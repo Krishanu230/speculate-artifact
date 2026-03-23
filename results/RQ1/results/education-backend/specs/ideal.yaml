@@ -1,0 +1,1850 @@
+openapi: 3.1.0
+info:
+  title: API Documentation for education-backend
+  version: 1.0.0
+paths:
+  /:
+    get:
+      parameters: []
+      responses:
+        '302':
+          description: >-
+            Found - The URL requested has been temporarily moved to the target
+            URL.
+          headers:
+            Location:
+              description: The URL to which the redirection is pointed.
+              schema:
+                example: /admin/
+                type: string
+        '401':
+          description: Unauthorized - Authentication credentials were not provided.
+        '403':
+          description: Forbidden - User does not have permission to view the list.
+      security:
+        - Token: []
+        - JWT: []
+      summary: Redirect to the admin page
+  '/api/v2/auth/as/{user_id}/':
+    get:
+      summary: Obtain a JWT for a given user by their user_id
+      tags:
+        - Auth
+      parameters:
+        - name: user_id
+          in: path
+          description: The primary key of the User to impersonate
+          required: true
+          schema:
+            type: integer
+            format: int64
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: JWT successfully obtained for the user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: A JSON Web Token for the given user
+                    example: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+        '401':
+          description: >-
+            Unauthorized – authentication credentials were not provided or are
+            invalid
+        '403':
+          description: Forbidden – the requesting user is not a superuser
+        '404':
+          description: Not Found – no User exists with the given user_id
+  /api/v2/auth/password/reset/:
+    post:
+      summary: Request a password reset email
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        '200':
+          description: Password reset e-mail has been sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Confirmation message
+                    example: Password reset e-mail has been sent.
+        '400':
+          description: Validation error — bad input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordResetResponse'
+      security: []
+  '/api/v2/auth/passwordless-token/request/{user_email}/':
+    get:
+      summary: Request a passwordless authentication token for a user by email
+      tags:
+        - Auth
+      parameters:
+        - name: user_email
+          in: path
+          description: Email address of the (active) user to send a one-time token to
+          required: true
+          schema:
+            type: string
+            format: email
+      security: []
+      responses:
+        '200':
+          description: >-
+            Token request succeeded; if a matching active user exists, an email
+            has been sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+        '429':
+          description: Too Many Requests – client has hit the anonymous rate limit
+  '/api/v2/auth/passwordless-token/{token}/':
+    get:
+      summary: Obtain a JSON Web Token using a one-time passwordless token
+      tags:
+        - Auth
+      parameters:
+        - name: token
+          in: path
+          description: The one-time passwordless token (UUID) to exchange for a JWT
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security: []
+      responses:
+        '200':
+          description: A JSON Web Token successfully obtained
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JSON Web Token for subsequent authenticated requests
+                    example: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+        '404':
+          description: 'Passwordless token not found, invalid, expired, or already used'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    description: Error message indicating token lookup failure
+                    example: Not found.
+        '429':
+          description: >-
+            Too Many Requests – rate limit exceeded for anonymous token
+            validation
+  /api/v2/auth/token/:
+    post:
+      summary: Obtain a JSON Web Token
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  description: The username for authentication
+                password:
+                  type: string
+                  description: The password for authentication
+      responses:
+        '200':
+          description: Token obtained successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: A JSON Web Token for authenticated requests
+                    example: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+        '400':
+          description: Validation error — invalid credentials or malformed request
+        '429':
+          description: Too Many Requests – rate limit exceeded for authentication
+      security: []
+  /api/v2/auth/token/refresh/:
+    post:
+      summary: Refresh an existing JWT token
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+              properties:
+                token:
+                  type: string
+                  description: The JSON Web Token to refresh
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: The new JSON Web Token
+                    example: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+        '400':
+          description: Validation error — invalid or malformed token
+        '429':
+          description: Too Many Requests – rate limit exceeded for authentication
+      security: []
+  /api/v2/banking/dolyame-notifications/:
+    post:
+      summary: Receive Dolyame notifications
+      tags:
+        - Banking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DolyameNotificationRequest'
+      responses:
+        '200':
+          description: Notification received successfully
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: OK
+        '400':
+          description: Validation error — bad input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '403':
+          description: Forbidden — requests only allowed from the Dolyame IP range
+        '405':
+          description: Method Not Allowed — only POST is supported
+      security: []
+  /api/v2/banking/stripe-webhooks/:
+    post:
+      summary: Handle incoming Stripe webhook events
+      tags:
+        - Banking
+      parameters:
+        - name: STRIPE_SIGNATURE
+          in: header
+          description: Stripe’s signature header used to verify the webhook payload
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Raw Stripe webhook event payload (any valid JSON object)
+              additionalProperties: {}
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '400':
+          description: Not a valid webhook request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: Not a valid webhook request
+      security: []
+  /api/v2/banking/tinkoff-notifications/:
+    post:
+      summary: Receive and process payment notifications from Tinkoff Bank
+      tags:
+        - Banking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TinkoffPaymentNotificationRequest'
+      responses:
+        '200':
+          description: Notification received and processed successfully
+          content:
+            text/html:
+              schema:
+                type: string
+                example: OK
+        '400':
+          description: Validation error — invalid data or signature token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: Invalid data provided
+      security: []
+  '/api/v2/courses/{slug}/promocode/':
+    get:
+      summary: >-
+        Retrieve the price of a course with an optional promocode and desired
+        bank
+      tags:
+        - Courses
+      parameters:
+        - name: slug
+          in: path
+          description: Unique slug identifier for the Course
+          required: true
+          schema:
+            type: string
+        - name: promocode
+          in: query
+          description: Promocode to apply for a discount
+          required: false
+          schema:
+            type: string
+        - name: desired_bank
+          in: query
+          description: >-
+            Bank key for price conversion; defaults to the system default if
+            omitted or invalid
+          required: false
+          schema:
+            type: string
+            enum:
+              - '[object Object]': null
+      responses:
+        '200':
+          description: Price details after applying promocode and bank conversion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PromocodeResponse'
+        '404':
+          description: Course not found
+        '429':
+          description: Too Many Requests – rate limit exceeded
+      security: []
+  '/api/v2/courses/{slug}/purchase/':
+    post:
+      summary: Initiates a purchase process for a course
+      tags:
+        - Courses
+      parameters:
+        - name: slug
+          in: path
+          description: Slug of the Course to purchase
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+              properties:
+                name:
+                  type: string
+                  description: Name of the user making the purchase
+                  example: John Doe
+                email:
+                  type: string
+                  format: email
+                  description: Email address of the user
+                  example: john.doe@example.com
+                desired_bank:
+                  type: string
+                  description: Bank key to use for payment (defaults applied if omitted)
+                  enum:
+                    - '[object Object]': null
+                promocode:
+                  type: string
+                  maxLength: 100
+                  description: Promotional code for discount
+                  example: DISCOUNT100
+                success_url:
+                  type: string
+                  format: uri
+                  maxLength: 256
+                  description: URL to redirect to upon a successful purchase
+                  example: 'https://example.com/success'
+                redirect_url:
+                  type: string
+                  format: uri
+                  maxLength: 256
+                  description: URL to redirect to if the user cancels the purchase
+                  example: 'https://example.com/cancel'
+                subscribe:
+                  type: string
+                  description: >-
+                    String flag (`'true'`, `'1'`, `'yes'`) indicating
+                    subscription to updates
+                  example: 'true'
+                analytics:
+                  type: object
+                  description: Arbitrary analytics data
+                  additionalProperties: true
+      responses:
+        '302':
+          description: Redirect to a payment link for the course purchase
+          headers:
+            Location:
+              description: URL of the external payment gateway
+              schema:
+                type: string
+                format: uri
+        '400':
+          description: Validation error — bad input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: Input validation failed
+        '404':
+          description: Course not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: Course not found
+        '429':
+          description: Too Many Requests – rate limit exceeded for purchases
+      security: []
+  /api/v2/diplomas/:
+    get:
+      summary: Retrieve a list of diplomas
+      tags:
+        - Diplomas
+      parameters:
+        - name: disable_pagination
+          in: query
+          description: Set to `true` to return all results in one page
+          required: false
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          description: Page number to retrieve.
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          description: Number of items per page.
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 20
+      responses:
+        '200':
+          description: A paginated list of diplomas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    description: Total number of diplomas available
+                    example: 123
+                  next:
+                    type: string
+                    format: uri
+                    nullable: true
+                    description: Link to the next page of results
+                    example: 'http://api.example.org/api/v2/diplomas/?page=4'
+                  previous:
+                    type: string
+                    format: uri
+                    nullable: true
+                    description: Link to the previous page of results
+                    example: 'http://api.example.org/api/v2/diplomas/?page=2'
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DiplomaListItem'
+        '429':
+          description: Too Many Requests – rate limit exceeded
+      security: []
+    post:
+      summary: Create a new diploma
+      tags:
+        - Diplomas
+      parameters:
+        - name: disable_pagination
+          in: query
+          description: Ignored on create; supported for uniformity
+          required: false
+          schema:
+            type: boolean
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiplomaCreateRequest'
+      responses:
+        '201':
+          description: Diploma created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiplomaRetrieve'
+        '400':
+          description: Validation error — bad input or missing study
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+        '429':
+          description: Too Many Requests – rate limit exceeded
+      security: []
+  '/api/v2/diplomas/{slug}/':
+    get:
+      summary: Retrieve a specific diploma by its slug
+      tags:
+        - Diplomas
+      parameters:
+        - name: slug
+          in: path
+          description: Unique slug identifier for the diploma
+          required: true
+          schema:
+            type: string
+        - name: disable_pagination
+          in: query
+          description: Ignored on retrieve; supported for uniformity
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: A single diploma object successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiplomaRetrieve'
+        '404':
+          description: Diploma not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+        - Diplomas
+      summary: Partially Update a Diploma
+      description: Allows for partially updating a diploma's details. Requires 'change_diploma' permission.
+      operationId: partialUpdateDiploma
+      parameters:
+        - name: slug
+          in: path
+          description: A unique identifier for the diploma.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: JSON object with fields to update. Only 'language' and 'image' are writable.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiplomaUpdate'
+      responses:
+        '200':
+          description: Diploma updated successfully. The full updated object is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiplomaRetrieve'
+        '400':
+          description: Bad request, validation error.
+        '401':
+          description: Authentication credentials were not provided.
+        '403':
+          description: You do not have permission to perform this action.
+        '404':
+          description: Diploma not found.
+      security:
+        - bearerAuth: []
+  /api/v2/homework/answers/:
+    get:
+      summary: Retrieve a list of homework answers
+      tags:
+        - Homework
+      parameters:
+        - name: question
+          in: query
+          description: UUID of the question to filter answers by.
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: author
+          in: query
+          description: UUID of the answer's author to filter by.
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          description: A page number within the paginated result set.
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        - name: page_size
+          in: query
+          description: Number of results to return per page.
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+        - name: disable_pagination
+          in: query
+          description: If set to 'true', pagination is disabled and all results are returned in a single list.
+          required: false
+          schema:
+            type: boolean
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A (possibly paginated) list of answers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  next:
+                    type: string
+                    format: uri
+                    nullable: true
+                  previous:
+                    type: string
+                    format: uri
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AnswerDetailed'
+        '400':
+          description: Invalid query parameters
+        '401':
+          description: Unauthorized – authentication credentials missing or invalid
+        '403':
+          description: Forbidden – you don’t have permission to view these answers
+    post:
+      summary: Create a new homework answer
+      tags:
+        - Homework
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnswerCreate'
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Homework answer created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnswerDetailed'
+        '400':
+          description: Validation error — bad input
+        '401':
+          description: Unauthorized – authentication credentials missing or invalid
+        '403':
+          description: Forbidden – you don’t have permission to create this answer
+  '/api/v2/homework/answers/{slug}/':
+    get:
+      summary: Retrieve a specific homework answer by its slug
+      tags:
+        - Homework
+      parameters:
+        - name: slug
+          in: path
+          description: UUID slug of the answer
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A single homework answer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnswerDetailed'
+        '401':
+          description: Unauthorized – authentication credentials missing or invalid
+        '403':
+          description: Forbidden – you don’t have permission to view this answer
+        '404':
+          description: Not Found – no answer exists with that slug
+    patch:
+      summary: Partially update an existing homework answer
+      tags:
+        - Homework
+      parameters:
+        - name: slug
+          in: path
+          description: UUID slug of the homework answer to update
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnswerCreate'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The answer was successfully updated and returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnswerDetailed'
+        '400':
+          description: Validation error — bad input or partial update not allowed
+        '401':
+          description: Unauthorized – authentication credentials missing or invalid
+        '403':
+          description: Forbidden – you don’t have permission to edit this answer
+        '404':
+          description: Not Found – no answer exists with that slug
+    delete:
+      summary: Delete a specific homework answer
+      tags:
+        - Homework
+      parameters:
+        - name: slug
+          in: path
+          description: UUID slug of the homework answer to delete
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: No Content – the homework answer was successfully deleted
+        '401':
+          description: Unauthorized – authentication credentials missing or invalid
+        '403':
+          description: Forbidden – you don’t have permission to delete this answer
+        '404':
+          description: Not Found – no answer exists with that slug
+        '429':
+          description: Too Many Requests – rate limit exceeded
+  /api/v2/homework/answers/image/:
+    post:
+      summary: Upload an image for a homework answer
+      tags:
+        - Homework
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - image
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: The image file to upload
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Image uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  image:
+                    type: string
+                    format: uri
+                    description: URL of the uploaded image file
+                required:
+                  - image
+        '400':
+          description: Validation error — bad input
+        '401':
+          description: Unauthorized — authentication credentials missing or invalid
+        '403':
+          description: Forbidden — you don’t have permission to upload an image
+        '405':
+          description: Method Not Allowed — only POST is supported
+        '415':
+          description: Unsupported Media Type — request must be multipart/form-data
+        '429':
+          description: Too Many Requests — rate limit exceeded
+  
+  /api/v2/homework/answers/{answer_slug}/reactions/:
+    post:
+      summary: Create a reaction for a specific answer
+      tags:
+        - Homework
+      parameters:
+        - name: answer_slug
+          in: path
+          description: UUID slug of the answer to which the reaction is being added
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReactionCreate'
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Reaction created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReactionDetailed'
+        '400':
+          description: Validation error — bad emoji or slug collision
+        '401':
+          description: Unauthorized — authentication credentials missing or invalid
+        '403':
+          description: Forbidden — you’re not allowed to react on this answer
+        '404':
+          description: Not Found — no answer exists with that slug
+  '/api/v2/homework/answers/{answer_slug}/reactions/{slug}/':
+    delete:
+      summary: Delete a specific reaction to an answer
+      tags:
+        - Homework
+      parameters:
+        - name: answer_slug
+          in: path
+          description: UUID slug of the answer associated with the reaction
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: slug
+          in: path
+          description: UUID slug of the reaction to delete
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: No Content – the reaction was successfully deleted
+        '401':
+          description: Unauthorized — authentication credentials missing or invalid
+        '403':
+          description: Forbidden — you’re not the author of this reaction
+        '404':
+          description: Not Found — no reaction exists with that slug
+  /api/v2/homework/comments/:
+    get:
+      summary: Retrieve a tree of comments (answers) for a homework answer
+      tags:
+        - Homework
+      parameters:
+        - name: answer
+          in: query
+          description: UUID slug of the homework answer whose comment tree to fetch
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A list of comment trees (root answers with nested descendants)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AnswerCommentNode'
+        '400':
+          description: Invalid query parameters
+        '401':
+          description: Unauthorized – authentication credentials missing or invalid
+        '403':
+          description: Forbidden – you don’t have permission to view these comments
+  '/api/v2/homework/questions/{slug}/':
+    get:
+      summary: Retrieve a specific homework question by its slug
+      tags:
+        - Homework
+      parameters:
+        - name: slug
+          in: path
+          description: UUID slug of the homework question
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successfully retrieved the homework question
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Question'
+        '401':
+          description: Unauthorized – authentication credentials missing or invalid
+        '403':
+          description: Forbidden – you don’t have permission to view this question
+        '404':
+          description: Not Found – no question exists with that slug
+  '/api/v2/leads/email/{slug}/':
+    post:
+      summary: Create a lead for an EmailLeadMagnetCampaign
+      tags:
+        - Leads
+      parameters:
+        - name: slug
+          in: path
+          description: Slug identifier of the EmailLeadMagnetCampaign
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LeadMagnetRequest'
+      security: []
+      responses:
+        '201':
+          description: Lead created successfully with campaign success message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeadMagnetResponse'
+        '400':
+          description: Validation error — bad input or missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: Not Found — no campaign exists with that slug
+  '/api/v2/notion/materials/{page_id}/':
+    get:
+      summary: Retrieve the details of a Notion material by its page ID
+      tags:
+        - Notion
+      parameters:
+        - name: page_id
+          in: path
+          description: 'The Notion page identifier (UUID string, converted internally)'
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successfully retrieved the Notion material details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotionPage'
+        '404':
+          description: Not Found – no material exists with that page_id or it’s not shared
+        '429':
+          description: Too Many Requests – rate limit exceeded for Notion materials
+  '/api/v2/orders/{slug}/confirm/':
+    get:
+      summary: Confirm an order and redirect to the item's confirmation success URL
+      tags:
+        - Orders
+      parameters:
+        - name: slug
+          in: path
+          description: Unique slug identifier for the order to be confirmed
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        '302':
+          description: Found – redirect to the confirmation success URL
+          headers:
+            Location:
+              description: URL to redirect to after order confirmation
+              schema:
+                type: string
+                format: uri
+        '404':
+          description: >-
+            Not Found – no order exists with that slug (or it’s not available to
+            confirm)
+        '429':
+          description: Too Many Requests – rate limit exceeded for public ID operations
+  /api/v2/studies/purchased/:
+    get:
+      summary: Retrieve a list of purchased courses for the authenticated user
+      tags:
+        - Studies
+      parameters:
+        - name: disable_pagination
+          in: query
+          description: >-
+            Set to `true` or `1` to return a raw array instead of a paginated
+            object
+          required: false
+          schema:
+            type: boolean
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A (possibly paginated) list of purchased courses
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PaginatedCourses'
+                  - type: array
+                    items:
+                      $ref: '#/components/schemas/CourseSummary'
+        '401':
+          description: Unauthorized – authentication credentials missing or invalid
+        '403':
+          description: Forbidden – user does not have permission to view this list
+  /api/v2/users/me/:
+    get:
+      summary: Retrieve the current authenticated user's details
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: A user object representing the current authenticated user's details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized – authentication credentials missing or invalid
+        '403':
+          description: Forbidden – you don’t have permission to view this object
+    patch:
+      summary: Update the current user's profile information
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                  description: The user's new first name
+                last_name:
+                  type: string
+                  description: The user's new last name
+                first_name_en:
+                  type: string
+                  description: The user's first name in English
+                last_name_en:
+                  type: string
+                  description: The user's last name in English
+                gender:
+                  type: string
+                  enum:
+                    - male
+                    - female
+                  description: The user's new gender
+                github_username:
+                  type: string
+                  description: The user's new GitHub username
+                linkedin_username:
+                  type: string
+                  description: The user's new LinkedIn username
+                telegram_username:
+                  type: string
+                  description: The user's new Telegram username
+      responses:
+        '200':
+          description: User profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Bad Request – invalid input or validation error
+        '401':
+          description: Unauthorized – authentication credentials missing or invalid
+        '403':
+          description: Forbidden – you don’t have permission to edit this object
+components:
+  schemas:
+    PasswordResetRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          description: User’s email address to receive reset instructions
+          writeOnly: true
+    PasswordResetResponse:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: string
+          description: Message indicating that the password reset email has been sent
+          readOnly: true
+          example: Password reset e-mail has been sent.
+    DolyameNotificationRequest:
+      type: object
+      required:
+        - id
+        - status
+        - amount
+        - demo
+        - residual_amount
+      properties:
+        id:
+          type: string
+          description: Slug of the Order the notification relates to
+        status:
+          type: string
+          description: Status of the notification
+          enum:
+            - approved
+            - rejected
+            - refunded
+            - canceled
+            - committed
+            - wait_for_commit
+            - completed
+        amount:
+          type: number
+          format: decimal
+          description: Amount related to the notification
+        residual_amount:
+          type: number
+          format: decimal
+          description: Residual amount after the notification
+        demo:
+          type: boolean
+          description: Flag indicating if this is a demo notification
+        client_info:
+          type: object
+          additionalProperties: true
+          description: JSON object containing client information
+        payment_schedule:
+          type: object
+          additionalProperties: true
+          description: JSON object containing the payment schedule
+    TinkoffPaymentNotificationRequest:
+      type: object
+      required:
+        - TerminalKey
+        - OrderId
+        - Success
+        - Status
+        - PaymentId
+        - Amount
+        - Token
+      properties:
+        TerminalKey:
+          type: string
+          description: Tinkoff-assigned terminal key
+        OrderId:
+          type: string
+          description: Slug of the related Order (mapped to its PK)
+        Success:
+          type: boolean
+          description: Whether the payment was successful
+        Status:
+          type: string
+          description: Payment status
+          enum:
+            - AUTHORIZED
+            - CONFIRMED
+            - REVERSED
+            - REFUNDED
+            - PARTIAL_REFUNDED
+            - REJECTED
+        PaymentId:
+          type: integer
+          description: Unique identifier of the payment in Tinkoff
+        Amount:
+          type: integer
+          description: Amount in cents (service converts to decimal)
+        Token:
+          type: string
+          description: SHA-256 signature token validating the payload
+        ErrorCode:
+          type: string
+          description: Error code if the transaction failed
+          nullable: true
+        ExpDate:
+          type: string
+          description: Card expiration date
+          nullable: true
+        RebillId:
+          type: integer
+          description: Identifier for recurring billing
+          nullable: true
+        CardId:
+          type: string
+          description: Card identifier
+          nullable: true
+        Pan:
+          type: string
+          description: Masked primary account number
+          nullable: true
+        DATA:
+          type: string
+          description: Optional data field
+          nullable: true
+    PromocodeResponse:
+      type: object
+      properties:
+        price:
+          type: integer
+          description: >-
+            Raw price (in the smallest currency unit) after promocode and
+            conversion
+        formatted_price:
+          type: string
+          description: Human-readable formatted price (including currency symbol)
+        currency:
+          type: string
+          description: 'ISO currency code used in formatting (e.g. "USD", "EUR")'
+        currency_symbol:
+          type: string
+          description: 'Symbol of the currency (e.g. "$", "€")'
+      required:
+        - price
+        - formatted_price
+        - currency
+        - currency_symbol
+    UserSafe:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        first_name:
+          type: string
+        last_name:
+          type: string
+      required:
+        - uuid
+        - first_name
+        - last_name
+    CourseSimple:
+      type: object
+      properties:
+        name:
+          type: string
+      required:
+        - name
+    DiplomaListItem:
+      type: object
+      properties:
+        course:
+          $ref: '#/components/schemas/CourseSimple'
+        slug:
+          type: string
+        language:
+          type: string
+          description: ISO 639-1 code of the diploma’s language
+        image:
+          type: string
+          format: uri
+          description: URL to the diploma image
+        student:
+          $ref: '#/components/schemas/UserSafe'
+        url:
+          type: string
+          format: uri
+          description: Frontend URL for this diploma
+      required:
+        - course
+        - slug
+        - language
+        - image
+        - student
+        - url
+    DiplomaRetrieve:
+      type: object
+      properties:
+        course:
+          $ref: '#/components/schemas/CourseSimple'
+        slug:
+          type: string
+        language:
+          type: string
+        image:
+          type: string
+          format: uri
+        student:
+          $ref: '#/components/schemas/UserSafe'
+        other_languages:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiplomaListItem'
+      required:
+        - course
+        - slug
+        - language
+        - image
+        - student
+        - other_languages
+    DiplomaUpdate:
+      type: object
+      properties:
+        language:
+          type: string
+          description: The language of the diploma.
+        image:
+          type: string
+          format: uri
+          description: A new URL for the diploma image.
+    DiplomaCreateRequest:
+      type: object
+      required:
+        - student
+        - course
+        - language
+        - image
+      properties:
+        student:
+          type: integer
+          description: User ID (will map to a `Study` record)
+        course:
+          type: integer
+          description: Course ID (will map to a `Study` record)
+        language:
+          type: string
+          description: ISO 639-1 code for the diploma language
+        image:
+          type: string
+          format: binary
+          description: Diploma image file upload
+    AnswerDetailed:
+      type: object
+      properties:
+        created:
+          type: string
+          format: date-time
+          description: When the answer was created
+        modified:
+          type: string
+          format: date-time
+          description: When the answer was last modified
+        slug:
+          type: string
+          format: uuid
+          description: Unique identifier of the answer
+        question:
+          type: string
+          format: uuid
+          description: Slug of the related question
+        author:
+          $ref: '#/components/schemas/UserSafe'
+        parent:
+          type: string
+          format: uuid
+          nullable: true
+          description: 'Slug of the parent answer, if any'
+        text:
+          type: string
+          description: Answer content in Markdown
+        src:
+          type: string
+          description: The raw source text
+        has_descendants:
+          type: boolean
+          description: True if this answer has replies
+        reactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReactionDetailed'
+      required:
+        - created
+        - modified
+        - slug
+        - question
+        - author
+        - text
+        - src
+        - has_descendants
+        - reactions
+    AnswerCreate:
+      type: object
+      required:
+        - question
+        - text
+      properties:
+        question:
+          type: string
+          format: uuid
+          description: Slug of the question being answered
+        parent:
+          type: string
+          format: uuid
+          nullable: true
+          description: 'Slug of the parent answer, if replying'
+        text:
+          type: string
+          description: Content of the answer in Markdown
+    ReactionDetailed:
+      type: object
+      properties:
+        slug:
+          type: string
+          format: uuid
+        emoji:
+          type: string
+        author:
+          $ref: '#/components/schemas/UserSafe'
+        answer:
+          type: string
+          format: uuid
+          description: Slug of the associated answer
+      required:
+        - slug
+        - emoji
+        - author
+        - answer
+    PaginatedAnswers:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of answers
+        next:
+          type: string
+          format: uri
+          nullable: true
+        previous:
+          type: string
+          format: uri
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnswerDetailed'
+    AnswerCommentNode:
+      type: object
+      properties:
+        slug:
+          type: string
+          format: uuid
+          description: Unique identifier of the root answer
+        descendants:
+          type: array
+          description: 'Direct child answers, each with its own nested replies'
+          items:
+            $ref: '#/components/schemas/AnswerTreeNode'
+      required:
+        - slug
+        - descendants
+    AnswerTreeNode:
+      type: object
+      properties:
+        slug:
+          type: string
+          format: uuid
+          description: Unique identifier of this answer node
+        author:
+          $ref: '#/components/schemas/UserSafe'
+        question:
+          type: string
+          format: uuid
+          description: UUID slug of the associated question
+        parent:
+          type: string
+          format: uuid
+          nullable: true
+          description: 'UUID slug of the parent answer, if any'
+        created:
+          type: string
+          format: date-time
+          description: When this answer was created
+        modified:
+          type: string
+          format: date-time
+          description: When this answer was last modified
+        text:
+          type: string
+          description: Markdown content of the answer
+        src:
+          type: string
+          description: Raw source text of the answer
+        has_descendants:
+          type: boolean
+          description: True if this answer has any replies
+        reactions:
+          type: array
+          description: Reactions on this answer
+          items:
+            $ref: '#/components/schemas/ReactionDetailed'
+        descendants:
+          type: array
+          description: Nested replies for this node
+          items:
+            $ref: '#/components/schemas/AnswerTreeNode'
+      required:
+        - slug
+        - author
+        - question
+        - created
+        - modified
+        - text
+        - src
+        - has_descendants
+        - reactions
+        - descendants
+    Question:
+      type: object
+      properties:
+        slug:
+          type: string
+          format: uuid
+          description: Unique identifier for the question
+        name:
+          type: string
+          description: Name/title of the question
+        text:
+          type: string
+          description: Question content in Markdown format
+      required:
+        - slug
+        - name
+        - text
+    LeadMagnetRequest:
+      type: object
+      required:
+        - email
+        - recaptcha
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email address of the lead
+        name:
+          type: string
+          description: Name of the lead
+        recaptcha:
+          type: string
+          description: ReCaptcha V3 response token
+    LeadMagnetResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          description: Indicates that the lead was created
+          example: true
+        message:
+          type: string
+          description: Campaign-specific success message
+          example: Your lead has been successfully created.
+      required:
+        - ok
+        - message
+    ValidationError:
+      type: object
+      description: Mapping of field names to lists of error messages
+      additionalProperties:
+        type: array
+        items:
+          type: string
+      example:
+        email:
+          - Enter a valid email address.
+        recaptcha:
+          - Invalid or expired reCAPTCHA token.
+    NotionPage:
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/NotionBlock'
+      description: >
+        A map of block IDs to their block data.  Each key is a block ID string,
+        and each value is an object with `role` and `value` (see NotionBlock).
+    NotionBlock:
+      type: object
+      required:
+        - role
+        - value
+      properties:
+        role:
+          type: string
+          description: 'The block’s role (e.g. “editor”, “viewer”)'
+        value:
+          type: object
+          description: The block’s data
+          required:
+            - id
+            - type
+          properties:
+            id:
+              type: string
+              description: Internal ID of the block
+            type:
+              type: string
+              enum:
+                - page
+                - text
+                - bookmark
+                - callout
+                - code
+                - column
+                - column_list
+                - decorator
+                - equation
+                - header
+                - image
+                - divider
+                - sub_header
+                - sub_sub_header
+                - bulleted_list
+                - numbered_list
+              description: Type of the block
+            content:
+              type: array
+              items:
+                type: string
+              description: 'Block content, if applicable'
+            last_edited_time:
+              type: integer
+              description: Unix timestamp (ms) of last edit
+            properties:
+              type: object
+              description: 'Block-specific properties (e.g. `title`, `caption`)'
+              additionalProperties: false
+              properties:
+                title:
+                  type: array
+                  items:
+                    oneOf:
+                      - type: string
+                      - type: array
+                        items:
+                          type: string
+                caption:
+                  type: array
+                  items:
+                    oneOf:
+                      - type: string
+                      - type: array
+                        items:
+                          type: string
+                last_edited_time:
+                  type: integer
+                  description: Duplicate timestamp when content changed
+    CourseSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the course
+        slug:
+          type: string
+          description: URL-friendly identifier for the course
+        name:
+          type: string
+          description: Name of the course
+        home_page_slug:
+          type: string
+          description: Custom slug for the course's home page
+        cover:
+          type: string
+          format: uri
+          description: URL to the cover image of the course
+      required:
+        - id
+        - slug
+        - name
+        - home_page_slug
+        - cover
+    PaginatedCourses:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Total number of courses
+        next:
+          type: string
+          format: uri
+          nullable: true
+          description: Link to the next page of results
+        previous:
+          type: string
+          format: uri
+          nullable: true
+          description: Link to the previous page of results
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/CourseSummary'
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique internal identifier for the user
+        uuid:
+          type: string
+          format: uuid
+          description: Universally unique identifier for the user
+        username:
+          type: string
+          description: The user's username
+        first_name:
+          type: string
+          description: The user's first name
+        last_name:
+          type: string
+          description: The user's last name
+        first_name_en:
+          type: string
+          description: The user's first name in English
+        last_name_en:
+          type: string
+          description: The user's last name in English
+        email:
+          type: string
+          format: email
+          description: The user's email address
+        gender:
+          type: string
+          enum:
+            - male
+            - female
+          description: The user's gender
+        github_username:
+          type: string
+          description: The user's GitHub username
+        linkedin_username:
+          type: string
+          description: The user's LinkedIn username
+        telegram_username:
+          type: string
+          description: The user's Telegram username
+      required:
+        - id
+        - uuid
+        - username
+        - first_name
+        - last_name
+        - email
+        - gender
+        - github_username
+        - linkedin_username
+        - telegram_username
+    HTTPValidationError:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Validation error detail
+          example: 'order: This field is required.'

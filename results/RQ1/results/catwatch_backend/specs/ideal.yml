@@ -1,0 +1,784 @@
+openapi: 3.0.1
+info:
+  title: CatWatch API
+  version: "1.0.0 (Approximate)"
+  description: |
+    An API for accessing and analyzing statistics from GitHub projects, contributors, and languages within specified organizations.
+    
+    **Note:** This specification is an approximation generated from available source code. It accurately reflects endpoint paths, parameters, security for protected routes, and success response schemas. However, standard error response schemas and detailed field validation rules are generalized due to missing global error handling (`@ControllerAdvice`) and bean validation annotations.
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+tags:
+  - name: Projects
+    description: Endpoints for querying project data.
+  - name: Contributors
+    description: Endpoints for querying contributor data.
+  - name: Languages
+    description: Endpoints for querying language data.
+  - name: Statistics
+    description: Endpoints for historical and time-series statistical data.
+  - name: Admin
+    description: Administrative and system-level endpoints.
+
+paths:
+  # ===============================================
+  # Core Data APIs
+  # ===============================================
+  /projects:
+    get:
+      tags:
+        - Projects
+      summary: Search and list projects
+      description: A powerful endpoint to search, filter, and sort projects. It can retrieve the latest state of projects or calculate the change in metrics like stars and commits between a start and end date.
+      operationId: getProjects
+      parameters:
+        - name: organizations
+          in: query
+          description: "Comma-separated list of organization names to search within."
+          schema: { type: string }
+        - name: limit
+          in: query
+          description: "The maximum number of projects to return."
+          schema: { type: integer, format: int32 }
+        - name: offset
+          in: query
+          description: "The starting index for pagination."
+          schema: { type: integer, format: int32 }
+        - name: start_date
+          in: query
+          description: "The start date for a time-window query. If used with end_date, metrics will be calculated as a delta. Expected format: yyyy-MM-dd'T'HH:mm:ss"
+          schema: { type: string, format: date-time, example: "2023-10-01T00:00:00" }
+        - name: end_date
+          in: query
+          description: "The end date for a time-window query. Expected format: yyyy-MM-dd'T'HH:mm:ss"
+          schema: { type: string, format: date-time, example: "2023-10-27T00:00:00" }
+        - name: sortBy
+          in: query
+          description: "The field to sort by. A leading '-' indicates descending order (e.g., -score, starsCount)."
+          schema: { type: string, example: "-score" }
+        - name: q
+          in: query
+          description: "A search query string that matches against project names."
+          schema: { type: string }
+        - name: language
+          in: query
+          description: "Filters projects by their primary programming language."
+          schema: { type: string, example: "Java" }
+      responses:
+        '200':
+          description: A list of projects matching the criteria.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+        '400':
+          description: Bad Request (e.g., invalid date format).
+        '500':
+          description: Internal Server Error.
+
+  /contributors:
+    get:
+      tags:
+        - Contributors
+      summary: Search and list contributors
+      description: Fetches a detailed list of contributors. It can show their latest aggregated statistics or calculate the change in their contributions over a time period.
+      operationId: getContributors
+      parameters:
+        - name: organizations
+          in: query
+          required: true
+          description: "Comma-separated list of organization names."
+          schema: { type: string }
+        - name: limit
+          in: query
+          description: "The maximum number of contributors to return (default: 5)."
+          schema: { type: integer, format: int32, default: 5, minimum: 1 }
+        - name: offset
+          in: query
+          description: "The starting index for pagination (default: 0)."
+          schema: { type: integer, format: int32, default: 0, minimum: 0 }
+        - name: start_date
+          in: query
+          description: "The start date for calculating deltas. Expected format: yyyy-MM-dd'T'HH:mm:ss'Z' (UTC)."
+          schema: { type: string, format: date-time, example: "2023-10-01T00:00:00Z" }
+        - name: end_date
+          in: query
+          description: "The end date for calculating deltas. Expected format: yyyy-MM-dd'T'HH:mm:ss'Z' (UTC)."
+          schema: { type: string, format: date-time, example: "2023-10-27T00:00:00Z" }
+        - name: sortBy
+          in: query
+          description: "Field to sort by (e.g., -organizationalCommitsCount)."
+          schema:
+            type: string
+            enum:
+            - organizationalCommitsCount
+            - organizationalProjectsCount
+            - personalCommitsCount
+            - personalProjectsCount
+            - organizationName
+            - name
+            - -organizationalCommitsCount
+            - -organizationalProjectsCount
+            - -personalCommitsCount
+            - -personalProjectsCount
+            - -organizationName
+            - -name
+        - name: q
+          in: query
+          description: "A search query for contributor names."
+          schema: { type: string }
+      responses:
+        '200':
+          description: A list of contributors.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Contributor'
+        '400':
+          description: Bad Request (e.g., organizations parameter is missing or invalid).
+        '500':
+          description: Internal Server Error.
+
+  /languages:
+    get:
+      tags:
+        - Languages
+      summary: List programming languages
+      description: Fetches an aggregated list of programming languages used across the specified organizations, sorted by the number of projects they appear in.
+      operationId: getLanguages
+      parameters:
+        - name: organizations
+          in: query
+          description: "Comma-separated list of organization names."
+          schema: { type: string }
+        - name: limit
+          in: query
+          description: "The maximum number of languages to return (default: 5)."
+          schema: { type: integer, format: int32, default: 5 }
+        - name: offset
+          in: query
+          description: "The starting index for pagination (default: 0)."
+          schema: { type: integer, format: int32, default: 0 }
+        - name: q
+          in: query
+          description: "A search query to filter languages by name."
+          schema: { type: string }
+      responses:
+        '200':
+          description: An array of programming languages.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Language'
+        '500':
+          description: Internal Server Error.
+
+  # ===============================================
+  # Statistics APIs
+  # ===============================================
+  /statistics:
+    get:
+      tags:
+        - Statistics
+      summary: Get aggregated organization statistics
+      description: Returns aggregated snapshot statistics for one or more organizations over a specified period.
+      operationId: getStatistics
+      parameters:
+        - name: organizations
+          in: query
+          description: "Comma-separated list of organization names."
+          schema: { type: string }
+        - name: start_date
+          in: query
+          description: "The start date for fetching records. Expected format: yyyy-MM-dd'T'HH:mm:ss'Z' (UTC)."
+          schema: { type: string, format: date-time, example: "2023-10-01T00:00:00Z" }
+        - name: end_date
+          in: query
+          description: "The end date for fetching records. Expected format: yyyy-MM-dd'T'HH:mm:ss'Z' (UTC)."
+          schema: { type: string, format: date-time, example: "2023-10-27T00:00:00Z" }
+      responses:
+        '200':
+          description: An array of statistics snapshots.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Statistics'
+        '400':
+          description: Bad Request (e.g., invalid date format).
+        '500':
+          description: Internal Server Error.
+
+  /statistics/projects:
+    get:
+      tags:
+        - Statistics
+      summary: Get time-series statistics for projects
+      description: Retrieves time-series data for the top 10 projects (sorted by score) to track their performance over time.
+      operationId: getProjectTimeSeries
+      parameters:
+        - name: organizations
+          in: query
+          description: "Comma-separated list of organization names."
+          required: false
+          schema:
+            type: string
+        - name: start_date
+          in: query
+          description: "The start date for fetching records. Defaults to 30 days ago. Expected format: yyyy-MM-dd'T'HH:mm:ss'Z' (UTC)."
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: "2023-10-01T00:00:00Z"
+        - name: end_date
+          in: query
+          description: "The end date for fetching records. Defaults to the current date. Expected format: yyyy-MM-dd'T'HH:mm:ss'Z' (UTC)."
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: "2023-10-31T00:00:00Z"
+      responses:
+        '200':
+          description: Time-series data for top projects.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectStats'
+        '500':
+          description: Internal Server Error.
+
+  /statistics/contributors:
+    get:
+      tags:
+        - Statistics
+      summary: Get time-series statistics for contributors
+      description: Retrieves time-series data for the top 10 contributors (by commit count) to track their activity over time.
+      operationId: getContributorTimeSeries
+      parameters:
+        - name: organizations
+          in: query
+          description: "Comma-separated list of organization names."
+          required: false
+          schema:
+            type: string
+        - name: start_date
+          in: query
+          description: "The start date for fetching records. Defaults to 30 days ago. Expected format: yyyy-MM-dd'T'HH:mm:ss'Z' (UTC)."
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: "2023-10-01T00:00:00Z"
+        - name: end_date
+          in: query
+          description: "The end date for fetching records. Defaults to the current date. Expected format: yyyy-MM-dd'T'HH:mm:ss'Z' (UTC)."
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: "2023-10-31T00:00:00Z"
+      responses:
+        '200':
+          description: Time-series data for top contributors.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContributorStats'
+        '400':
+          description: Bad Request. This error occurs if the `start_date` or `end_date` parameters are not in a valid ISO 8601 format.
+          content:
+            application/json:
+              schema:
+                type: string
+                description: A literal string message explaining the error.
+              example: "Couldn't parse date string 2025-08-40T00:00:00Z."
+
+  /statistics/languages:
+    get:
+      tags:
+        - Statistics
+      summary: Get time-series statistics for languages
+      description: Retrieves time-series data showing how the project count for each language has evolved over time.
+      operationId: getLanguageTimeSeries
+      parameters:
+        - name: organizations
+          in: query
+          description: "Comma-separated list of organization names."
+          required: false
+          schema:
+            type: string
+        - name: start_date
+          in: query
+          description: "The start date for fetching records. Defaults to 30 days ago. Expected format: yyyy-MM-dd'T'HH:mm:ss'Z' (UTC)."
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: "2023-10-01T00:00:00Z"
+        - name: end_date
+          in: query
+          description: "The end date for fetching records. Defaults to the current date. Expected format: yyyy-MM-dd'T'HH:mm:ss'Z' (UTC)."
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: "2023-10-31T00:00:00Z"
+      responses:
+        '200':
+          description: Time-series data for language usage.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LanguageStats'
+        '500':
+          description: Internal Server Error.
+
+  # ===============================================
+  # Admin & System APIs
+  # ===============================================
+  /config:
+    get:
+      tags:
+        - Admin
+      summary: Get public application configuration
+      description: Retrieves a map of public-facing application configuration properties.
+      operationId: getConfig
+      responses:
+        '200':
+          description: A map of configuration properties.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+
+  /export:
+    get:
+      tags:
+        - Admin
+      summary: Export database content
+      description: Exports the entire database content (projects, contributors, and statistics) as a single JSON object.
+      operationId: exportDatabase
+      responses:
+        '200':
+          description: A JSON object containing all database data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatabaseDto'
+
+  /init:
+    get:
+      tags:
+        - Admin
+      summary: Initialize the system (Deactivated)
+      description: This endpoint is defined but intentionally deactivated for security.
+      operationId: initSystem
+      security:
+        - oAuth2Scope: [uid]
+      responses:
+        '403':
+          description: Forbidden. The endpoint is deactivated.
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "This endpoint is deactivated."
+
+  /delete:
+    get:
+      tags:
+        - Admin
+      summary: Delete all data (Deactivated)
+      description: This endpoint is defined but intentionally deactivated for security.
+      operationId: deleteAllData
+      security:
+        - oAuth2Scope: [uid]
+      responses:
+        '403':
+          description: Forbidden. The endpoint is deactivated.
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "This endpoint is deactivated."
+
+  /import:
+    post:
+      tags:
+        - Admin
+      summary: Import database content (Deactivated)
+      description: |
+        Accepts a JSON payload to import database content.
+
+        **Note:** This endpoint is intentionally and permanently deactivated in the source code for security reasons. Any attempt to call it will result in a `403 Forbidden` error.
+      operationId: importDatabase
+      requestBody:
+        description: A JSON object containing lists of contributors, projects, and statistics to import.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DatabaseDto'
+      responses:
+        '403':
+          description: Forbidden. The endpoint is permanently deactivated.
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: string
+                description: A literal string message explaining why access is forbidden.
+                example: "This endpoint is deactivated."
+  /config/scoring.project:
+    post:
+      tags:
+        - Admin
+      summary: Configure project scoring (Deactivated)
+      description: |
+        An endpoint to configure project scoring.
+
+        **Note:** This endpoint is permanently deactivated for security reasons (it enabled execution of arbitrary JS code). Any attempt to call it will result in a `403 Forbidden` error.
+      operationId: configScoringProjects
+      parameters:
+        - name: X-Organizations
+          in: header
+          description: An optional header to specify organizations.
+          required: false
+          schema:
+            type: string
+      responses:
+        '403':
+          description: Forbidden. The endpoint is permanently deactivated.
+          content:
+            application/json:
+              schema:
+                type: string
+              example: "This endpoint is deactivated."
+  /fetch:
+    get:
+      tags:
+        - Admin
+      summary: Trigger a data collection process
+      description: |
+        Triggers a long-running, asynchronous process to fetch the latest data from the configured source (e.g., GitHub) and populate the database. The response indicates that the process has been successfully *initiated*, not that it has completed.
+
+        This endpoint is confirmed to be public (unsecured) and takes no parameters. The integration test (`FetchControllerIT.java`) for this endpoint is marked as `@Ignore`, which suggests this can be a very long-running or resource-intensive operation not suitable for all test environments.
+      operationId: triggerDataFetch
+      responses:
+        '200':
+          description: OK. The data fetching process was successfully initiated.
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: string
+                description: The literal string "OK" returned as a JSON string.
+                example: "OK"
+        '500':
+          description: Internal Server Error. This response is returned if the backend `fetcher` service fails to start or throws an unhandled exception.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    oAuth2Scope:
+      type: oauth2
+      description: OAuth2 security scheme for protected admin endpoints.
+      flows:
+        implicit:
+          authorizationUrl: https://example.com/oauth/authorize
+          scopes:
+            uid: Grants access to system-level operations.
+
+  schemas:
+    Contributor:
+      type: object
+      description: 'A contributor is a (GitHub) user that may have contributed to projects.
+        Equals to a GitHub acocunt. See https://developer.github.com/v3/users/#get-a-single-user'
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: the GitHub User ID of the Contributor. Part of the primary
+            key. See official GitHub REST API guide.
+        organizationId:
+          type: integer
+          format: int64
+          description: the GitHub ID of the organization. Part of the primary key.
+            See official GitHub REST API guide.
+        name:
+          type: string
+          description: Name of contributor
+        url:
+          type: string
+          description: URL of contributor
+        organizationalCommitsCount:
+          type: integer
+          format: int32
+          description: Count of organizational commits.
+        personalCommitsCount:
+          type: integer
+          format: int32
+          description: Count of personal commits.
+        personalProjectsCount:
+          type: integer
+          format: int32
+          description: Count of personal projects of contributor.
+        organizationalProjectsCount:
+          type: integer
+          format: int32
+          description: Count of organization projects of contributor.
+        organizationName:
+          type: string
+          description: Organization of the Contributor.
+        snapshotDate:
+          type: string
+          format: date-time
+          description: Contributor snapshot date. Part of the primary key.
+      required:
+        - id
+        - organizationId
+        
+    Project:
+      type: object
+      description: Represents a GitHub repository.
+      properties:
+        gitHubProjectId:
+          type: integer
+          format: int64
+          description: The unique GitHub ID of the repository.
+        snapshotDate:
+          type: string
+          format: date-time
+          description: The timestamp of when the data was recorded.
+        name:
+          type: string
+          description: The name of the project.
+        title:
+          type: string
+          description: Title of the project.
+        image:
+          type: string
+          description: Image URL of the project.
+        organizationName:
+          type: string
+          description: The name of the owning organization.
+        url:
+          type: string
+          description: The URL to the project.
+        description:
+          type: string
+          description: The project's description.
+        starsCount:
+          type: integer
+          format: int32
+          description: Total number of stars.
+        commitsCount:
+          type: integer
+          format: int32
+          description: Total number of commits.
+        forksCount:
+          type: integer
+          format: int32
+          description: Total number of forks.
+        contributorsCount:
+          type: integer
+          format: int32
+          description: Total number of contributors.
+        externalContributorsCount:
+          type: integer
+          format: int32
+          description: Number of contributors not part of the organization.
+        score:
+          type: integer
+          format: int32
+          description: The calculated score for the project.
+        lastPushed:
+          type: string
+          description: Timestamp of the last push.
+        primaryLanguage:
+          type: string
+          description: The main programming language.
+        languageList:
+          type: array
+          items:
+            type: string
+          description: A list of all languages used in the project.
+        maintainers:
+          type: array
+          items:
+            type: string
+          description: A list of project maintainers.
+      required:
+        - gitHubProjectId
+
+    Statistics:
+      type: object
+      description: Represents the statistics of a GitHub organization. See https://developer.github.com/v3/orgs/
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: the GitHub ID of the organization. Part of the primary key.
+            See official GitHub REST API guide.
+        privateProjectCount:
+          type: integer
+          format: int32
+          description: Count of private projects.
+        publicProjectCount:
+          type: integer
+          format: int32
+          description: Count of public projects.
+        membersCount:
+          type: integer
+          format: int32
+          description: Count of memebers.
+        teamsCount:
+          type: integer
+          format: int32
+          description: Count of teams.
+        allContributorsCount:
+          type: integer
+          format: int32
+          description: Count of contributors.
+        externalContributorsCount:
+          type: integer
+          format: int32
+          description: Count of external contributors.
+        allStarsCount:
+          type: integer
+          format: int32
+          description: Count of stars.
+        allForksCount:
+          type: integer
+          format: int32
+          description: Count of forks.
+        allSizeCount:
+          type: integer
+          format: int32
+          description: Count of projects.
+        programLanguagesCount:
+          type: integer
+          format: int32
+          description: Count of programming languages used.
+        tagsCount:
+          type: integer
+          format: int32
+          description: Count of tags.
+        organizationName:
+          type: string
+          description: Organization name.
+        snapshotDate:
+          type: string
+          format: date-time
+          description: Statistics snapshot date. Part of the primary key.
+      required:
+        - id
+
+    Language:
+      type: object
+      description: "Represents a programming language and its usage statistics."
+      properties:
+        name: { type: string, description: "The name of the programming language." }
+        projectsCount: { type: integer, format: int32, description: "The number of projects using this language." }
+        percentage: { type: integer, format: int32, description: "The usage percentage across all projects." }
+
+    
+    DatabaseDto:
+      type: object
+      description: "A data transfer object for exporting the entire database."
+      properties:
+        contributors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Contributor'
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+        statistics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Statistics'
+
+    ProjectStats:
+      type: object
+      description: "Represents time-series data for a single project."
+      properties:
+        name: { type: string }
+        organization_name: { type: string }
+        url: { type: string }
+        description: { type: string }
+        primary_language: { type: string }
+        commit_counts: { type: array, items: { type: integer } }
+        fork_counts: { type: array, items: { type: integer } }
+        contributors_counts: { type: array, items: { type: integer } }
+        scores: { type: array, items: { type: integer } }
+        snapshot_dates: { type: array, items: { type: string, format: "date-time" }, description: "Format: yyyy-MM-dd'T'HH:mm:ss" }
+
+    ContributorStats:
+      type: object
+      description: "Represents time-series data for a single contributor."
+      properties:
+        name: { type: string }
+        url: { type: string }
+        organization_name: { type: array, items: { type: string } }
+        organization_commit_counts: { type: array, items: { type: integer } }
+        personal_commit_counts: { type: array, items: { type: integer } }
+        organization_project_counts: { type: array, items: { type: integer } }
+        personal_project_counts: { type: array, items: { type: integer } }
+        snapshot_dates: { type: array, items: { type: string, format: "date-time" }, description: "Format: yyyy-MM-dd'T'HH:mm:ss" }
+
+    LanguageStats:
+      type: object
+      description: "Represents time-series data for a single language."
+      properties:
+        name: { type: string }
+        project_counts: { type: array, items: { type: integer } }
+        snapshot_dates: { type: array, items: { type: string, format: "date-time" }, description: "Format: yyyy-MM-dd'T'HH:mm:ss" }
+
+  Error:
+      type: object
+      description: |
+        A standardized error response. 
+        **Note:** The exact schema is an assumption based on default Spring Boot behavior, as a global `@ControllerAdvice` was not provided.
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: The time the error occurred.
+        status:
+          type: integer
+          description: The HTTP status code.
+          example: 500
+        error:
+          type: string
+          description: The HTTP status description.
+          example: "Internal Server Error"
+        message:
+          type: string
+          description: A description of the error.
+        path:
+          type: string
+          description: The path of the request that caused the error.
+          example: "/fetch"

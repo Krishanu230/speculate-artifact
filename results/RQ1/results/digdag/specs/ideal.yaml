@@ -1,0 +1,2083 @@
+openapi: 3.0.1
+info:
+  title: Digdag API
+  description: A comprehensive API for managing projects, workflows, schedules, sessions, attempts, logs, and administrative tasks in Digdag.
+  version: '1.0'
+servers:
+  - url: /
+    description: API Server
+tags:
+  - name: Project
+    description: Endpoints for managing projects.
+  - name: Workflow
+    description: Endpoints for managing workflows.
+  - name: Schedule
+    description: Endpoints for managing schedules.
+  - name: Session
+    description: Endpoints for viewing sessions.
+  - name: Attempt
+    description: Endpoints for managing attempts (workflow executions).
+  - name: Log
+    description: Endpoints for accessing attempt logs.
+  - name: Version
+    description: Endpoints for version information.
+  - name: Admin
+    description: Endpoints for administrative tasks.
+paths:
+  /api/admin/attempts/{id}/userinfo:
+    get:
+      tags:
+        - Admin
+      summary: Get user info for a specific attempt (deprecated)
+      description: |-
+        Retrieves user information from the workflow revision associated with a specific session attempt.
+        This endpoint is deprecated.
+        Requires administrator privileges.
+      operationId: getAttemptUserInfo
+      deprecated: true
+      parameters:
+        - name: id
+          in: path
+          description: A unique integer value identifying the session attempt.
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 123
+      security:
+        - basicAuth: []
+      responses:
+        "200":
+          description: Successful operation. Returns a free-form JSON object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Config"
+        "401":
+          description: Unauthorized - Authentication credentials were not provided.
+        "403":
+          description: Forbidden - The authenticated user is not an administrator.
+        "404":
+          description: Not Found - The specified attempt ID was not found or the request was not made to the admin interface.
+   
+  /api/logs/{attempt_id}/files:
+    get:
+      tags:
+        - "Log"
+      summary: "List log files of an attempt with filters"
+      description: "Retrieves a list of available log file handles for a specific workflow attempt."
+      operationId: "getFileHandles"
+      parameters:
+        - name: "attempt_id"
+          in: "path"
+          description: "The ID of the workflow attempt."
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: "task"
+          in: "query"
+          description: "An optional filter to return only log files whose task name starts with this prefix."
+          required: false
+          schema:
+            type: string
+        - name: "direct_download"
+          in: "query"
+          description: "A flag to request a direct download handle. If true or absent, a direct download URL may be returned."
+          required: false
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: "Successfully retrieved the list of log file handles."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RestLogFileHandleCollection"
+        "403":
+          description: "Access denied. The user does not have permission to view logs for this attempt."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: "The specified attempt ID was not found."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/logs/{attempt_id}/files/{file_name}:
+    get:
+      tags:
+        - "Log"
+      summary: "Download a log file"
+      description: "Downloads a specific gzipped log file for a given workflow attempt."
+      operationId: "getFile"
+      parameters:
+        - name: "attempt_id"
+          in: "path"
+          description: "The ID of the workflow attempt."
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: "file_name"
+          in: "path"
+          description: "The name of the log file to download."
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Successfully retrieved the log file."
+          content:
+            application/gzip:
+              schema:
+                type: string
+                format: binary
+        "400":
+          description: "Bad Request. This can happen if the requested log file is corrupted."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: "Access denied. The user does not have permission to download logs for this attempt."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: "The specified attempt ID or file name was not found."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/project:
+    get:
+      tags: [Project]
+      summary: (deprecated) Get a project by name
+      deprecated: true
+      operationId: getProjectByNameDeprecated
+      parameters:
+        - name: name
+          in: query
+          description: The name of the project.
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestProject" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Project not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/projects:
+    get:
+      tags: [Project]
+      summary: List projects with filters
+      operationId: getProjects
+      parameters:
+        - name: name
+          in: query
+          description: Exact matching filter on project name.
+          schema: { type: string }
+        - name: last_id
+          in: query
+          description: List projects whose id is greater than this id for pagination.
+          schema: { type: integer, format: int32 }
+        - name: count
+          in: query
+          description: Number of projects to return.
+          schema: { type: integer, format: int32 }
+        - name: name_pattern
+          in: query
+          description: Name pattern to be partially matched.
+          schema: { type: string }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestProjectCollection" }
+    put:
+      tags: [Project]
+      summary: Upload a project archive
+      description: Upload a project archive as a new project or a new revision of an existing project.
+      operationId: putProject
+      parameters:
+        - name: project
+          in: query
+          description: Project name.
+          required: true
+          schema: { type: string }
+        - name: revision
+          in: query
+          description: Revision name.
+          required: true
+          schema: { type: string }
+        - name: schedule_from
+          in: query
+          description: Start scheduling of new workflows from the given time instead of current time.
+          schema: { type: string, format: date-time }
+        - name: clear_schedule
+          in: query
+          description: Specifies a workflow name whose schedule should be cleared. Can be used multiple times.
+          schema: { type: array, items: { type: string } }
+        - name: clear_schedule_all
+          in: query
+          description: If true, all existing schedules for the project will be cleared.
+          schema: { type: boolean, default: false }
+        - name: Content-Length
+          in: header
+          description: The size of the gzipped archive in bytes.
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        description: Gzipped project archive file.
+        required: true
+        content:
+          application/gzip:
+            schema: { type: string, format: binary }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestProject" }
+        "400":
+          description: Bad request, such as an invalid archive file.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: Resource conflict, such as a revision already existing.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/projects/{id}:
+    get:
+      tags: [Project]
+      summary: Get a project
+      operationId: getProjectById
+      parameters:
+        - name: id
+          in: path
+          description: Project ID.
+          required: true
+          schema: { type: integer, format: int32 }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestProject" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Project not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+    delete:
+      tags: [Project]
+      summary: Delete a project
+      operationId: deleteProject
+      parameters:
+        - name: id
+          in: path
+          description: Project ID.
+          required: true
+          schema: { type: integer, format: int32 }
+      responses:
+        "200":
+          description: Successful operation, returns the deleted project details.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestProject" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Project not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/projects/{id}/revisions:
+    get:
+      tags: [Project]
+      summary: List revisions of a project
+      operationId: getRevisions
+      parameters:
+        - name: id
+          in: path
+          description: Project ID.
+          required: true
+          schema: { type: integer, format: int32 }
+        - name: last_id
+          in: query
+          description: deprecated - do not use.
+          schema: { type: integer, format: int32 }
+        - name: name
+          in: query
+          description: Revision name to look up.
+          schema: { type: string }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestRevisionCollection" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Project not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/projects/{id}/workflow:
+    get:
+      tags: [Project]
+      summary: (deprecated) Get a workflow by name
+      deprecated: true
+      operationId: getWorkflowByNameDeprecated
+      parameters:
+        - name: id
+          in: path
+          description: Project ID.
+          required: true
+          schema: { type: integer, format: int32 }
+        - name: name
+          in: query
+          description: The name of the workflow.
+          required: true
+          schema: { type: string }
+        - name: revision
+          in: query
+          description: The revision name.
+          schema: { type: string }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestWorkflowDefinition" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Resource not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/projects/{id}/workflows:
+    get:
+      tags: [Project]
+      summary: List workflows of a project with filters
+      operationId: getWorkflows
+      parameters:
+        - name: id
+          in: path
+          description: Project ID.
+          required: true
+          schema: { type: integer, format: int32 }
+        - name: revision
+          in: query
+          description: Use a given revision of the project instead of the latest revision.
+          required: false
+          schema: { type: string }
+        - name: name
+          in: query
+          description: Exact matching filter on workflow name.
+          schema: { type: string }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestWorkflowDefinitionCollection" }
+        "404":
+          description: Project or revision not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/projects/{id}/workflows/{name}:
+    get:
+      tags: [Project]
+      summary: Get a workflow by name
+      operationId: getWorkflowByName
+      parameters:
+        - name: id
+          in: path
+          description: Project ID.
+          required: true
+          schema: { type: integer, format: int32 }
+        - name: name
+          in: path
+          description: Workflow name.
+          required: true
+          schema: { type: string }
+        - name: revision
+          in: query
+          description: The revision name. If not set, latest is used.
+          schema: { type: string }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestWorkflowDefinition" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Resource not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/projects/{id}/schedules:
+    get:
+      tags: [Project]
+      summary: List schedules of a project with filters
+      operationId: getSchedules
+      parameters:
+        - name: id
+          in: path
+          description: Project ID.
+          required: true
+          schema: { type: integer, format: int32 }
+        - name: workflow
+          in: query
+          description: Exact matching filter on workflow name.
+          schema: { type: string }
+        - name: last_id
+          in: query
+          description: List schedules whose id is greater than this id for pagination.
+          schema: { type: integer, format: int32 }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestScheduleCollection" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Project not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/projects/{id}/sessions:
+    get:
+      tags: [Project]
+      summary: List sessions of a project with filters
+      operationId: getSessions
+      parameters:
+        - name: id
+          in: path
+          description: Project ID.
+          required: true
+          schema: { type: integer, format: int32 }
+        - name: workflow
+          in: query
+          description: Exact matching filter on workflow name.
+          schema: { type: string }
+        - name: last_id
+          in: query
+          description: List sessions whose id is greater than this id for pagination.
+          schema: { type: integer, format: int64 }
+        - name: page_size
+          in: query
+          description: Number of sessions to return.
+          schema: { type: integer, format: int32 }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestSessionCollection" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Project not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/projects/{id}/archive:
+    get:
+      tags: [Project]
+      summary: Download a project archive file
+      operationId: getArchive
+      parameters:
+        - name: id
+          in: path
+          description: Project ID.
+          required: true
+          schema: { type: integer, format: int32 }
+        - name: revision
+          in: query
+          description: Use a given revision of a project instead of the latest revision.
+          schema: { type: string }
+        - name: direct_download
+          in: query
+          description: Enable returning direct download handle.
+          schema: { type: boolean, default: true }
+      responses:
+        "200":
+          description: Successful operation. The gzipped archive is returned.
+          content:
+            application/gzip:
+              schema: { type: string, format: binary }
+        "303":
+          description: Redirect to a direct download URL.
+          headers:
+            Location:
+              description: The direct download URL for the archive.
+              schema: { type: string, format: uri }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Project, revision, or archive file not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/projects/{id}/secrets:
+    get:
+      tags: [Project]
+      summary: List secret keys of a project
+      operationId: getProjectSecrets
+      parameters:
+        - name: id
+          in: path
+          description: Project ID.
+          required: true
+          schema: { type: integer, format: int32 }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestSecretList" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Project not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/projects/{id}/secrets/{key}:
+    put:
+      tags: [Project]
+      summary: Set a secret for a project
+      operationId: putProjectSecret
+      parameters:
+        - name: id
+          in: path
+          description: Project ID.
+          required: true
+          schema: { type: integer, format: int32 }
+        - name: key
+          in: path
+          description: Secret key.
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RestSetSecretRequest" }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestSecret" }
+        "400":
+          description: Invalid secret key or value.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Project not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+    delete:
+      tags: [Project]
+      summary: Delete a secret from a project
+      operationId: deleteProjectSecret
+      parameters:
+        - name: id
+          in: path
+          description: Project ID.
+          required: true
+          schema: { type: integer, format: int32 }
+        - name: key
+          in: path
+          description: Secret key.
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestSecret" }
+        "400":
+          description: Invalid secret key.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Project not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+  /api/schedules:
+    get:
+      tags: [Schedule]
+      summary: List schedules
+      operationId: getSchedules
+      parameters:
+        - name: last_id
+          in: query
+          description: List schedules whose id is greater than this id for pagination.
+          schema: { type: integer, format: int32 }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestScheduleCollection" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/schedules/{id}:
+    get:
+      tags: [Schedule]
+      summary: Get a schedule
+      operationId: getScheduleById
+      parameters:
+        - name: id
+          in: path
+          description: Schedule ID.
+          required: true
+          schema: { type: integer, format: int32 }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestSchedule" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Schedule not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/schedules/{id}/skip:
+    post:
+      tags: [Schedule]
+      summary: Skip future sessions by count or time
+      operationId: skipSchedule
+      parameters:
+        - name: id
+          in: path
+          description: Schedule ID.
+          required: true
+          schema: { type: integer, format: int32 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RestScheduleSkipRequest" }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestScheduleSummary" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Schedule not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: Resource conflict.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/schedules/{id}/backfill:
+    post:
+      tags: [Schedule]
+      summary: Re-schedule past sessions by count or duration
+      operationId: backfillSchedule
+      parameters:
+        - name: id
+          in: path
+          description: Schedule ID.
+          required: true
+          schema: { type: integer, format: int32 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RestScheduleBackfillRequest" }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestScheduleAttemptCollection" }
+        "400":
+          description: Bad request, such as exceeding a resource limit.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Schedule not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: Resource conflict.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/schedules/{id}/disable:
+    post:
+      tags: [Schedule]
+      summary: Disable scheduling of new sessions
+      operationId: disableSchedule
+      parameters:
+        - name: id
+          in: path
+          description: Schedule ID.
+          required: true
+          schema: { type: integer, format: int32 }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestScheduleSummary" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Schedule not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: Resource conflict.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /api/schedules/{id}/enable:
+    post:
+      tags: [Schedule]
+      summary: Re-enable disabled scheduling
+      operationId: enableSchedule
+      parameters:
+        - name: id
+          in: path
+          description: Schedule ID.
+          required: true
+          schema: { type: integer, format: int32 }
+      requestBody:
+        description: Optional settings for enabling the schedule.
+        required: false
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RestScheduleEnableRequest" }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestScheduleSummary" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Schedule not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: Resource conflict.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+  /api/sessions:
+    get:
+      tags: [Session]
+      summary: List sessions
+      operationId: getSessions
+      parameters:
+        - name: last_id
+          in: query
+          description: List sessions whose id is greater than this id for pagination.
+          schema:
+            type: integer
+            format: int64
+        - name: page_size
+          in: query
+          description: Number of sessions to return.
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RestSessionCollection"
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/sessions/{id}:
+    get:
+      tags: [Session]
+      summary: Get a session
+      operationId: getSession
+      parameters:
+        - name: id
+          in: path
+          description: Session ID.
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RestSession"
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Session not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/sessions/{id}/attempts:
+    get:
+      tags: [Session]
+      summary: List attempts of a session
+      operationId: getSessionAttempts
+      parameters:
+        - name: id
+          in: path
+          description: Session ID.
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: last_id
+          in: query
+          description: List attempts whose id is greater than this id for pagination.
+          schema:
+            type: integer
+            format: int64
+        - name: page_size
+          in: query
+          description: Number of attempts to return.
+          schema:
+            type: integer
+            format: int32
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RestSessionAttemptCollection"
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Session not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/workflow:
+    get:
+      tags: [Workflow]
+      summary: (deprecated) Get a workflow definition
+      operationId: getWorkflowDefinitionDeprecated
+      deprecated: true
+      parameters:
+        - name: project
+          in: query
+          description: Project name.
+          required: true
+          schema: { type: string }
+        - name: revision
+          in: query
+          description: Revision name.
+          schema: { type: string }
+        - name: name
+          in: query
+          description: Workflow name.
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestWorkflowDefinition" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Resource not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+      security:
+        - basicAuth: []
+
+  /api/workflows:
+    get:
+      tags: [Workflow]
+      summary: List workflows
+      operationId: getWorkflowDefinitions
+      parameters:
+        - name: last_id
+          in: query
+          description: "Pagination cursor. For 'asc' order, return workflows with ID > last_id. For 'desc', ID < last_id."
+          schema: { type: integer, format: int64 }
+        - name: count
+          in: query
+          description: Number of workflows to return.
+          schema: { type: integer, format: int32 }
+        - name: order
+          in: query
+          description: "Sort order: 'asc' or 'desc'."
+          schema: { type: string, enum: [asc, desc], default: asc }
+        - name: name_pattern
+          in: query
+          description: Name pattern to be partially matched.
+          schema: { type: string }
+        - name: search_project_name
+          in: query
+          description: If true, searches project names as well as workflow names.
+          schema: { type: boolean, default: false }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestWorkflowDefinitionCollection" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Resource not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+      security:
+        - basicAuth: []
+
+  /api/workflows/{id}:
+    get:
+      tags: [Workflow]
+      summary: Get a workflow
+      operationId: getWorkflowDefinitionById
+      parameters:
+        - name: id
+          in: path
+          description: Workflow ID.
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestWorkflowDefinition" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Workflow not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+      security:
+        - basicAuth: []
+
+  /api/workflows/{id}/truncated_session_time:
+    get:
+      tags: [Workflow]
+      summary: Get truncated local time based on the time zone of a workflow
+      operationId: getTruncatedSessionTime
+      parameters:
+        - name: id
+          in: path
+          description: Workflow ID.
+          required: true
+          schema: { type: integer, format: int64 }
+        - name: session_time
+          in: query
+          description: Session time to be truncated.
+          required: true
+          schema: { type: string, format: date-time }
+        - name: mode
+          in: query
+          description: Truncation mode.
+          schema:
+            type: string
+            enum: [hour, day, schedule, next_schedule]
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestWorkflowSessionTime" }
+        "400":
+          description: Bad request, such as using schedule mode on a non-scheduled workflow.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "403":
+          description: Access denied.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404":
+          description: Workflow not found.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+      security:
+        - basicAuth: []
+
+  /api/version:
+    get:
+      tags: [Version]
+      summary: Get server version
+      operationId: getVersion
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version: { type: string }
+              example:
+                version: "0.10.4"
+
+  /api/version/check:
+    get:
+      tags: [Version]
+      summary: Check client version compatibility
+      operationId: checkClientVersion
+      parameters:
+        - name: client
+          in: query
+          description: Client version string.
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Successful operation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RestVersionCheckResult" }
+
+  /api/attempts/{id}:
+    get:
+      tags:
+        - Attempt
+      summary: Get an attempt
+      description: Retrieves the details of a specific session attempt by its ID.
+      operationId: getAttempt
+      parameters:
+        - name: id
+          in: path
+          description: The unique identifier of the session attempt.
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful retrieval of the session attempt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestSessionAttempt'
+        '403':
+          description: Forbidden to access the requested attempt.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Access denied"
+        '404':
+          description: The requested session attempt ID was not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Resource not found"
+  /api/attempts/{id}/kill:
+    post:
+      tags:
+        - Attempt
+      summary: Kill an attempt
+      description: Sets a "cancel-requested" flag on a running session attempt. This requests the attempt to stop gracefully.
+      operationId: killAttempt
+      parameters:
+        - name: id
+          in: path
+          description: The unique identifier of the session attempt to kill.
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: The kill request was successfully accepted. The response body contains the state of the attempt at the time of the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestSessionAttempt'
+        '403':
+          description: Forbidden to kill the requested attempt.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Access denied"
+        '404':
+          description: The requested session attempt ID was not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Resource not found"
+        '409':
+          description: The attempt could not be killed because it is already finished or has a pending cancellation.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Session attempt already killed or finished"
+  /api/attempts/{id}/retries:
+    get:
+      tags:
+        - Attempt
+      summary: List retries of an attempt
+      description: Retrieves a list of all attempts that belong to the same session as the specified attempt. This includes the specified attempt itself, any previous attempts (if the specified ID is a retry), and any subsequent retries.
+      operationId: getAttemptRetries
+      parameters:
+        - name: id
+          in: path
+          description: The unique identifier of any attempt within a session.
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful retrieval of the list of attempts for the session.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestSessionAttemptCollection'
+        '403':
+          description: Forbidden to access the requested attempt or its session.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Access denied"
+        '404':
+          description: The requested session attempt ID was not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Resource not found"
+  /api/attempts/{id}/tasks:
+    get:
+      tags:
+        - Attempt
+      summary: List tasks of an attempt
+      description: Retrieves a list of all tasks that are part of a specific session attempt.
+      operationId: getTasks
+      parameters:
+        - name: id
+          in: path
+          description: The unique identifier of the session attempt.
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful retrieval of the list of tasks for the attempt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestTaskCollection'
+        '403':
+          description: Forbidden to access the requested attempt or its tasks.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Access denied"
+        '404':
+          description: The requested session attempt ID was not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Resource not found"
+  /api/attempts:
+    get:
+      tags:
+        - Attempt
+      summary: List attempts
+      description: Retrieves a list of session attempts, with optional filters for project and workflow, and pagination support.
+      operationId: getAttempts
+      parameters:
+        - name: project
+          in: query
+          description: Filter attempts by project name (exact match).
+          required: false
+          schema:
+            type: string
+        - name: workflow
+          in: query
+          description: Filter attempts by workflow name (exact match). Requires 'project' parameter to be set.
+          required: false
+          schema:
+            type: string
+        - name: include_retried
+          in: query
+          description: If true, the result can include multiple attempts for the same session. If false (default), it only includes the most recent attempt for each session.
+          required: false
+          schema:
+            type: boolean
+        - name: last_id
+          in: query
+          description: For pagination, retrieves attempts with an ID greater than this value.
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: page_size
+          in: query
+          description: The number of attempts to return per page.
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful retrieval of the list of attempts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestSessionAttemptCollection'
+        '403':
+          description: Forbidden to access the requested attempts.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Access denied"
+        '404':
+          description: The specified project or workflow was not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Resource not found"
+    put:
+      tags:
+        - Attempt
+      summary: Start a new attempt
+      description: Starts a new workflow execution (a session attempt). This can be a fresh run, a retry of a previous attempt, or a resumed run from a specific task.
+      operationId: startAttempt
+      requestBody:
+        description: The details of the attempt to start.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestSessionAttemptRequest'
+      responses:
+        '200':
+          description: The attempt was successfully started. The response body contains the details of the new attempt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestSessionAttempt'
+        '400':
+          description: Bad request, such as exceeding task or attempt limits.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Attempt limit exceeded"
+        '403':
+          description: Forbidden to start an attempt for the specified workflow.
+        '404':
+          description: The specified workflow ID was not found.
+        '409':
+          description: An attempt with the same workflow and session time already exists. The response body contains the details of the conflicting attempt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestSessionAttempt'
+  /assets/{path}:
+    get:
+      parameters:
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Asset retrieved successfully.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Asset not found.
+      summary: Retrieves the static asset located at the given path.
+  /{path}:
+    get:
+      parameters:
+      - name: path
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Resource not found
+      summary: Retrieves the application resource for the given path or falls back to the default index page.
+components:
+  schemas:
+    Id:
+      type: string
+      description: "A unique identifier, represented as a string."
+      example: "123"
+    IdAndName:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        name:
+          type: string
+          description: The name of the associated resource.
+          example: "my_project"
+    NameOptionalId:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: The name of the workflow.
+          example: "+daily_load"
+        id:
+          $ref: '#/components/schemas/Id'
+          nullable: true
+    Config:
+      type: object
+      description: A free-form JSON object containing user-provided information from the workflow revision file.
+      additionalProperties: true
+      example:
+        digdag.version: 0.10.4
+        user.name: "admin_user"
+        custom_param: "custom_value"
+    RestProject:
+      type: object
+      required:
+      - id
+      - name
+      - revision
+      - createdAt
+      - updatedAt
+      - archiveType
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        name:
+          type: string
+        revision:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+        archiveType:
+          type: string
+        archiveMd5:
+          type: string
+          format: byte
+          nullable: true
+    RestProjectCollection:
+      type: object
+      properties:
+        projects:
+          type: array
+          items:
+            $ref: "#/components/schemas/RestProject"
+    RestRevision:
+      type: object
+      required:
+      - revision
+      - createdAt
+      - archiveType
+      properties:
+        revision:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        archiveType:
+          type: string
+        archiveMd5:
+          type: string
+          format: byte
+          nullable: true
+        userInfo:
+          $ref: "#/components/schemas/Config"
+    RestRevisionCollection:
+      required:
+      - revisions
+      type: object
+      properties:
+        revisions:
+          type: array
+          items:
+            $ref: "#/components/schemas/RestRevision"
+    RestWorkflowDefinition:
+      type: object
+      required:
+            - id
+            - name
+            - project
+            - revision
+            - timezone
+            - config
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        name:
+          type: string
+        project:
+          $ref: "#/components/schemas/IdAndName"
+        revision:
+          type: string
+        timezone:
+          type: string
+          description: "IANA Time Zone"
+        config:
+          $ref: "#/components/schemas/Config"
+    RestWorkflowDefinitionCollection:
+      type: object
+      properties:
+        workflows:
+          type: array
+          items:
+            $ref: "#/components/schemas/RestWorkflowDefinition"
+    RestSchedule:
+      type: object
+      required:
+      - id
+      - project
+      - workflow
+      - nextRunTime
+      - nextScheduleTime
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        project:
+          $ref: "#/components/schemas/IdAndName"
+        workflow:
+          $ref: "#/components/schemas/IdAndName"
+        nextRunTime:
+          type: string
+          format: date-time
+        nextScheduleTime:
+          type: string
+          format: date-time
+        disabledAt:
+          type: string
+          format: date-time
+          nullable: true
+    RestScheduleCollection:
+      type: object
+      required:
+      - schedules
+      properties:
+        schedules:
+          type: array
+          items:
+            $ref: "#/components/schemas/RestSchedule"
+    RestSession:
+      type: object
+      required:
+            - id
+            - project
+            - workflow
+            - sessionUuid
+            - sessionTime
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        project:
+          $ref: "#/components/schemas/IdAndName"
+        workflow:
+          $ref: "#/components/schemas/NameOptionalId"
+        sessionUuid:
+          type: string
+          format: uuid
+        sessionTime:
+          type: string
+          format: date-time
+        lastAttempt:
+          type: object
+          nullable: true
+          properties:
+            id:
+              $ref: "#/components/schemas/Id"
+            retryAttemptName:
+              type: string
+              nullable: true
+            done:
+              type: boolean
+            success:
+              type: boolean
+            cancelRequested:
+              type: boolean
+            params:
+              $ref: "#/components/schemas/Config"
+            createdAt:
+              type: string
+              format: date-time
+            finishedAt:
+              type: string
+              format: date-time
+              nullable: true
+    RestSessionCollection:
+      type: object
+      required:
+      - sessions
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: "#/components/schemas/RestSession"
+    RestSetSecretRequest:
+      type: object
+      required:
+        - value
+      properties:
+        value:
+          type: string
+          description: "The value of the secret."
+    RestSecret:
+      type: object
+      properties:
+        key:
+          type: string
+        project:
+          $ref: "#/components/schemas/IdAndName"
+    RestSecretMetadata:
+      type: object
+      properties:
+        key:
+          type: string
+    RestSecretList:
+      type: object
+      properties:
+        secrets:
+          type: array
+          items:
+            $ref: "#/components/schemas/RestSecretMetadata"
+    RestLogFileHandleCollection:
+      type: object
+      properties:
+        files:
+          type: array
+          items:
+            $ref: "#/components/schemas/RestLogFileHandle"
+    RestLogFileHandle:
+      type: object
+      properties:
+        fileName:
+          type: string
+          description: "The name of the log file."
+        fileSize:
+          type: integer
+          format: int64
+          description: "The size of the log file in bytes."
+        taskName:
+          type: string
+          description: "The name of the task that generated the log file."
+        fileTime:
+          type: string
+          format: date-time
+          description: "The timestamp of the first log entry in the file."
+        agentId:
+          type: string
+          description: "The ID of the agent that handled the task."
+        direct:
+          $ref: "#/components/schemas/RestDirectDownloadHandle"
+    RestDirectDownloadHandle:
+      type: object
+      description: "A handle for downloading the log file directly from a storage provider."
+      properties:
+        url:
+          type: string
+          format: uri
+    RestScheduleSummary:
+      type: object
+      required:
+      - id
+      - project
+      - workflow
+      - nextRunTime
+      - nextScheduleTime
+      - createdAt
+      - updatedAt
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        project:
+          $ref: "#/components/schemas/IdAndName"
+        workflow:
+          $ref: "#/components/schemas/IdAndName"
+        nextRunTime:
+          type: string
+          format: date-time
+        nextScheduleTime:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        disabledAt:
+          type: string
+          format: date-time
+          nullable: true
+    RestScheduleAttemptCollection:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/Id"
+        project:
+          $ref: "#/components/schemas/IdAndName"
+        workflow:
+          $ref: "#/components/schemas/IdAndName"
+        attempts:
+          type: array
+          items:
+            $ref: "#/components/schemas/RestSessionAttempt"
+    RestScheduleSkipRequest:
+      type: object
+      properties:
+        count:
+          type: integer
+          format: int32
+        fromTime:
+          type: string
+          format: date-time
+        nextTime:
+          type: string
+          description: "A timestamp with a time zone (e.g., '2025-01-01T00:00:00Z') or a local time (e.g., '2025-01-01T00:00:00')."
+        nextRunTime:
+          type: string
+          format: date-time
+        dryRun:
+          type: boolean
+          default: false
+    RestScheduleBackfillRequest:
+      type: object
+      required:
+        - fromTime
+        - dryRun
+        - attemptName
+      properties:
+        fromTime:
+          type: string
+          format: date-time
+        dryRun:
+          type: boolean
+          default: false
+        attemptName:
+          type: string
+        count:
+          type: integer
+          format: int32
+    RestScheduleEnableRequest:
+      type: object
+      properties:
+        skipSchedule:
+          type: boolean
+        nextTime:
+          type: string
+    RestSessionAttempt:
+      type: object
+      required:
+        - id
+        - index
+        - project
+        - workflow
+        - sessionId
+        - sessionUuid
+        - sessionTime
+        - done
+        - success
+        - cancelRequested
+        - params
+        - createdAt
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        index:
+          type: integer
+          description: The index of this attempt within its session (0 for the first run, 1 for the first retry, etc.).
+          example: 0
+        project:
+          $ref: '#/components/schemas/IdAndName'
+        workflow:
+          $ref: '#/components/schemas/NameOptionalId'
+        sessionId:
+          $ref: '#/components/schemas/Id'
+        sessionUuid:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        sessionTime:
+          type: string
+          format: date-time
+          example: "2023-10-27T10:00:00Z"
+        retryAttemptName:
+          type: string
+          nullable: true
+          description: A custom name for the retry attempt, if any.
+        done:
+          type: boolean
+          description: Indicates whether the attempt has finished executing.
+        success:
+          type: boolean
+          description: Indicates whether the attempt finished successfully.
+        cancelRequested:
+          type: boolean
+          description: Indicates whether a cancellation request was issued for this attempt.
+        params:
+          $ref: '#/components/schemas/Config'
+        createdAt:
+          type: string
+          format: date-time
+          description: The timestamp when this attempt was created.
+        finishedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: The timestamp when this attempt finished.
+
+    RestSessionAttemptCollection:
+      type: object
+      properties:
+        attempts:
+          type: array
+          items:
+            $ref: "#/components/schemas/RestSessionAttempt"
+    RestWorkflowSessionTime:
+      type: object
+      properties:
+        project:
+          $ref: "#/components/schemas/IdAndName"
+        revision:
+          type: string
+        sessionTime:
+          type: string
+          format: date-time
+        timezone:
+          type: string
+          description: "IANA Time Zone"
+          example: "America/Los_Angeles"
+    RestVersionCheckResult:
+      type: object
+      properties:
+        serverVersion:
+          type: string
+        upgradeRecommended:
+          type: boolean
+        apiCompatible:
+          type: boolean
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: "A description of the error."
+    RestTaskCollection:
+      type: object
+      required:
+        - tasks
+      properties:
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/RestTask' 
+
+    RestTask:
+      type: object
+      required:
+        - id
+        - fullName
+        - config
+        - upstreams
+        - isGroup
+        - state
+        - cancelRequested
+        - exportParams
+        - storeParams
+        - stateParams
+        - updatedAt
+        - error
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        fullName:
+          type: string
+          description: The fully qualified name of the task.
+          example: "+main+step1"
+        parentId:
+          $ref: '#/components/schemas/Id'
+          nullable: true
+          description: The ID of the parent task, if this is a sub-task.
+        config:
+          $ref: '#/components/schemas/Config'
+          description: The configuration of the task as defined in the workflow file.
+        upstreams:
+          type: array
+          description: A list of IDs of tasks that must complete before this task can run.
+          items:
+            $ref: '#/components/schemas/Id'
+        isGroup:
+          type: boolean
+          description: True if this task is a grouping task (e.g., +group:).
+        state:
+          type: string
+          description: The current execution state of the task.
+          example: "success"
+        cancelRequested:
+          type: boolean
+          description: True if a cancellation has been requested for this task's attempt.
+        exportParams:
+          $ref: '#/components/schemas/Config'
+          description: Parameters exported by this task for use by downstream tasks.
+        storeParams:
+          $ref: '#/components/schemas/Config'
+          description: Parameters stored by this task in the parameter server.
+        stateParams:
+          $ref: '#/components/schemas/Config'
+          description: Internal state parameters used for task execution.
+        updatedAt:
+          type: string
+          format: date-time
+          description: The timestamp of the last state update for this task.
+        retryAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: If the task is scheduled for a retry, this is the time of the next attempt.
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: The timestamp when the task started execution.
+        error:
+          $ref: '#/components/schemas/Config'
+          description: If the task failed, this object contains details about the error.
+
+securitySchemes:
+      basicAuth:
+         type: http
+         scheme: basic
+
+    

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>prefetch</groupId>
+    <artifactId>prefetch-aggregator</artifactId>
+    <version>1.0</version>
+    <packaging>pom</packaging>
+
+    <description>
+        Synthetic aggregator that downloads common Maven dependencies
+        across all benchmark repos in a single invocation.
+        This populates the .m2 cache before parallel compilation.
+    </description>
+
+    <modules>
+        <module>sb-26</module>
+        <module>sb-25</module>
+        <module>sb-23</module>
+        <module>sb-15</module>
+        <module>sb-13</module>
+        <module>jaxrs</module>
+    </modules>
+</project>

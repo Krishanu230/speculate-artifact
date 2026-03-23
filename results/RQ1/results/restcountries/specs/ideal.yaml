@@ -1,0 +1,1273 @@
+paths:
+  /v1/all:
+    get:
+      summary: Get all countries (v1)
+      description: Returns a list of all countries from the v1 dataset.
+      operationId: getAllCountries_v1
+      tags:
+        - v1-country
+      responses:
+        '200':
+          description: A list of all countries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v1'
+  /v1:
+    get:
+      summary: Get all countries (v1, alias for /v1/all)
+      description: Returns a list of all countries from the v1 dataset. This endpoint is an alias for `/v1/all`.
+      operationId: getCountries_v1
+      tags:
+        - v1-country
+      responses:
+        '200':
+          description: A list of all countries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v1'
+
+    post:
+      summary: Method Not Allowed (v1)
+      description: This method is not allowed for this path and will always return a 405 error.
+      operationId: doPOST_v1
+      tags:
+        - v1-country
+      responses:
+        '405':
+          description: Method Not Allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/alpha/{alphacode}:
+    get:
+      summary: Get a country by its alpha code (v1)
+      description: Search for a country by its ISO 3166-1 2-letter or 3-letter alpha code.
+      operationId: getByAlpha_v1
+      tags:
+        - v1-country
+      parameters:
+        - name: alphacode
+          in: path
+          description: 2 or 3-letter country code
+          required: true
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 3
+      responses:
+        '200':
+          description: The country object was found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Country_v1'
+        '400':
+          description: Bad Request - The provided alpha code is invalid (e.g., length is not 2 or 3).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found - The country with the specified alpha code was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/alpha:
+    get:
+      summary: Get a list of countries by alpha codes (v1)
+      description: Search for countries by a semi-colon separated list of ISO 3166-1 2-letter or 3-letter alpha codes.
+      operationId: getByAlphaList_v1
+      tags:
+        - v1-country
+      parameters:
+        - name: codes
+          in: query
+          description: A semi-colon separated list of 2 or 3-letter country codes (e.g., "co;no;ee").
+          required: true
+          schema:
+            type: string
+            minLength: 2
+      responses:
+        '200':
+          description: An array of country objects. The list can be empty if no countries are found for the given codes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v1'
+        '400':
+          description: Bad Request - The provided 'codes' parameter is malformed or empty.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found - No countries were found for the specified codes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error - An unexpected error occurred while processing the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/currency/{currency}:
+    get:
+      summary: Get countries by currency code (v1)
+      description: Search for countries by ISO 4217 currency code.
+      operationId: getByCurrency_v1
+      tags:
+        - v1-country
+      parameters:
+        - name: currency
+          in: path
+          description: 3-letter ISO 4217 currency code.
+          required: true
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 3
+      responses:
+        '200':
+          description: An array of country objects that use the specified currency.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v1'
+        '400':
+          description: Bad Request - The provided currency code is invalid (e.g., length is not 3).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found - No countries were found for the specified currency code.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error - An unexpected error occurred while processing the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/name/{name}:
+    get:
+      summary: Get countries by name (v1)
+      description: Search for countries by name. Can be a partial name or the full native name.
+      operationId: getByName_v1
+      tags:
+        - v1-country
+      parameters:
+        - name: name
+          in: path
+          description: The country's name (or partial name).
+          required: true
+          schema:
+            type: string
+        - name: fullText
+          in: query
+          description: If set to true, searches by the full country name.
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: An array of country objects matching the search criteria.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v1'
+        '404':
+          description: Not Found - No countries were found matching the name.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error - An unexpected error occurred while processing the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/callingcode/{callingcode}:
+    get:
+      summary: Get countries by calling code (v1)
+      description: Search for countries by calling code.
+      operationId: getByCallingCode_v1
+      tags:
+        - v1-country
+      parameters:
+        - name: callingcode
+          in: path
+          description: The country's calling code.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An array of country objects matching the calling code.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v1'
+        '404':
+          description: Not Found - No countries were found matching the calling code.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error - An unexpected error occurred while processing the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/capital/{capital}:
+    get:
+      summary: Get countries by capital city (v1)
+      description: Search for countries by capital city.
+      operationId: getByCapital_v1
+      tags:
+        - v1-country
+      parameters:
+        - name: capital
+          in: path
+          description: The country's capital city.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An array of country objects matching the capital city.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v1'
+        '404':
+          description: Not Found - No countries were found matching the capital city.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error - An unexpected error occurred while processing the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/region/{region}:
+    get:
+      summary: Get countries by region (v1)
+      description: Search for countries by region.
+      operationId: getByRegion_v1
+      tags:
+        - v1-country
+      parameters:
+        - name: region
+          in: path
+          description: The country's region.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An array of country objects in the specified region.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v1'
+        '404':
+          description: Not Found - No countries were found in the specified region.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error - An unexpected error occurred while processing the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/subregion/{subregion}:
+    get:
+      summary: Get countries by subregion (v1)
+      description: Search for countries by subregion.
+      operationId: getBySubregion_v1
+      tags:
+        - v1-country
+      parameters:
+        - name: subregion
+          in: path
+          description: The country's subregion.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An array of country objects in the specified subregion.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v1'
+        '404':
+          description: Not Found - No countries were found in the specified subregion.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error - An unexpected error occurred while processing the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/lang/{lang}:
+    get:
+      summary: Get countries by language (v1)
+      description: Search for countries by language code.
+      operationId: getByLanguage_v1
+      tags:
+        - v1-country
+      parameters:
+        - name: lang
+          in: path
+          description: The language code.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An array of country objects where the language is spoken.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v1'
+        '404':
+          description: Not Found - No countries were found for the specified language.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error - An unexpected error occurred while processing the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /v2/all:
+    get:
+      summary: Get all countries (v2)
+      description: Get all countries.
+      operationId: getAllCountries_v2
+      tags:
+        - v2-country
+      parameters:
+        - name: fields
+          in: query
+          description: A semi-colon separated list of fields to include in the response (e.g., "name;capital;currencies").
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of all countries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v2'
+  /v2:
+    get:
+      summary: Get all countries (v2, alias for /v2/all)
+      description: Get all countries. This endpoint is an alias for `/v2/all`.
+      operationId: getCountries_v2
+      tags:
+        - v2-country
+      parameters:
+        - name: fields
+          in: query
+          description: A semi-colon separated list of fields to include in the response (e.g., "name;capital;currencies").
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of all countries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v2'
+    post:
+      summary: Method Not Allowed (v2)
+      description: This method is not allowed for this path and will always return a 405 error.
+      operationId: doPOST_v2
+      tags:
+        - v2-country
+      responses:
+        '405':
+          description: Method Not Allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v2/alpha/{alphacode}:
+    get:
+      summary: Get a country by its alpha code (v2)
+      description: Search by ISO 3166-1 2-letter or 3-letter country code
+      operationId: getByAlpha_v2
+      tags:
+        - v2-country
+      parameters:
+        - name: alphacode
+          in: path
+          description: ISO 3166-1 2-letter or 3-letter country code
+          required: true
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 3
+        - name: fields
+          in: query
+          description: A semi-colon separated list of fields to include in the response (e.g., "name;capital;currencies").
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The country object was found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Country_v2'
+        '400':
+          description: Bad Request - The provided alpha code is invalid (e.g., length is not 2 or 3).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found - The country with the specified alpha code was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'                              
+  /v2/alpha:
+    get:
+      summary: Get a list of countries by alpha codes (v2)
+      description: Search by list of ISO 3166-1 2-letter or 3-letter country codes
+      operationId: getByAlphaList_v2
+      tags:
+        - v2-country
+      parameters:
+        - name: codes
+          in: query
+          description: A semi-colon separated list of 2 or 3-letter country codes (e.g., "col;no;ee").
+          required: true
+          schema:
+            type: string
+            minLength: 2
+        - name: fields
+          in: query
+          description: A semi-colon separated list of fields to include in the response (e.g., "name;capital;currencies").
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An array of country objects.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v2'
+        '400':
+          description: Bad Request - The provided 'codes' parameter is malformed or empty.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found - No countries were found for the specified codes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error - An unexpected error occurred while processing the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v2/currency/{currency}:
+    get:
+      summary: Get countries by currency code (v2)
+      description: Search by ISO 4217 currency code
+      operationId: getByCurrency_v2
+      tags:
+        - v2-country
+      parameters:
+        - name: currency
+          in: path
+          description: ISO 4217 currency code
+          required: true
+          schema:
+            type: string
+            minLength: 3
+            maxLength: 3
+        - name: fields
+          in: query
+          description: A semi-colon separated list of fields to include in the response (e.g., "name;capital;currencies").
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An array of country objects that use the specified currency.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v2'
+        '400':
+          description: Bad Request - The provided currency code is invalid (e.g., length is not 3).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found - No countries were found for the specified currency code.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error - An unexpected error occurred while processing the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v2/name/{name}:
+    get:
+      summary: Get countries by name (v2)
+      description: Search by country name. It can be the native name or partial name.
+      operationId: getByName_v2
+      tags:
+        - v2-country
+      parameters:
+        - name: name
+          in: path
+          description: The country's name.
+          required: true
+          schema:
+            type: string
+        - name: fullText
+          in: query
+          description: Search by country full name.
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - name: fields
+          in: query
+          description: A semi-colon separated list of fields to include in the response (e.g., "name;capital;currencies").
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An array of country objects matching the search criteria.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v2'
+        '404':
+          description: Not Found - No countries were found matching the name.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error - An unexpected error occurred while processing the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v2/callingcode/{callingcode}:
+    get:
+      summary: Get countries by calling code (v2)
+      description: Search by calling code.
+      operationId: getByCallingCode_v2
+      tags:
+        - v2-country
+      parameters:
+        - name: callingcode
+          in: path
+          description: The country's calling code.
+          required: true
+          schema:
+            type: string
+        - name: fields
+          in: query
+          description: A semi-colon separated list of fields to include in the response (e.g., "name;capital;currencies").
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An array of country objects matching the calling code.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v2'
+        '404':
+          description: Not Found - No countries were found matching the calling code.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error - An unexpected error occurred while processing the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v2/capital/{capital}:
+    get:
+      summary: Get countries by capital city (v2)
+      description: Search by capital city.
+      operationId: getByCapital_v2
+      tags:
+        - v2-country
+      parameters:
+        - name: capital
+          in: path
+          description: The country's capital city.
+          required: true
+          schema:
+            type: string
+        - name: fields
+          in: query
+          description: A semi-colon separated list of fields to include in the response (e.g., "name;capital;currencies").
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An array of country objects matching the capital city.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v2'
+        '404':
+          description: Not Found - No countries were found matching the capital city.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error - An unexpected error occurred while processing the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v2/region/{region}:
+    get:
+      summary: Get countries by region (v2)
+      operationId: getByRegion_v2
+      tags:
+        - v2-country
+      parameters:
+        - name: region
+          in: path
+          description: The country's region.
+          required: true
+          schema:
+            type: string
+            enum: [ "Africa", "Americas", "Asia", "Europe", "Oceania" ]
+        - name: fields
+          in: query
+          description: A semi-colon separated list of fields to include in the response (e.g., "name;capital;currencies").
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An array of country objects in the specified region.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v2'
+        '404':
+          description: Not Found - No countries were found in the specified region.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error - An unexpected error occurred while processing the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v2/subregion/{subregion}:
+    get:
+      summary: Get countries by subregion (v2)
+      description: Search for countries by subregion.
+      operationId: getBySubRegion_v2
+      tags:
+        - v2-country
+      parameters:
+        - name: subregion
+          in: path
+          description: The country's subregion.
+          required: true
+          schema:
+            type: string
+        - name: fields
+          in: query
+          description: A semi-colon separated list of fields to include in the response (e.g., "name;capital;currencies").
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An array of country objects in the specified subregion.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v2'
+        '404':
+          description: Not Found - No countries were found in the specified subregion.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error - An unexpected error occurred while processing the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v2/lang/{lang}:
+    get:
+      summary: Get countries by language code (v2)
+      description: Search by ISO 639-1 (2-letter) or ISO 639-2 (3-letter) language code.
+      operationId: getByLanguage_v2
+      tags:
+        - v2-country
+      parameters:
+        - name: lang
+          in: path
+          description: ISO 639-1 (2-letter) or ISO 639-2 (3-letter) language code.
+          required: true
+          schema:
+            type: string
+        - name: fields
+          in: query
+          description: A semi-colon separated list of fields to include in the response (e.g., "name;capital;currencies").
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An array of country objects where the language is spoken.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v2'
+        '404':
+          description: Not Found - No countries were found for the specified language.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error - An unexpected error occurred while processing the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v2/demonym/{demonym}:
+    get:
+      summary: Get countries by demonym (v2)
+      description: Search for countries by demonym.
+      operationId: getByDemonym_v2
+      tags:
+        - v2-country
+      parameters:
+        - name: demonym
+          in: path
+          description: The country's demonym.
+          required: true
+          schema:
+            type: string
+        - name: fields
+          in: query
+          description: A semi-colon separated list of fields to include in the response (e.g., "name;capital;currencies").
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An array of country objects matching the demonym.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v2'
+        '404':
+          description: Not Found - No countries were found matching the demonym.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error - An unexpected error occurred while processing the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v2/regionalbloc/{regionalbloc}:
+    get:
+      summary: Get countries by regional bloc (v2)
+      description: Search by regional bloc acronym.
+      operationId: getByRegionalBloc_v2
+      tags:
+        - v2-country
+      parameters:
+        - name: regionalbloc
+          in: path
+          description: The regional bloc acronym.
+          required: true
+          schema:
+            type: string
+            enum: [ "EU", "EFTA", "CARICOM", "PA", "AU", "USAN", "EEU", "AL", "ASEAN", "CAIS", "CEFTA", "NAFTA", "SAARC" ]
+        - name: fields
+          in: query
+          description: A semi-colon separated list of fields to include in the response (e.g., "name;capital;currencies").
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An array of country objects belonging to the regional bloc.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country_v2'
+        '404':
+          description: Not Found - No countries were found for the specified regional bloc.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error - An unexpected error occurred while processing the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /contribute:
+    post:
+      summary: Submit a contribution
+      description: Submits a contribution charge via the payment provider.
+      operationId: contribute
+      tags:
+        - contribution
+      requestBody:
+        description: Contribution details, including amount and payment token.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Contribution'
+      responses:
+        '202':
+          description: Accepted - The contribution has been accepted for processing.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '400':
+          description: Bad Request - The request body is missing or malformed, or the payment was declined.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    # Base schema derived from BaseCountry.java
+    BaseCountry_v1:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+        topLevelDomain:
+          type: array
+          nullable: true
+          items:
+            type: string
+        alpha2Code:
+          type: string
+          nullable: true
+        alpha3Code:
+          type: string
+          nullable: true
+        callingCodes:
+          type: array
+          nullable: true
+          items:
+            type: string
+        capital:
+          type: string
+          nullable: true
+        altSpellings:
+          type: array
+          nullable: true
+          items:
+            type: string
+        region:
+          type: string
+          nullable: true
+        subregion:
+          type: string
+          nullable: true
+        population:
+          type: integer
+          format: int32
+          nullable: true
+        latlng:
+          type: array
+          nullable: true
+          items:
+            type: number
+            format: double
+        demonym:
+          type: string
+          nullable: true
+        area:
+          type: number
+          format: double
+          nullable: true
+        gini:
+          type: number
+          format: double
+          nullable: true
+        timezones:
+          type: array
+          nullable: true
+          items:
+            type: string
+        borders:
+          type: array
+          nullable: true
+          items:
+            type: string
+        nativeName:
+          type: string
+          nullable: true
+        numericCode:
+          type: string
+          nullable: true
+
+    # Schema derived from v1/domain/CountryTranslations.java
+    CountryTranslations_v1:
+      type: object
+      properties:
+        de:
+          type: string
+          nullable: true
+        es:
+          type: string
+          nullable: true
+        fr:
+          type: string
+          nullable: true
+        ja:
+          type: string
+          nullable: true
+        it:
+          type: string
+          nullable: true
+
+    # Schema derived from v1/domain/Country.java, extending BaseCountry
+    Country_v1:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/BaseCountry_v1'
+      properties:
+        currencies:
+          type: array
+          nullable: true
+          items:
+            type: string
+        languages:
+          type: array
+          nullable: true
+          items:
+            type: string
+        translations:
+          nullable: true
+          $ref: '#/components/schemas/CountryTranslations_v1'
+        relevance:
+          type: string
+          nullable: true
+
+    # Generic error schema derived from domain/ResponseEntity.java
+    Error:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: integer
+          format: int32
+        message:
+          type: string
+          nullable: true
+
+    Contribution:
+      type: object
+      required:
+        - amount
+        - token
+      properties:
+        amount:
+          description: The amount of the contribution in the smallest currency unit (e.g., cents).
+          type: integer
+          format: int32
+        token:
+          description: The payment token provided by the frontend (e.g., Stripe.js).
+          type: string
+
+    BaseCountry_v2:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+        topLevelDomain:
+          type: array
+          nullable: true
+          items:
+            type: string
+        alpha2Code:
+          type: string
+          nullable: true
+        alpha3Code:
+          type: string
+          nullable: true
+        callingCodes:
+          type: array
+          nullable: true
+          items:
+            type: string
+        capital:
+          type: string
+          nullable: true
+        altSpellings:
+          type: array
+          nullable: true
+          items:
+            type: string
+        region:
+          type: string
+          nullable: true
+        subregion:
+          type: string
+          nullable: true
+        population:
+          type: integer
+          format: int32
+          nullable: true
+        latlng:
+          type: array
+          nullable: true
+          items:
+            type: number
+            format: double
+        demonym:
+          type: string
+          nullable: true
+        area:
+          type: number
+          format: double
+          nullable: true
+        gini:
+          type: number
+          format: double
+          nullable: true
+        timezones:
+          type: array
+          nullable: true
+          items:
+            type: string
+        borders:
+          type: array
+          nullable: true
+          items:
+            type: string
+        nativeName:
+          type: string
+          nullable: true
+        numericCode:
+          type: string
+          nullable: true
+
+    # v2 component: Currency
+    Currency_v2:
+      type: object
+      properties:
+        code:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        symbol:
+          type: string
+          nullable: true
+
+    # v2 component: Language
+    Language_v2:
+      type: object
+      properties:
+        iso639_1:
+          type: string
+          nullable: true
+        iso639_2:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        nativeName:
+          type: string
+          nullable: true
+
+    # v2 component: Translations
+    # Inherits from v1 CountryTranslations and adds new fields.
+    Translations_v2:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/CountryTranslations_v1'
+      properties:
+        br:
+          type: string
+          nullable: true
+        pt:
+          type: string
+          nullable: true
+        nl:
+          type: string
+          nullable: true
+        hr:
+          type: string
+          nullable: true
+        fa:
+          type: string
+          nullable: true
+
+    # v2 component: RegionalBloc
+    RegionalBloc_v2:
+      type: object
+      properties:
+        acronym:
+          type: string
+          nullable: true
+        name:
+          type: string
+          nullable: true
+        otherAcronyms:
+          type: array
+          nullable: true
+          items:
+            type: string
+        otherNames:
+          type: array
+          nullable: true
+          items:
+            type: string
+
+    # v2 component: Country
+    Country_v2:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/BaseCountry_v2'
+      properties:
+        currencies:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/Currency_v2'
+        languages:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/Language_v2'
+        translations:
+          $ref: '#/components/schemas/Translations_v2'
+          nullable: true
+        flag:
+          type: string
+          nullable: true
+        regionalBlocs:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/RegionalBloc_v2'
+        cioc:
+          type: string
+          nullable: true

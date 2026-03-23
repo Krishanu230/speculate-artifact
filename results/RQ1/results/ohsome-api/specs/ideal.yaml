@@ -1,0 +1,4619 @@
+openapi: 3.0.3
+info:
+  title: ohsome API - Data Extraction
+  description: |-
+    This API provides access to OpenStreetMap (OSM) history data through two main resource types:
+
+    - **Contributions**: Events of object creation, modification, or deletion.
+    - **Elements**: Snapshots of OSM objects as they existed at specific moments in time.
+
+    The data is returned as a GeoJSON FeatureCollection. The API supports complex spatial and temporal filtering and allows customization of the output geometry and properties.
+
+    - All endpoints support both `GET` and `POST` requests. For `POST` requests, parameters should be sent in the body with a content type of `application/x-www-form-urlencoded`.
+    - At least one boundary parameter (`bpolys`, `bboxes`, or `bcircles`) must be provided.
+  version: 1.6.0
+  contact:
+    name: HeiGIT - Heidelberg Institute for Geoinformation Technology
+    url: https://heigit.org/
+    email: ohsome@heigit.org
+  license:
+    name: 'Data: © OpenStreetMap contributors | Database: ODbL 1.0'
+    url: https://www.openstreetmap.org/copyright
+servers:
+  - url: https://api.ohsome.org/v1
+    description: ohsome API Production Server
+tags:
+  - name: Contributions Extraction
+    description: Endpoints for extracting OSM contribution data as GeoJSON.
+  - name: Elements Extraction
+    description: Endpoints for extracting OSM data snapshots as GeoJSON.
+paths:
+  /metadata:
+    get:
+      tags:
+        - Metadata
+      summary: Get metadata of the OSHDB data
+      description: Returns metadata about the underlying OSHDB data extract, including its spatial and temporal coverage. This endpoint does not accept any parameters.
+      operationId: getMetadata
+      responses:
+        '200':
+          description: A successful response containing the OSHDB metadata.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetadataResponse'
+        '400':
+          description: Bad Request. This error is returned if any query parameters are unexpectedly provided to the endpoint.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /contributions/geometry:
+    get:
+      tags:
+        - Contributions Extraction
+      summary: Get contributions with raw object geometry
+      description: |-
+        Returns all contributions within the given time range and spatial boundaries.
+        Each feature in the response will have the full, detailed geometry of the respective OSM object at the time of the contribution.
+      operationId: contributionsGeometry
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/propertiesContributions'
+        - $ref: '#/components/parameters/clipGeometry'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessContributionsExtractionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    post:
+      tags:
+        - Contributions Extraction
+      summary: Get contributions with raw object geometry (POST)
+      description: |-
+        Returns all contributions within the given time range and spatial boundaries.
+        Each feature in the response will have the full, detailed geometry of the respective OSM object at the time of the contribution.
+        This method is useful for passing large `bpolys` GeoJSON objects that may exceed URL length limits.
+      operationId: contributionsGeometry_post
+      requestBody:
+        $ref: '#/components/requestBodies/ContributionsExtractionRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessContributionsExtractionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /contributions/bbox:
+    get:
+      tags:
+        - Contributions Extraction
+      summary: Get contributions with bounding box geometry
+      description: |-
+        Returns all contributions within the given time range and spatial boundaries.
+        The `geometry` of each feature will be the bounding box of the respective OSM object.
+      operationId: contributionsBbox
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/propertiesContributions'
+        - $ref: '#/components/parameters/clipGeometry'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessContributionsExtractionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    post:
+      tags:
+        - Contributions Extraction
+      summary: Get contributions with bounding box geometry (POST)
+      description: |-
+        Returns all contributions within the given time range and spatial boundaries.
+        The `geometry` of each feature will be the bounding box of the respective OSM object.
+      operationId: contributionsBbox_post
+      requestBody:
+        $ref: '#/components/requestBodies/ContributionsExtractionRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessContributionsExtractionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /contributions/centroid:
+    get:
+      tags:
+        - Contributions Extraction
+      summary: Get contributions with centroid geometry
+      description: |-
+        Returns all contributions within the given time range and spatial boundaries.
+        The `geometry` of each feature will be the centroid of the respective OSM object.
+      operationId: contributionsCentroid
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/propertiesContributions'
+        - $ref: '#/components/parameters/clipGeometry'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessContributionsExtractionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    post:
+      tags:
+        - Contributions Extraction
+      summary: Get contributions with centroid geometry (POST)
+      description: |-
+        Returns all contributions within the given time range and spatial boundaries.
+        The `geometry` of each feature will be the centroid of the respective OSM object.
+      operationId: contributionsCentroid_post
+      requestBody:
+        $ref: '#/components/requestBodies/ContributionsExtractionRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessContributionsExtractionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /contributions/latest/geometry:
+    get:
+      tags:
+        - Contributions Extraction
+      summary: Get latest contributions with raw object geometry
+      description: |-
+        Returns only the most recent contribution for each OSM entity within the given time range and spatial boundaries.
+        Each feature in the response will have the full, detailed geometry of the respective OSM object.
+      operationId: contributionsLatestGeometry
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/propertiesContributions'
+        - $ref: '#/components/parameters/clipGeometry'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessContributionsExtractionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    post:
+      tags:
+        - Contributions Extraction
+      summary: Get latest contributions with raw object geometry (POST)
+      description: |-
+        Returns only the most recent contribution for each OSM entity within the given time range and spatial boundaries.
+        Each feature in the response will have the full, detailed geometry of the respective OSM object.
+      operationId: contributionsLatestGeometry_post
+      requestBody:
+        $ref: '#/components/requestBodies/ContributionsExtractionRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessContributionsExtractionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /contributions/latest/bbox:
+    get:
+      tags:
+        - Contributions Extraction
+      summary: Get latest contributions with bounding box geometry
+      description: |-
+        Returns only the most recent contribution for each OSM entity within the given time range and spatial boundaries.
+        The `geometry` of each feature will be the bounding box of the respective OSM object.
+      operationId: contributionsLatestBbox
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/propertiesContributions'
+        - $ref: '#/components/parameters/clipGeometry'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessContributionsExtractionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    post:
+      tags:
+        - Contributions Extraction
+      summary: Get latest contributions with bounding box geometry (POST)
+      description: |-
+        Returns only the most recent contribution for each OSM entity within the given time range and spatial boundaries.
+        The `geometry` of each feature will be the bounding box of the respective OSM object.
+      operationId: contributionsLatestBbox_post
+      requestBody:
+        $ref: '#/components/requestBodies/ContributionsExtractionRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessContributionsExtractionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /contributions/latest/centroid:
+    get:
+      tags:
+        - Contributions Extraction
+      summary: Get latest contributions with centroid geometry
+      description: |-
+        Returns only the most recent contribution for each OSM entity within the given time range and spatial boundaries.
+        The `geometry` of each feature will be the centroid of the respective OSM object.
+      operationId: contributionsLatestCentroid
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/propertiesContributions'
+        - $ref: '#/components/parameters/clipGeometry'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessContributionsExtractionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    post:
+      tags:
+        - Contributions Extraction
+      summary: Get latest contributions with centroid geometry (POST)
+      description: |-
+        Returns only the most recent contribution for each OSM entity within the given time range and spatial boundaries.
+        The `geometry` of each feature will be the centroid of the respective OSM object.
+      operationId: contributionsLatestCentroid_post
+      requestBody:
+        $ref: '#/components/requestBodies/ContributionsExtractionRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessContributionsExtractionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /elements/geometry:
+    get:
+      tags:
+        - Elements Extraction
+      summary: Get OSM data with raw object geometry
+      description: |-
+        Returns a snapshot of OSM data within the given spatial boundaries at one or more specified timestamps.
+        Each feature in the response will have the full, detailed geometry of the respective OSM object.
+      operationId: elementsGeometry
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/propertiesElements'
+        - $ref: '#/components/parameters/clipGeometry'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessElementsExtractionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    post:
+      tags:
+        - Elements Extraction
+      summary: Get OSM data with raw object geometry (POST)
+      description: |-
+        Returns a snapshot of OSM data within the given spatial boundaries at one or more specified timestamps.
+        Each feature in the response will have the full, detailed geometry of the respective OSM object.
+        This method is useful for passing large `bpolys` GeoJSON objects that may exceed URL length limits.
+      operationId: elementsGeometry_post
+      requestBody:
+        $ref: '#/components/requestBodies/ElementsExtractionRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessElementsExtractionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /elements/bbox:
+    get:
+      tags:
+        - Elements Extraction
+      summary: Get OSM data with bounding box geometry
+      description: Returns a snapshot of OSM data. The `geometry` of each feature will be the bounding box of the respective OSM object.
+      operationId: elementsBbox
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/propertiesElements'
+        - $ref: '#/components/parameters/clipGeometry'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessElementsExtractionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    post:
+      tags:
+        - Elements Extraction
+      summary: Get OSM data with bounding box geometry (POST)
+      description: Returns a snapshot of OSM data. The `geometry` of each feature will be the bounding box of the respective OSM object.
+      operationId: elementsBbox_post
+      requestBody:
+        $ref: '#/components/requestBodies/ElementsExtractionRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessElementsExtractionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /elements/centroid:
+    get:
+      tags:
+        - Elements Extraction
+      summary: Get OSM data with centroid geometry
+      description: Returns a snapshot of OSM data. The `geometry` of each feature will be the centroid of the respective OSM object.
+      operationId: elementsCentroid
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/propertiesElements'
+        - $ref: '#/components/parameters/clipGeometry'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessElementsExtractionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    post:
+      tags:
+        - Elements Extraction
+      summary: Get OSM data with centroid geometry (POST)
+      description: Returns a snapshot of OSM data. The `geometry` of each feature will be the centroid of the respective OSM object.
+      operationId: elementsCentroid_post
+      requestBody:
+        $ref: '#/components/requestBodies/ElementsExtractionRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessElementsExtractionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /elementsFullHistory/geometry:
+    get:
+      tags:
+        - Full History Elements Extraction
+      summary: Get full history with raw object geometry
+      description: Returns the full version history of OSM data within a given spatial and temporal interval. Each feature in the response will have the full, detailed geometry of the respective OSM object version.
+      operationId: elementsFullHistory
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/propertiesElements'
+        - $ref: '#/components/parameters/clipGeometry'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessFullHistoryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    post:
+      tags:
+        - Full History Elements Extraction
+      summary: Get full history with raw object geometry (POST)
+      description: |-
+        Returns the full version history of OSM data within a given spatial and temporal interval. Each feature in the response will have the full, detailed geometry of the respective OSM object version.
+        This method is useful for passing large `bpolys` GeoJSON objects that may exceed URL length limits.
+      operationId: elementsFullHistory_post
+      requestBody:
+        $ref: '#/components/requestBodies/FullHistoryExtractionRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessFullHistoryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /elementsFullHistory/bbox:
+    get:
+      tags:
+        - Full History Elements Extraction
+      summary: Get full history with bounding box geometry
+      description: Returns the full version history of OSM data. The `geometry` of each feature will be the bounding box of the respective OSM object version.
+      operationId: elementsBboxFullHistory
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/propertiesElements'
+        - $ref: '#/components/parameters/clipGeometry'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessFullHistoryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    post:
+      tags:
+        - Full History Elements Extraction
+      summary: Get full history with bounding box geometry (POST)
+      description: Returns the full version history of OSM data. The `geometry` of each feature will be the bounding box of the respective OSM object version.
+      operationId: elementsBboxFullHistory_post
+      requestBody:
+        $ref: '#/components/requestBodies/FullHistoryExtractionRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessFullHistoryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /elementsFullHistory/centroid:
+    get:
+      tags:
+        - Full History Elements Extraction
+      summary: Get full history with centroid geometry
+      description: Returns the full version history of OSM data. The `geometry` of each feature will be the centroid of the respective OSM object version.
+      operationId: elementsCentroidFullHistory
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/propertiesElements'
+        - $ref: '#/components/parameters/clipGeometry'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessFullHistoryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+    post:
+      tags:
+        - Full History Elements Extraction
+      summary: Get full history with centroid geometry (POST)
+      description: Returns the full version history of OSM data. The `geometry` of each feature will be the centroid of the respective OSM object version.
+      operationId: elementsCentroidFullHistory_post
+      requestBody:
+        $ref: '#/components/requestBodies/FullHistoryExtractionRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessFullHistoryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /users/count:
+    get:
+      tags:
+        - Users Count
+      summary: Get the count of unique OSM users
+      description: Calculates the total number of unique OSM users who made contributions matching the filter criteria within the given time interval.
+      operationId: countUsers
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/contributionType'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Users Count
+      summary: Get the count of unique OSM users (POST)
+      description: Calculates the total number of unique OSM users who made contributions matching the filter criteria within the given time interval.
+      operationId: countUsers_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /users/count/groupBy/type:
+    get:
+      tags:
+        - Users Count
+      summary: Get user count grouped by OSM type
+      description: Calculates the number of unique OSM users, grouped by the type of OSM element they contributed to (node, way, relation).
+      operationId: countUsersGroupByType
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/contributionType'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Users Count
+      summary: Get user count grouped by OSM type (POST)
+      description: Calculates the number of unique OSM users, grouped by the type of OSM element they contributed to (node, way, relation).
+      operationId: countUsersGroupByType_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /users/count/groupBy/tag:
+    get:
+      tags:
+        - Users Count
+      summary: Get user count grouped by tag
+      description: Calculates the number of unique OSM users, grouped by specific OSM tags (key-value pairs) on the elements they contributed to.
+      operationId: countUsersGroupByTag
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKey'
+        - $ref: '#/components/parameters/groupByValues'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/contributionType'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Users Count
+      summary: Get user count grouped by tag (POST)
+      description: Calculates the number of unique OSM users, grouped by specific OSM tags (key-value pairs) on the elements they contributed to.
+      operationId: countUsersGroupByTag_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByTagRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /users/count/groupBy/key:
+    get:
+      tags:
+        - Users Count
+      summary: Get user count grouped by key
+      description: Calculates the number of unique OSM users, grouped by the specified OSM keys present on the elements they contributed to.
+      operationId: countUsersGroupByKey
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKeys'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/contributionType'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Users Count
+      summary: Get user count grouped by key (POST)
+      description: Calculates the number of unique OSM users, grouped by the specified OSM keys present on the elements they contributed to.
+      operationId: countUsersGroupByKey_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByKeyRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /users/count/groupBy/boundary:
+    get:
+      tags:
+        - Users Count
+      summary: Get user count grouped by boundary
+      description: Calculates the number of unique OSM users, grouped by the individual geometries provided in the boundary parameter (`bpolys`, `bboxes`, `bcircles`). The response can be JSON or GeoJSON.
+      operationId: countUsersGroupByBoundary
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/contributionType'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+        - $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Users Count
+      summary: Get user count grouped by boundary (POST)
+      description: Calculates the number of unique OSM users, grouped by the individual geometries provided in the boundary parameter (`bpolys`, `bboxes`, `bcircles`). The response can be JSON or GeoJSON.
+      operationId: countUsersGroupByBoundary_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /users/count/density:
+    get:
+      tags:
+        - Users Count
+      summary: Get the density of unique OSM users
+      description: Calculates the density of unique OSM users (number of users per square kilometer) who made contributions matching the filter criteria.
+      operationId: countUsersDensity
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/contributionType'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Users Count
+      summary: Get the density of unique OSM users (POST)
+      description: Calculates the density of unique OSM users (number of users per square kilometer) who made contributions matching the filter criteria.
+      operationId: countUsersDensity_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /users/count/density/groupBy/type:
+    get:
+      tags:
+        - Users Count
+      summary: Get user density grouped by OSM type
+      description: Calculates the density of unique OSM users, grouped by the type of OSM element they contributed to (node, way, relation).
+      operationId: countUsersDensityGroupByType
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/contributionType'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Users Count
+      summary: Get user density grouped by OSM type (POST)
+      description: Calculates the density of unique OSM users, grouped by the type of OSM element they contributed to (node, way, relation).
+      operationId: countUsersDensityGroupByType_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /users/count/density/groupBy/tag:
+    get:
+      tags:
+        - Users Count
+      summary: Get user density grouped by tag
+      description: Calculates the density of unique OSM users, grouped by specific OSM tags (key-value pairs) on the elements they contributed to.
+      operationId: countUsersDensityGroupByTag
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKey'
+        - $ref: '#/components/parameters/groupByValues'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/contributionType'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Users Count
+      summary: Get user density grouped by tag (POST)
+      description: Calculates the density of unique OSM users, grouped by specific OSM tags (key-value pairs) on the elements they contributed to.
+      operationId: countUsersDensityGroupByTag_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByTagRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /users/count/density/groupBy/boundary:
+    get:
+      tags:
+        - Users Count
+      summary: Get user density grouped by boundary
+      description: Calculates the density of unique OSM users, grouped by the individual geometries provided in the boundary parameter. The response can be JSON or GeoJSON.
+      operationId: countUsersDensityGroupByBoundary
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/contributionType'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+        - $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Users Count
+      summary: Get user density grouped by boundary (POST)
+      description: Calculates the density of unique OSM users, grouped by the individual geometries provided in the boundary parameter. The response can be JSON or GeoJSON.
+      operationId: countUsersDensityGroupByBoundary_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /contributions/count:
+    get:
+      tags:
+        - Contributions Count
+      summary: Get the count of OSM contributions
+      description: Calculates the total number of OSM contributions (creations, modifications, deletions) that match the filter criteria within the given time interval.
+      operationId: contributionsCount
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/contributionType'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Contributions Count
+      summary: Get the count of OSM contributions (POST)
+      description: Calculates the total number of OSM contributions (creations, modifications, deletions) that match the filter criteria within the given time interval.
+      operationId: contributionsCount_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /contributions/count/density:
+    get:
+      tags:
+        - Contributions Count
+      summary: Get the density of OSM contributions
+      description: Calculates the density of OSM contributions (number of contributions per square kilometer) that match the filter criteria.
+      operationId: contributionsCountDensity
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/contributionType'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Contributions Count
+      summary: Get the density of OSM contributions (POST)
+      description: Calculates the density of OSM contributions (number of contributions per square kilometer) that match the filter criteria.
+      operationId: contributionsCountDensity_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /contributions/latest/count:
+    get:
+      tags:
+        - Contributions Count
+      summary: Get the count of latest OSM contributions
+      description: For each OSM element matching the filter, this counts only its single most recent contribution within the time interval.
+      operationId: contributionsLatestCount
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/contributionType'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Contributions Count
+      summary: Get the count of latest OSM contributions (POST)
+      description: For each OSM element matching the filter, this counts only its single most recent contribution within the time interval.
+      operationId: contributionsLatestCount_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /contributions/latest/count/density:
+    get:
+      tags:
+        - Contributions Count
+      summary: Get the density of latest OSM contributions
+      description: For each OSM element matching the filter, this calculates the density of its single most recent contribution within the time interval.
+      operationId: contributionsLatestCountDensity
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/contributionType'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Contributions Count
+      summary: Get the density of latest OSM contributions (POST)
+      description: For each OSM element matching the filter, this calculates the density of its single most recent contribution within the time interval.
+      operationId: contributionsLatestCountDensity_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /contributions/count/groupBy/boundary:
+    get:
+      tags:
+        - Contributions Count
+      summary: Get contribution count grouped by boundary
+      description: Calculates the number of OSM contributions, grouped by the individual geometries provided in the boundary parameter (`bpolys`, `bboxes`, `bcircles`). The response can be JSON or GeoJSON.
+      operationId: contributionsCountGroupByBoundary
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/contributionType'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+        - $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Contributions Count
+      summary: Get contribution count grouped by boundary (POST)
+      description: Calculates the number of OSM contributions, grouped by the individual geometries provided in the boundary parameter (`bpolys`, `bboxes`, `bcircles`). The response can be JSON or GeoJSON.
+      operationId: contributionsCountGroupByBoundary_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /contributions/count/density/groupBy/boundary:
+    get:
+      tags:
+        - Contributions Count
+      summary: Get contribution density grouped by boundary
+      description: Calculates the density of OSM contributions, grouped by the individual geometries provided in the boundary parameter. The response can be JSON or GeoJSON.
+      operationId: contributionsCountDensityGroupByBoundary
+      parameters:
+        - $ref: '#/components/parameters/timeInterval'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/contributionType'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+        - $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Contributions Count
+      summary: Get contribution density grouped by boundary (POST)
+      description: Calculates the density of OSM contributions, grouped by the individual geometries provided in the boundary parameter. The response can be JSON or GeoJSON.
+      operationId: contributionsCountDensityGroupByBoundary_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/area:
+    get:
+      tags:
+        - Elements Area
+      summary: Get the total area of OSM elements
+      description: Calculates the total area (in square meters) of OSM elements that match the filter criteria at one or more specified timestamps.
+      operationId: area
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Area
+      summary: Get the total area of OSM elements (POST)
+      operationId: area_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/area/groupBy/type:
+    get:
+      tags:
+        - Elements Area
+      summary: Get element area grouped by OSM type
+      description: Calculates the total area of OSM elements, grouped by their type (node, way, relation).
+      operationId: areaGroupByType
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Area
+      summary: Get element area grouped by OSM type (POST)
+      operationId: areaGroupByType_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/area/groupBy/boundary:
+    get:
+      tags:
+        - Elements Area
+      summary: Get element area grouped by boundary
+      description: Calculates the total area of OSM elements, grouped by the individual geometries provided in the boundary parameter. The response can be JSON or GeoJSON.
+      operationId: areaGroupByBoundary
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+        - $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Area
+      summary: Get element area grouped by boundary (POST)
+      operationId: areaGroupByBoundary_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/area/groupBy/boundary/groupBy/tag:
+    get:
+      tags:
+        - Elements Area
+      summary: Get element area grouped by boundary and tag
+      description: Calculates the total area of OSM elements, grouped first by the individual boundary geometries and then by tag.
+      operationId: areaGroupByBoundaryGroupByTag
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKey'
+        - $ref: '#/components/parameters/groupByValues'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Area
+      summary: Get element area grouped by boundary and tag (POST)
+      operationId: areaGroupByBoundaryGroupByTag_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByTagRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/area/groupBy/key:
+    get:
+      tags:
+        - Elements Area
+      summary: Get element area grouped by key
+      description: Calculates the total area of OSM elements, grouped by the specified OSM keys.
+      operationId: areaGroupByKey
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKeys'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Area
+      summary: Get element area grouped by key (POST)
+      operationId: areaGroupByKey_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByKeyRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/area/groupBy/tag:
+    get:
+      tags:
+        - Elements Area
+      summary: Get element area grouped by tag
+      description: Calculates the total area of OSM elements, grouped by specific OSM tags (key-value pairs).
+      operationId: areaGroupByTag
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKey'
+        - $ref: '#/components/parameters/groupByValues'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Area
+      summary: Get element area grouped by tag (POST)
+      operationId: areaGroupByTag_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByTagRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/area/density:
+    get:
+      tags:
+        - Elements Area
+      summary: Get the density of element area
+      description: Calculates the area density (total area of elements per square kilometer of the boundary area) for elements matching the filter criteria.
+      operationId: areaDensity
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Area
+      summary: Get the density of element area (POST)
+      operationId: areaDensity_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/area/density/groupBy/type:
+    get:
+      tags:
+        - Elements Area
+      summary: Get element area density grouped by type
+      description: Calculates the area density of OSM elements, grouped by their type.
+      operationId: areaDensityGroupByType
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Area
+      summary: Get element area density grouped by type (POST)
+      operationId: areaDensityGroupByType_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/area/density/groupBy/boundary:
+    get:
+      tags:
+        - Elements Area
+      summary: Get element area density grouped by boundary
+      description: Calculates the area density of OSM elements, grouped by the individual geometries provided in the boundary parameter. The response can be JSON or GeoJSON.
+      operationId: areaDensityGroupByBoundary
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+        - $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Area
+      summary: Get element area density grouped by boundary (POST)
+      operationId: areaDensityGroupByBoundary_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/area/density/groupBy/boundary/groupBy/tag:
+    get:
+      tags:
+        - Elements Area
+      summary: Get element area density grouped by boundary and tag
+      description: Calculates the area density of OSM elements, grouped first by the individual boundary geometries and then by tag.
+      operationId: areaDensityGroupByBoundaryGroupByTag
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKey'
+        - $ref: '#/components/parameters/groupByValues'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Area
+      summary: Get element area density grouped by boundary and tag (POST)
+      operationId: areaDensityGroupByBoundaryGroupByTag_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByTagRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/area/density/groupBy/tag:
+    get:
+      tags:
+        - Elements Area
+      summary: Get element area density grouped by tag
+      description: Calculates the area density of OSM elements, grouped by specific OSM tags.
+      operationId: areaDensityGroupByTag
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKey'
+        - $ref: '#/components/parameters/groupByValues'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Area
+      summary: Get element area density grouped by tag (POST)
+      operationId: areaDensityGroupByTag_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByTagRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/area/ratio:
+    get:
+      tags:
+        - Elements Area
+      summary: Get the ratio of element area between two filters
+      description: Calculates the ratio of the total area of elements matching `filter2` to the total area of elements matching `filter`.
+      operationId: areaRatio
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/filter2'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessRatioResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Area
+      summary: Get the ratio of element area between two filters (POST)
+      operationId: areaRatio_post
+      requestBody:
+        $ref: '#/components/requestBodies/RatioRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessRatioResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/area/ratio/groupBy/boundary:
+    get:
+      tags:
+        - Elements Area
+      summary: Get the area ratio grouped by boundary
+      description: Calculates the area ratio between two filters, grouped by the individual geometries provided in the boundary parameter.
+      operationId: areaRatioGroupByBoundary
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/filter2'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+        - $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessRatioGroupByBoundaryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Area
+      summary: Get the area ratio grouped by boundary (POST)
+      operationId: areaRatioGroupByBoundary_post
+      requestBody:
+        $ref: '#/components/requestBodies/RatioRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessRatioGroupByBoundaryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/count:
+    get:
+      tags:
+        - Elements Count
+      summary: Get the count of OSM elements
+      description: Calculates the total number of OSM elements that match the filter criteria at one or more specified timestamps.
+      operationId: count
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Count
+      summary: Get the count of OSM elements (POST)
+      operationId: count_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/count/groupBy/type:
+    get:
+      tags:
+        - Elements Count
+      summary: Get element count grouped by OSM type
+      description: Calculates the number of OSM elements, grouped by their type (node, way, relation).
+      operationId: countGroupByType
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Count
+      summary: Get element count grouped by OSM type (POST)
+      operationId: countGroupByType_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/count/groupBy/boundary:
+    get:
+      tags:
+        - Elements Count
+      summary: Get element count grouped by boundary
+      description: Calculates the number of OSM elements, grouped by the individual geometries provided in the boundary parameter. The response can be JSON or GeoJSON.
+      operationId: countGroupByBoundary
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+        - $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Count
+      summary: Get element count grouped by boundary (POST)
+      operationId: countGroupByBoundary_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/count/groupBy/boundary/groupBy/tag:
+    get:
+      tags:
+        - Elements Count
+      summary: Get element count grouped by boundary and tag
+      description: Calculates the number of OSM elements, grouped first by the individual boundary geometries and then by tag.
+      operationId: countGroupByBoundaryGroupByTag
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKey'
+        - $ref: '#/components/parameters/groupByValues'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Count
+      summary: Get element count grouped by boundary and tag (POST)
+      operationId: countGroupByBoundaryGroupByTag_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByTagRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/count/groupBy/key:
+    get:
+      tags:
+        - Elements Count
+      summary: Get element count grouped by key
+      description: Calculates the number of OSM elements, grouped by the specified OSM keys.
+      operationId: countGroupByKey
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKeys'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Count
+      summary: Get element count grouped by key (POST)
+      operationId: countGroupByKey_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByKeyRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/count/groupBy/tag:
+    get:
+      tags:
+        - Elements Count
+      summary: Get element count grouped by tag
+      description: Calculates the number of OSM elements, grouped by specific OSM tags (key-value pairs).
+      operationId: countGroupByTag
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKey'
+        - $ref: '#/components/parameters/groupByValues'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Count
+      summary: Get element count grouped by tag (POST)
+      operationId: countGroupByTag_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByTagRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/count/density:
+    get:
+      tags:
+        - Elements Count
+      summary: Get the density of elements
+      description: Calculates the count density (number of elements per square kilometer) for elements matching the filter criteria.
+      operationId: countDensity
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Count
+      summary: Get the density of elements (POST)
+      operationId: countDensity_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/count/density/groupBy/type:
+    get:
+      tags:
+        - Elements Count
+      summary: Get element count density grouped by type
+      description: Calculates the count density of OSM elements, grouped by their type.
+      operationId: countDensityGroupByType
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Count
+      summary: Get element count density grouped by type (POST)
+      operationId: countDensityGroupByType_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/count/density/groupBy/boundary:
+    get:
+      tags:
+        - Elements Count
+      summary: Get element count density grouped by boundary
+      description: Calculates the count density of OSM elements, grouped by the individual geometries provided in the boundary parameter. The response can be JSON or GeoJSON.
+      operationId: countDensityGroupByBoundary
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+        - $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Count
+      summary: Get element count density grouped by boundary (POST)
+      operationId: countDensityGroupByBoundary_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/count/density/groupBy/boundary/groupBy/tag:
+    get:
+      tags:
+        - Elements Count
+      summary: Get element count density grouped by boundary and tag
+      description: Calculates the count density of OSM elements, grouped first by the individual boundary geometries and then by tag.
+      operationId: countDensityGroupByBoundaryGroupByTag
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKey'
+        - $ref: '#/components/parameters/groupByValues'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Count
+      summary: Get element count density grouped by boundary and tag (POST)
+      operationId: countDensityGroupByBoundaryGroupByTag_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByTagRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/count/density/groupBy/tag:
+    get:
+      tags:
+        - Elements Count
+      summary: Get element count density grouped by tag
+      description: Calculates the count density of OSM elements, grouped by specific OSM tags.
+      operationId: countDensityGroupByTag
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKey'
+        - $ref: '#/components/parameters/groupByValues'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Count
+      summary: Get element count density grouped by tag (POST)
+      operationId: countDensityGroupByTag_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByTagRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/count/ratio:
+    get:
+      tags:
+        - Elements Count
+      summary: Get the ratio of element count between two filters
+      description: Calculates the ratio of the count of elements matching `filter2` to the count of elements matching `filter`.
+      operationId: countRatio
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/filter2'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessRatioResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Count
+      summary: Get the ratio of element count between two filters (POST)
+      operationId: countRatio_post
+      requestBody:
+        $ref: '#/components/requestBodies/RatioRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessRatioResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/count/ratio/groupBy/boundary:
+    get:
+      tags:
+        - Elements Count
+      summary: Get the count ratio grouped by boundary
+      description: Calculates the count ratio between two filters, grouped by the individual geometries provided in the boundary parameter.
+      operationId: countRatioGroupByBoundary
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/filter2'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+        - $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessRatioGroupByBoundaryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Count
+      summary: Get the count ratio grouped by boundary (POST)
+      operationId: countRatioGroupByBoundary_post
+      requestBody:
+        $ref: '#/components/requestBodies/RatioRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessRatioGroupByBoundaryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/length:
+    get:
+      tags:
+        - Elements Length
+      summary: Get the total length of OSM elements
+      description: Calculates the total length (in meters) of OSM elements that match the filter criteria at one or more specified timestamps.
+      operationId: length
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Length
+      summary: Get the total length of OSM elements (POST)
+      operationId: length_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/length/groupBy/type:
+    get:
+      tags:
+        - Elements Length
+      summary: Get element length grouped by OSM type
+      description: Calculates the total length of OSM elements, grouped by their type (node, way, relation).
+      operationId: lengthGroupByType
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Length
+      summary: Get element length grouped by OSM type (POST)
+      operationId: lengthGroupByType_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/length/groupBy/boundary:
+    get:
+      tags:
+        - Elements Length
+      summary: Get element length grouped by boundary
+      description: Calculates the total length of OSM elements, grouped by the individual geometries provided in the boundary parameter. The response can be JSON or GeoJSON.
+      operationId: lengthGroupByBoundary
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+        - $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Length
+      summary: Get element length grouped by boundary (POST)
+      operationId: lengthGroupByBoundary_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/length/groupBy/boundary/groupBy/tag:
+    get:
+      tags:
+        - Elements Length
+      summary: Get element length grouped by boundary and tag
+      description: Calculates the total length of OSM elements, grouped first by the individual boundary geometries and then by tag.
+      operationId: lengthGroupByBoundaryGroupByTag
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKey'
+        - $ref: '#/components/parameters/groupByValues'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Length
+      summary: Get element length grouped by boundary and tag (POST)
+      operationId: lengthGroupByBoundaryGroupByTag_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByTagRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/length/groupBy/key:
+    get:
+      tags:
+        - Elements Length
+      summary: Get element length grouped by key
+      description: Calculates the total length of OSM elements, grouped by the specified OSM keys.
+      operationId: lengthGroupByKey
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKeys'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Length
+      summary: Get element length grouped by key (POST)
+      operationId: lengthGroupByKey_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByKeyRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/length/groupBy/tag:
+    get:
+      tags:
+        - Elements Length
+      summary: Get element length grouped by tag
+      description: Calculates the total length of OSM elements, grouped by specific OSM tags (key-value pairs).
+      operationId: lengthGroupByTag
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKey'
+        - $ref: '#/components/parameters/groupByValues'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Length
+      summary: Get element length grouped by tag (POST)
+      operationId: lengthGroupByTag_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByTagRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/length/density:
+    get:
+      tags:
+        - Elements Length
+      summary: Get the density of element length
+      description: Calculates the length density (total length of elements per square kilometer of the boundary area) for elements matching the filter criteria.
+      operationId: lengthDensity
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Length
+      summary: Get the density of element length (POST)
+      operationId: lengthDensity_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/length/density/groupBy/type:
+    get:
+      tags:
+        - Elements Length
+      summary: Get element length density grouped by type
+      description: Calculates the length density of OSM elements, grouped by their type.
+      operationId: lengthDensityGroupByType
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Length
+      summary: Get element length density grouped by type (POST)
+      operationId: lengthDensityGroupByType_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/length/density/groupBy/boundary:
+    get:
+      tags:
+        - Elements Length
+      summary: Get element length density grouped by boundary
+      description: Calculates the length density of OSM elements, grouped by the individual geometries provided in the boundary parameter. The response can be JSON or GeoJSON.
+      operationId: lengthDensityGroupByBoundary
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+        - $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Length
+      summary: Get element length density grouped by boundary (POST)
+      operationId: lengthDensityGroupByBoundary_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/length/density/groupBy/boundary/groupBy/tag:
+    get:
+      tags:
+        - Elements Length
+      summary: Get element length density grouped by boundary and tag
+      description: Calculates the length density of OSM elements, grouped first by the individual boundary geometries and then by tag.
+      operationId: lengthDensityGroupByBoundaryGroupByTag
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKey'
+        - $ref: '#/components/parameters/groupByValues'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Length
+      summary: Get element length density grouped by boundary and tag (POST)
+      operationId: lengthDensityGroupByBoundaryGroupByTag_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByTagRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/length/density/groupBy/tag:
+    get:
+      tags:
+        - Elements Length
+      summary: Get element length density grouped by tag
+      description: Calculates the length density of OSM elements, grouped by specific OSM tags.
+      operationId: lengthDensityGroupByTag
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKey'
+        - $ref: '#/components/parameters/groupByValues'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Length
+      summary: Get element length density grouped by tag (POST)
+      operationId: lengthDensityGroupByTag_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByTagRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/length/ratio:
+    get:
+      tags:
+        - Elements Length
+      summary: Get the ratio of element length between two filters
+      description: Calculates the ratio of the total length of elements matching `filter2` to the total length of elements matching `filter`.
+      operationId: lengthRatio
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/filter2'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessRatioResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Length
+      summary: Get the ratio of element length between two filters (POST)
+      operationId: lengthRatio_post
+      requestBody:
+        $ref: '#/components/requestBodies/RatioRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessRatioResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/length/ratio/groupBy/boundary:
+    get:
+      tags:
+        - Elements Length
+      summary: Get the length ratio grouped by boundary
+      description: Calculates the length ratio between two filters, grouped by the individual geometries provided in the boundary parameter.
+      operationId: lengthRatioGroupByBoundary
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/filter2'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+        - $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessRatioGroupByBoundaryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Length
+      summary: Get the length ratio grouped by boundary (POST)
+      operationId: lengthRatioGroupByBoundary_post
+      requestBody:
+        $ref: '#/components/requestBodies/RatioRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessRatioGroupByBoundaryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/perimeter:
+    get:
+      tags:
+        - Elements Perimeter
+      summary: Get the total perimeter of OSM elements
+      description: Calculates the total perimeter (in meters) of polygonal OSM elements that match the filter criteria at one or more specified timestamps.
+      operationId: perimeter
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Perimeter
+      summary: Get the total perimeter of OSM elements (POST)
+      operationId: perimeter_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/perimeter/groupBy/type:
+    get:
+      tags:
+        - Elements Perimeter
+      summary: Get element perimeter grouped by OSM type
+      description: Calculates the total perimeter of polygonal OSM elements, grouped by their type (node, way, relation).
+      operationId: perimeterGroupByType
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Perimeter
+      summary: Get element perimeter grouped by OSM type (POST)
+      operationId: perimeterGroupByType_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/perimeter/groupBy/boundary:
+    get:
+      tags:
+        - Elements Perimeter
+      summary: Get element perimeter grouped by boundary
+      description: Calculates the total perimeter of polygonal OSM elements, grouped by the individual geometries provided in the boundary parameter. The response can be JSON or GeoJSON.
+      operationId: perimeterGroupByBoundary
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+        - $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Perimeter
+      summary: Get element perimeter grouped by boundary (POST)
+      operationId: perimeterGroupByBoundary_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/perimeter/groupBy/boundary/groupBy/tag:
+    get:
+      tags:
+        - Elements Perimeter
+      summary: Get element perimeter grouped by boundary and tag
+      description: Calculates the total perimeter of polygonal OSM elements, grouped first by the individual boundary geometries and then by tag.
+      operationId: perimeterGroupByBoundaryGroupByTag
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKey'
+        - $ref: '#/components/parameters/groupByValues'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Perimeter
+      summary: Get element perimeter grouped by boundary and tag (POST)
+      operationId: perimeterGroupByBoundaryGroupByTag_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByTagRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/perimeter/groupBy/key:
+    get:
+      tags:
+        - Elements Perimeter
+      summary: Get element perimeter grouped by key
+      description: Calculates the total perimeter of polygonal OSM elements, grouped by the specified OSM keys.
+      operationId: perimeterGroupByKey
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKeys'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Perimeter
+      summary: Get element perimeter grouped by key (POST)
+      operationId: perimeterGroupByKey_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByKeyRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/perimeter/groupBy/tag:
+    get:
+      tags:
+        - Elements Perimeter
+      summary: Get element perimeter grouped by tag
+      description: Calculates the total perimeter of polygonal OSM elements, grouped by specific OSM tags (key-value pairs).
+      operationId: perimeterGroupByTag
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKey'
+        - $ref: '#/components/parameters/groupByValues'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Perimeter
+      summary: Get element perimeter grouped by tag (POST)
+      operationId: perimeterGroupByTag_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByTagRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/perimeter/density:
+    get:
+      tags:
+        - Elements Perimeter
+      summary: Get the density of element perimeter
+      description: Calculates the perimeter density (total perimeter of elements per square kilometer of the boundary area) for elements matching the filter criteria.
+      operationId: perimeterDensity
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Perimeter
+      summary: Get the density of element perimeter (POST)
+      operationId: perimeterDensity_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessAggregationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/perimeter/density/groupBy/type:
+    get:
+      tags:
+        - Elements Perimeter
+      summary: Get element perimeter density grouped by type
+      description: Calculates the perimeter density of polygonal OSM elements, grouped by their type.
+      operationId: perimeterDensityGroupByType
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Perimeter
+      summary: Get element perimeter density grouped by type (POST)
+      operationId: perimeterDensityGroupByType_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/perimeter/density/groupBy/boundary:
+    get:
+      tags:
+        - Elements Perimeter
+      summary: Get element perimeter density grouped by boundary
+      description: Calculates the perimeter density of polygonal OSM elements, grouped by the individual geometries provided in the boundary parameter. The response can be JSON or GeoJSON.
+      operationId: perimeterDensityGroupByBoundary
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+        - $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Perimeter
+      summary: Get element perimeter density grouped by boundary (POST)
+      operationId: perimeterDensityGroupByBoundary_post
+      requestBody:
+        $ref: '#/components/requestBodies/AggregationRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/perimeter/density/groupBy/boundary/groupBy/tag:
+    get:
+      tags:
+        - Elements Perimeter
+      summary: Get element perimeter density grouped by boundary and tag
+      description: Calculates the perimeter density of polygonal OSM elements, grouped first by the individual boundary geometries and then by tag.
+      operationId: perimeterDensityGroupByBoundaryGroupByTag
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKey'
+        - $ref: '#/components/parameters/groupByValues'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Perimeter
+      summary: Get element perimeter density grouped by boundary and tag (POST)
+      operationId: perimeterDensityGroupByBoundaryGroupByTag_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByTagRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/perimeter/density/groupBy/tag:
+    get:
+      tags:
+        - Elements Perimeter
+      summary: Get element perimeter density grouped by tag
+      description: Calculates the perimeter density of polygonal OSM elements, grouped by specific OSM tags.
+      operationId: perimeterDensityGroupByTag
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/groupByKey'
+        - $ref: '#/components/parameters/groupByValues'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/types'
+        - $ref: '#/components/parameters/keys'
+        - $ref: '#/components/parameters/values'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Perimeter
+      summary: Get element perimeter density grouped by tag (POST)
+      operationId: perimeterDensityGroupByTag_post
+      requestBody:
+        $ref: '#/components/requestBodies/GroupByTagRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessGroupByResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/perimeter/ratio:
+    get:
+      tags:
+        - Elements Perimeter
+      summary: Get the ratio of element perimeter between two filters
+      description: Calculates the ratio of the total perimeter of elements matching `filter2` to the total perimeter of elements matching `filter`.
+      operationId: perimeterRatio
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - name: format
+          in: query
+          required: false
+          description: Response format; one of "json", "csv", or "geojson".
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - geojson
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/filter2'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessRatioResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Perimeter
+      summary: Get the ratio of element perimeter between two filters (POST)
+      operationId: perimeterRatio_post
+      requestBody:
+        $ref: '#/components/requestBodies/RatioRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessRatioResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /elements/perimeter/ratio/groupBy/boundary:
+    get:
+      tags:
+        - Elements Perimeter
+      summary: Get the perimeter ratio grouped by boundary
+      description: Calculates the perimeter ratio between two filters, grouped by the individual geometries provided in the boundary parameter.
+      operationId: perimeterRatioGroupByBoundary
+      parameters:
+        - $ref: '#/components/parameters/timeSnapshot'
+        - $ref: '#/components/parameters/bpolys'
+        - $ref: '#/components/parameters/bboxes'
+        - $ref: '#/components/parameters/bcircles'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/filter2'
+        - $ref: '#/components/parameters/showMetadata'
+        - $ref: '#/components/parameters/timeout'
+        - $ref: '#/components/parameters/format'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessRatioGroupByBoundaryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Elements Perimeter
+      summary: Get the perimeter ratio grouped by boundary (POST)
+      operationId: perimeterRatioGroupByBoundary_post
+      requestBody:
+        $ref: '#/components/requestBodies/RatioRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessRatioGroupByBoundaryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+components:
+  parameters:
+    timeInterval:
+      name: time
+      in: query
+      required: true
+      description: Two ISO-8601 conformant timestamps defining a time interval, separated by a comma.
+      schema:
+        type: string
+        example: 2016-01-01,2017-01-01
+    timeSnapshot:
+      name: time
+      in: query
+      required: false
+      description: One or more comma-separated ISO-8601 conformant timestamps. If not provided, the latest available timestamp in the database is used.
+      schema:
+        type: string
+        example: 2018-01-01T12:00:00Z,2019-01-01T12:00:00Z
+    bpolys:
+      name: bpolys
+      in: query
+      description: One or more polygonal geometries that define the area of interest. Can be provided as a pipe-separated list of coordinate pairs or as a GeoJSON Geometry object.
+      schema:
+        type: string
+        example: 8.6756,49.4184,8.6756,49.4208,8.678,49.4208,8.678,49.4184,8.6756,49.4184
+    bboxes:
+      name: bboxes
+      in: query
+      description: One or more rectangular bounding boxes that define the area of interest, separated by pipes (`|`).
+      schema:
+        type: string
+        example: 7.0,49.0,7.1,49.1|8.5,50.0,8.6,50.1
+    bcircles:
+      name: bcircles
+      in: query
+      description: One or more circular areas of interest, separated by pipes (`|`). Each circle is defined by `lon,lat,radius` where radius is in meters.
+      schema:
+        type: string
+        example: 8.6822,49.4042,1000
+    filter:
+      name: filter
+      in: query
+      description: A filter expression to select OSM entities. Cannot be used together with `types`, `keys`, or `values`.
+      schema:
+        type: string
+        example: building=yes and type:way
+    filter2:
+      name: filter2
+      in: query
+      description: A second filter, used in /ratio endpoints. The result will be the ratio of elements matching `filter2` to elements matching `filter`.
+      schema:
+        type: string
+        example: building=house
+    types:
+      name: types
+      in: query
+      description: A comma-separated list of OSM entity types (`node`, `way`, `relation`) or simple feature geometry types (`point`, `line`, `polygon`).
+      schema:
+        type: string
+        example: way,relation
+    keys:
+      name: keys
+      in: query
+      description: A comma-separated list of OSM tag keys to filter by.
+      schema:
+        type: string
+        example: highway
+    values:
+      name: values
+      in: query
+      description: A comma-separated list of OSM tag values to filter by. Must be used in conjunction with `keys`.
+      schema:
+        type: string
+        example: residential,primary
+    propertiesContributions:
+      name: properties
+      in: query
+      description: A comma-separated list to select which properties to include in the output features.
+      schema:
+        type: string
+        enum:
+          - tags
+          - metadata
+          - contributionTypes
+        example: tags,metadata
+    propertiesElements:
+      name: properties
+      in: query
+      description: A comma-separated list to select which properties to include in the output features.
+      schema:
+        type: string
+        enum:
+          - tags
+          - metadata
+        example: tags,metadata
+    clipGeometry:
+      name: clipGeometry
+      in: query
+      description: Whether to clip the geometries of the output features to the specified boundary.
+      schema:
+        type: boolean
+        default: true
+    contributionType:
+      name: contributionType
+      in: query
+      description: Filter by type of contribution. Can be a comma-separated list of 'creation', 'deletion', 'tagChange', 'geometryChange'.
+      schema:
+        type: string
+    groupByKey:
+      name: groupByKey
+      in: query
+      required: true
+      description: The OSM key to group results by.
+      schema:
+        type: string
+        example: building
+    groupByKeys:
+      name: groupByKeys
+      in: query
+      required: true
+      description: A comma-separated list of OSM keys to group results by.
+      schema:
+        type: string
+        example: highway,building
+    groupByValues:
+      name: groupByValues
+      in: query
+      description: A comma-separated list of OSM values to include in the grouping. Used with `groupByKey`.
+      schema:
+        type: string
+        example: yes,house,apartments
+    format:
+      name: format
+      in: query
+      description: Output format. Only applicable for `groupBy/boundary` endpoints.
+      schema:
+        type: string
+        enum:
+          - json
+          - geojson
+          - csv
+        default: json
+    showMetadata:
+      name: showMetadata
+      in: query
+      description: Whether to include a metadata object in the response.
+      schema:
+        type: boolean
+        default: false
+    timeout:
+      name: timeout
+      in: query
+      description: Overrides the default request timeout in seconds.
+      schema:
+        type: number
+  requestBodies:
+    ContributionsExtractionRequest:
+      description: Parameters for a contributions request. Useful for large `bpolys` values.
+      required: true
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            type: object
+            properties:
+              time:
+                $ref: '#/components/parameters/timeInterval/schema'
+              bpolys:
+                $ref: '#/components/parameters/bpolys/schema'
+              bboxes:
+                $ref: '#/components/parameters/bboxes/schema'
+              bcircles:
+                $ref: '#/components/parameters/bcircles/schema'
+              filter:
+                $ref: '#/components/parameters/filter/schema'
+              types:
+                $ref: '#/components/parameters/types/schema'
+              keys:
+                $ref: '#/components/parameters/keys/schema'
+              values:
+                $ref: '#/components/parameters/values/schema'
+              properties:
+                $ref: '#/components/parameters/propertiesContributions/schema'
+              clipGeometry:
+                $ref: '#/components/parameters/clipGeometry/schema'
+              showMetadata:
+                $ref: '#/components/parameters/showMetadata/schema'
+              timeout:
+                $ref: '#/components/parameters/timeout/schema'
+              format:
+                  type: string
+                  enum:
+                    - geojson
+                    - json
+                    - csv
+            required:
+              - time
+    FullHistoryExtractionRequest:
+      description: Parameters for a full history elements request. Useful for large `bpolys` values.
+      required: true
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            type: object
+            properties:
+              time:
+                $ref: '#/components/parameters/timeInterval/schema'
+              bpolys:
+                $ref: '#/components/parameters/bpolys/schema'
+              bboxes:
+                $ref: '#/components/parameters/bboxes/schema'
+              bcircles:
+                $ref: '#/components/parameters/bcircles/schema'
+              filter:
+                $ref: '#/components/parameters/filter/schema'
+              types:
+                $ref: '#/components/parameters/types/schema'
+              keys:
+                $ref: '#/components/parameters/keys/schema'
+              values:
+                $ref: '#/components/parameters/values/schema'
+              properties:
+                $ref: '#/components/parameters/propertiesElements/schema'
+              clipGeometry:
+                $ref: '#/components/parameters/clipGeometry/schema'
+              showMetadata:
+                $ref: '#/components/parameters/showMetadata/schema'
+              timeout:
+                $ref: '#/components/parameters/timeout/schema'
+              format:
+                  type: string
+                  enum:
+                    - geojson
+                    - json
+                    - csv
+            required:
+              - time
+    ElementsExtractionRequest:
+      description: Parameters for an elements request. Useful for large `bpolys` values.
+      required: true
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            type: object
+            properties:
+              time:
+                $ref: '#/components/parameters/timeSnapshot/schema'
+              bpolys:
+                $ref: '#/components/parameters/bpolys/schema'
+              bboxes:
+                $ref: '#/components/parameters/bboxes/schema'
+              bcircles:
+                $ref: '#/components/parameters/bcircles/schema'
+              filter:
+                $ref: '#/components/parameters/filter/schema'
+              types:
+                $ref: '#/components/parameters/types/schema'
+              keys:
+                $ref: '#/components/parameters/keys/schema'
+              values:
+                $ref: '#/components/parameters/values/schema'
+              properties:
+                $ref: '#/components/parameters/propertiesElements/schema'
+              clipGeometry:
+                $ref: '#/components/parameters/clipGeometry/schema'
+              showMetadata:
+                $ref: '#/components/parameters/showMetadata/schema'
+              timeout:
+                $ref: '#/components/parameters/timeout/schema'
+              format:
+                  type: string
+                  enum:
+                    - geojson
+                    - json
+                    - csv
+    AggregationRequest:
+      description: Parameters for an aggregation request.
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            $ref: '#/components/schemas/AggregationRequestParameters'
+    GroupByTagRequest:
+      description: Parameters for a groupBy/tag aggregation request.
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/AggregationRequestParameters'
+              - type: object
+                properties:
+                  groupByKey:
+                    $ref: '#/components/parameters/groupByKey/schema'
+                  groupByValues:
+                    $ref: '#/components/parameters/groupByValues/schema'
+                required:
+                  - groupByKey
+    GroupByKeyRequest:
+      description: Parameters for a groupBy/key aggregation request.
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/AggregationRequestParameters'
+              - type: object
+                properties:
+                  groupByKeys:
+                    $ref: '#/components/parameters/groupByKeys/schema'
+                required:
+                  - groupByKeys
+    RatioRequest:
+      content:
+        application/x-www-form-urlencoded:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/AggregationRequestParameters'
+              - type: object
+                properties:
+                  filter2:
+                    $ref: '#/components/parameters/filter2/schema'
+  responses:
+    SuccessContributionsExtractionResponse:
+      description: A GeoJSON FeatureCollection containing the requested OSM contributions.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ContributionsExtractionResponse'
+    SuccessElementsExtractionResponse:
+      description: A GeoJSON FeatureCollection containing the requested OSM data snapshots.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ElementsExtractionResponse'
+    SuccessFullHistoryResponse:
+      description: A GeoJSON FeatureCollection containing the full history of the requested OSM elements.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FullHistoryExtractionResponse'
+    SuccessAggregationResponse:
+      description: A successful aggregation response.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DefaultAggregationResponse'
+        text/csv:
+          schema:
+            type: string
+            description: CSV formatted aggregation results.
+    SuccessGroupByResponse:
+      description: A successful groupBy aggregation response.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GroupByResponse'
+        text/csv:
+          schema:
+            type: string
+            description: CSV formatted aggregation results.
+    RatioResponse:
+      type: object
+      properties:
+        attribution:
+          $ref: '#/components/schemas/Attribution'
+        apiVersion:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+        ratioResult:
+          type: array
+          items:
+            $ref: '#/components/schemas/RatioResult'
+    RatioGroupByBoundaryResponse:
+      type: object
+      properties:
+        attribution:
+          $ref: '#/components/schemas/Attribution'
+        apiVersion:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+        groupByBoundaryResult:
+          type: array
+          items:
+            $ref: '#/components/schemas/RatioGroupByResult'
+        type:
+          type: string
+        features:
+          type: array
+          items:
+            type: object
+    ElementsResult:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        value:
+          type: number
+    GroupByResult:
+      type: object
+      properties:
+        groupByObject:
+          oneOf:
+            - type: string
+            - type: array
+              items: {}
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/ElementsResult'
+    RatioResult:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        value:
+          type: number
+          description: Value corresponding to the initial filter parameters.
+        value2:
+          type: number
+          description: Value corresponding to the second (filter2) parameters.
+        ratio:
+          type: number
+          description: Ratio of value2 / value.
+    RatioGroupByResult:
+      type: object
+      properties:
+        groupByObject:
+          oneOf:
+            - type: string
+            - type: array
+              items: {}
+        ratioResult:
+          type: array
+          items:
+            $ref: '#/components/schemas/RatioResult'
+    SuccessRatioResponse:
+      description: A successful ratio aggregation response.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RatioResponse'
+        text/csv:
+          schema:
+            type: string
+    SuccessRatioGroupByBoundaryResponse:
+      description: A successful ratio groupBy boundary response.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RatioGroupByBoundaryResponse'
+        text/csv:
+          schema:
+            type: string
+    BadRequest:
+      description: |
+        Bad Request. The request was malformed or contained invalid parameters. Examples include:
+        - `time` parameter is missing or invalid for the endpoint.
+        - More than one boundary parameter (`bpolys`, `bboxes`, `bcircles`) is provided.
+        - `filter` is used alongside `keys`, `values`, or `types`.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalServerError:
+      description: Internal Server Error. An unexpected error occurred on the server.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ServiceUnavailable:
+      description: Service Unavailable. The cluster backend is currently not able to process the request. Please try again later.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    ContributionsExtractionResponse:
+      type: object
+      required:
+        - type
+        - attribution
+        - apiVersion
+        - features
+      properties:
+        type:
+          type: string
+          description: The GeoJSON type of the object.
+          example: FeatureCollection
+        attribution:
+          $ref: '#/components/schemas/Attribution'
+        apiVersion:
+          type: string
+          description: The version of the ohsome API.
+          example: 1.6.0
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+        features:
+          type: array
+          description: A list of GeoJSON features, where each feature represents one OSM contribution.
+          items:
+            $ref: '#/components/schemas/ContributionFeature'
+    ElementsExtractionResponse:
+      type: object
+      required:
+        - type
+        - attribution
+        - apiVersion
+        - features
+      properties:
+        type:
+          type: string
+          description: The GeoJSON type of the object.
+          example: FeatureCollection
+        attribution:
+          $ref: '#/components/schemas/Attribution'
+        apiVersion:
+          type: string
+          description: The version of the ohsome API.
+          example: 1.6.0
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+        features:
+          type: array
+          description: A list of GeoJSON features, where each feature represents one OSM object at a given snapshot time.
+          items:
+            $ref: '#/components/schemas/ElementFeature'
+    FullHistoryExtractionResponse:
+      type: object
+      required:
+        - type
+        - attribution
+        - apiVersion
+        - features
+      properties:
+        type:
+          type: string
+          description: The GeoJSON type of the object.
+          example: FeatureCollection
+        attribution:
+          $ref: '#/components/schemas/Attribution'
+        apiVersion:
+          type: string
+          description: The version of the ohsome API.
+          example: 1.6.0
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+        features:
+          type: array
+          description: A list of GeoJSON features, where each feature represents one version of an OSM object.
+          items:
+            $ref: '#/components/schemas/FullHistoryFeature'
+    Attribution:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+          description: URL to the copyright and license information.
+        text:
+          type: string
+          description: Copyright information about the used data.
+    Metadata:
+      type: object
+      nullable: true
+      properties:
+        executionTime:
+          type: integer
+          format: int64
+          description: Time in milliseconds the server needed to execute the request.
+        description:
+          type: string
+          description: A human-readable description of the result.
+        requestUrl:
+          type: string
+          format: uri
+          description: The request URL that generated this response.
+    ContributionFeature:
+      type: object
+      properties:
+        type:
+          type: string
+          example: Feature
+        geometry:
+          type: object
+          nullable: true
+          description: The GeoJSON geometry of the object. This will be `null` for deletion contributions.
+        properties:
+          $ref: '#/components/schemas/ContributionFeatureProperties'
+    ElementFeature:
+      type: object
+      properties:
+        type:
+          type: string
+          example: Feature
+        geometry:
+          type: object
+          nullable: true
+          description: The GeoJSON geometry of the object.
+        properties:
+          $ref: '#/components/schemas/ElementFeatureProperties'
+    ContributionFeatureProperties:
+      type: object
+      description: Properties of the contribution feature.
+      properties:
+        '@osmId':
+          type: string
+          description: The unique identifier of the OSM entity, prefixed with its type.
+          example: way/24167384
+        '@timestamp':
+          type: string
+          format: date-time
+          description: The timestamp of the contribution event.
+        '@contributionChangesetId':
+          type: integer
+          description: The changeset ID in which this contribution occurred.
+          example: 38479901
+        '@version':
+          type: integer
+          description: The version number of the OSM entity after the contribution. Included if `properties=metadata`.
+          example: 2
+        '@osmType':
+          type: string
+          description: The type of the OSM entity. Included if `properties=metadata`.
+          example: way
+        '@changesetId':
+          type: integer
+          description: The changeset ID of the OSM entity itself. Included if `properties=metadata`.
+          example: 38479901
+        '@creation':
+          type: boolean
+          description: Indicates if the contribution was a creation event. Included if `properties=contributionTypes`.
+        '@deletion':
+          type: boolean
+          description: Indicates if the contribution was a deletion event. Included if `properties=contributionTypes`.
+        '@tagChange':
+          type: boolean
+          description: Indicates if the contribution involved a tag change. Included if `properties=contributionTypes`.
+        '@geometryChange':
+          type: boolean
+          description: Indicates if the contribution involved a geometry change. Included if `properties=contributionTypes`.
+      additionalProperties:
+        description: If `properties=tags` is requested, the OSM tags of the entity will be included here as key-value pairs.
+        type: string
+    ElementFeatureProperties:
+      type: object
+      description: Properties of the element feature.
+      properties:
+        '@osmId':
+          type: string
+          description: The unique identifier of the OSM entity, prefixed with its type.
+          example: way/24167384
+        '@snapshotTimestamp':
+          type: string
+          format: date-time
+          description: The timestamp of the data snapshot this feature belongs to.
+        '@lastEdit':
+          type: string
+          format: date-time
+          description: The timestamp when this version of the entity was created. Included if `properties=metadata`.
+        '@version':
+          type: integer
+          description: The version number of the OSM entity. Included if `properties=metadata`.
+          example: 2
+        '@osmType':
+          type: string
+          description: The type of the OSM entity. Included if `properties=metadata`.
+          example: way
+        '@changesetId':
+          type: integer
+          description: The changeset ID in which this version of the entity was created. Included if `properties=metadata`.
+          example: 38479901
+      additionalProperties:
+        description: If `properties=tags` is requested, the OSM tags of the entity will be included here as key-value pairs.
+        type: string
+    FullHistoryFeature:
+      type: object
+      properties:
+        type:
+          type: string
+          example: Feature
+        geometry:
+          type: object
+          nullable: true
+          description: The GeoJSON geometry of the object version.
+        properties:
+          $ref: '#/components/schemas/FullHistoryFeatureProperties'
+    FullHistoryFeatureProperties:
+      type: object
+      description: Properties of the full history feature.
+      properties:
+        '@osmId':
+          type: string
+          description: The unique identifier of the OSM entity, prefixed with its type.
+          example: way/24167384
+        '@validFrom':
+          type: string
+          format: date-time
+          description: The timestamp marking the beginning of this version's validity.
+        '@validTo':
+          type: string
+          format: date-time
+          description: The timestamp marking the end of this version's validity.
+        '@version':
+          type: integer
+          description: The version number of the OSM entity. Included if `properties=metadata`.
+          example: 2
+        '@osmType':
+          type: string
+          description: The type of the OSM entity. Included if `properties=metadata`.
+          example: way
+        '@changesetId':
+          type: integer
+          description: The changeset ID in which this version of the entity was created. Included if `properties=metadata`.
+          example: 38479901
+      additionalProperties:
+        description: If `properties=tags` is requested, the OSM tags of the entity will be included here as key-value pairs.
+        type: string
+    AggregationRequestParameters:
+      type: object
+      properties:
+        time:
+          $ref: '#/components/parameters/timeInterval/schema'
+        bpolys:
+          $ref: '#/components/parameters/bpolys/schema'
+        bboxes:
+          $ref: '#/components/parameters/bboxes/schema'
+        bcircles:
+          $ref: '#/components/parameters/bcircles/schema'
+        filter:
+          $ref: '#/components/parameters/filter/schema'
+        types:
+          $ref: '#/components/parameters/types/schema'
+        keys:
+          $ref: '#/components/parameters/keys/schema'
+        values:
+          $ref: '#/components/parameters/values/schema'
+        contributionType:
+          $ref: '#/components/parameters/contributionType/schema'
+        showMetadata:
+          $ref: '#/components/parameters/showMetadata/schema'
+        timeout:
+          $ref: '#/components/parameters/timeout/schema'
+        format:
+                  type: string
+                  enum:
+                    - geojson
+                    - json
+                    - csv
+                  default: json
+                  description: Response format ('geojson', 'json', or 'csv')
+      required:
+        - time
+    DefaultAggregationResponse:
+      type: object
+      properties:
+        attribution:
+          $ref: '#/components/schemas/Attribution'
+        apiVersion:
+          type: string
+          example: 1.6.0
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContributionsResult'
+    GroupByResponse:
+      type: object
+      properties:
+        attribution:
+          $ref: '#/components/schemas/Attribution'
+        apiVersion:
+          type: string
+          example: 1.6.0
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+        groupByResult:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupByResult'
+        type:
+          type: string
+          description: The GeoJSON type. Present only when format=geojson.
+          example: FeatureCollection
+        features:
+          type: array
+          description: An array of GeoJSON features. Present only when format=geojson.
+          items:
+            type: object
+    RatioResponse:
+      type: object
+      properties:
+        attribution:
+          $ref: '#/components/schemas/Attribution'
+        apiVersion:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+        ratioResult:
+          type: array
+          items:
+            $ref: '#/components/schemas/RatioResult'
+    RatioGroupByBoundaryResponse:
+      type: object
+      properties:
+        attribution:
+          $ref: '#/components/schemas/Attribution'
+        apiVersion:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+        groupByBoundaryResult:
+          type: array
+          items:
+            $ref: '#/components/schemas/RatioGroupByResult'
+        type:
+          type: string
+        features:
+          type: array
+          items:
+            type: object
+    ContributionsResult:
+      type: object
+      properties:
+        fromTimestamp:
+          type: string
+          format: date-time
+        toTimestamp:
+          type: string
+          format: date-time
+        value:
+          type: number
+    ElementsResult:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        value:
+          type: number
+    RatioResult:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        value:
+          type: number
+          description: Value corresponding to the initial filter parameters.
+        value2:
+          type: number
+          description: Value corresponding to the second (filter2) parameters.
+        ratio:
+          type: number
+          description: Ratio of value2 / value.
+    RatioGroupByResult:
+      type: object
+      properties:
+        groupByObject:
+          oneOf:
+            - type: string
+            - type: array
+              items: {}
+        ratioResult:
+          type: array
+          items:
+            $ref: '#/components/schemas/RatioResult'
+    GroupByResult:
+      type: object
+      properties:
+        groupByObject:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: string
+          description: The object by which the results are grouped (e.g., 'way', 'highway=primary').
+          example: way
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/ContributionsResult'
+    ExtractRegion:
+      type: object
+      description: Object holding the spatial and temporal extent of the data extract.
+      properties:
+        spatialExtent:
+          type: object
+          description: A GeoJSON object representing the spatial extent of this extract region.
+          example:
+            type: Polygon
+            coordinates:
+              - - - 8.6
+                  - 49.3
+                - - 8.7
+                  - 49.3
+                - - 8.7
+                  - 49.4
+                - - 8.6
+                  - 49.4
+                - - 8.6
+                  - 49.3
+        temporalExtent:
+          $ref: '#/components/schemas/TemporalExtent'
+        replicationSequenceNumber:
+          type: integer
+          description: The replication sequence number of the data extract.
+    TemporalExtent:
+      type: object
+      description: The temporal extent of the data extract.
+      properties:
+        fromTimestamp:
+          type: string
+          format: date-time
+          description: The earliest timestamp available in the data extract.
+        toTimestamp:
+          type: string
+          format: date-time
+          description: The latest timestamp available in the data extract.
+    Error:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: The time the error occurred.
+        status:
+          type: integer
+          description: The HTTP status code.
+        error:
+          type: string
+          description: The HTTP status description.
+        message:
+          type: string
+          description: A detailed error message.
+        path:
+          type: string
+          description: The path of the request that caused the error.

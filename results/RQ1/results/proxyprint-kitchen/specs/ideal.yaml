@@ -1,0 +1,2238 @@
+---
+openapi: 3.0.1
+info:
+  title: PrintProxy API (Complete)
+  description: The complete and unified API specification for the PrintProxy application,
+    covering all modules from user authentication to print shop management.
+  version: 1.0.0
+servers:
+- url: http://localhost:8080
+  description: Local development server
+tags:
+- name: Authentication
+  description: Endpoints for user login and authentication checks.
+- name: Admin
+  description: Endpoints for platform administrators.
+- name: Consumer Account
+  description: Endpoints for managing a consumer's own account and profile.
+- name: Print Requests
+  description: Endpoints for creating and managing the lifecycle of print requests.
+- name: Printing Schemas
+  description: Endpoints for managing a consumer's saved printing preferences.
+- name: Notifications
+  description: Endpoints for real-time and persistent notifications.
+- name: PayPal IPN
+  description: Webhooks for receiving Instant Payment Notifications from PayPal.
+- name: Print Shop Management
+  description: Endpoints for print shop managers and employees.
+- name: Print Shop - Queue Management
+  description: Endpoints for managing the print queue.
+- name: Print Shops
+  description: Public-facing endpoints for discovering print shops.
+- name: Registration Requests
+  description: Endpoints for managing new print shop registration requests.
+- name: Reviews
+  description: Endpoints for managing customer reviews of print shops.
+- name: External Integration
+  description: Simplified endpoints for integration with external platforms.
+paths:
+  "/":
+    get:
+      tags:
+      - Authentication
+      summary: Root Endpoint
+      operationId: getIndex
+      responses:
+        '200':
+          description: Successful response with a welcome message.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Olá Mundo!
+  "/*":
+    options:
+      tags:
+      - Authentication
+      summary: CORS Pre-flight Handler
+      operationId: handleOptions
+      responses:
+        '204':
+          description: No Content. Standard response for a successful pre-flight request.
+  "/api/secured":
+    get:
+      tags:
+      - Authentication
+      summary: Secured Test Endpoint
+      operationId: getSecured
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Successful response for an authenticated user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Se estiveres autenticado, podes ver isto!
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+  "/login":
+    post:
+      tags:
+      - Authentication
+      summary: User Login
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                  format: password
+              required:
+              - username
+              - password
+      responses:
+        '200':
+          description: Authentication status response.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - "$ref": "#/components/schemas/LoginSuccessResponse"
+                - "$ref": "#/components/schemas/LoginFailureResponse"
+  "/admin/printshops":
+    get:
+      tags:
+      - Admin
+      summary: Get All Print Shops
+      operationId: getAdminPrintShops
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: A successful response containing the list of print shops.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  prinshops:
+                    type: string
+                    description: A JSON string representation of the array of print
+                      shops (implementation quirk).
+                  success:
+                    type: boolean
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+  "/admin/register":
+    post:
+      tags:
+      - Admin
+      summary: Register a New Administrator
+      operationId: registerAdmin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/Admin"
+      responses:
+        '200':
+          description: The administrator was successfully created.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Admin"
+  "/admin/seed":
+    post:
+      tags:
+      - Admin
+      summary: Seed Database (Dev)
+      operationId: seedDatabase
+      responses:
+        '200':
+          description: Database seeding completed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: seeding completed
+  "/admin/useed":
+    post:
+      tags:
+      - Admin
+      summary: Seed Consumers (Dev)
+      operationId: seedConsumers
+      responses:
+        '200':
+          description: Consumer seeding completed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: consumers seeding completed
+  "/consumer/register":
+    post:
+      tags:
+      - Consumer Account
+      summary: Register a New Consumer
+      operationId: registerConsumer
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+                  format: password
+                email:
+                  type: string
+                  format: email
+                name:
+                  type: string
+                latitude:
+                  type: string
+                longitude:
+                  type: string
+              required:
+              - username
+              - password
+              - email
+              - name
+      responses:
+        '200':
+          description: Registration success or failure response.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - "$ref": "#/components/schemas/ConsumerRegistrationSuccessResponse"
+                - "$ref": "#/components/schemas/ConsumerRegistrationFailureResponse"
+  "/consumer/info":
+    get:
+      tags:
+      - Consumer Account
+      summary: Get Consumer Information
+      operationId: getConsumerInfo
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Consumer's information.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ConsumerInfoResponse"
+  "/consumer/info/update":
+    put:
+      tags:
+      - Consumer Account
+      summary: Update Consumer Information
+      operationId: updateConsumerInfo
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/Consumer"
+      responses:
+        '200':
+          "$ref": "#/components/responses/SuccessResponse"
+  "/consumer/{username}/notifications":
+    delete:
+      tags:
+      - Consumer Account
+      summary: Delete All Notifications
+      operationId: deleteAllNotifications
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          "$ref": "#/components/responses/SuccessResponse"
+    put:
+      tags:
+      - Consumer Account
+      summary: Mark All Notifications as Read
+      operationId: readAllNotifications
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          "$ref": "#/components/responses/SuccessResponse"
+  "/consumer/requests":
+    get:
+      tags:
+      - Print Requests
+      summary: Get Pending Print Requests
+      operationId: getConsumerPendingRequests
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of pending print requests.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  printrequests:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/PrintRequest"
+                  success:
+                    type: boolean
+  "/consumer/requests/cancel/{id}":
+    delete:
+      tags:
+      - Print Requests
+      summary: Cancel a Pending Print Request
+      operationId: cancelConsumerRequest
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          "$ref": "#/components/responses/SuccessResponse"
+  "/consumer/satisfied":
+    get:
+      tags:
+      - Print Requests
+      summary: Get Satisfied Print Requests
+      operationId: getConsumerSatisfiedRequests
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: History of satisfied print requests.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  satisfiedrequests:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/SatisfiedRequest"
+                  success:
+                    type: boolean
+  "/consumer/balance":
+    get:
+      tags:
+      - Consumer Account
+      summary: Get Consumer Balance
+      operationId: getConsumerBalance
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Consumer's account balance.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balance:
+                    "$ref": "#/components/schemas/Money"
+                  success:
+                    type: boolean
+  "/consumer/{consumerID}/printingschemas":
+    get:
+      tags:
+      - Printing Schemas
+      summary: Get All Printing Schemas
+      operationId: getConsumerPrintingSchemas
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: consumerID
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: List of printing schemas.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PrintingSchemaListResponse"
+    post:
+      tags:
+      - Printing Schemas
+      summary: Create Printing Schema
+      operationId: createPrintingSchema
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: consumerID
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/PrintingSchema"
+      responses:
+        '200':
+          description: Success response with new schema ID.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CreateSuccessResponse"
+  "/consumer/{consumerID}/printingschemas/{printingSchemaID}":
+    put:
+      tags:
+      - Printing Schemas
+      summary: Edit Printing Schema
+      operationId: editPrintingSchema
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: consumerID
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: printingSchemaID
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/PrintingSchema"
+      responses:
+        '200':
+          "$ref": "#/components/responses/SuccessResponse"
+        '500':
+          description: Update failed.
+    delete:
+      tags:
+      - Printing Schemas
+      summary: Delete Printing Schema
+      operationId: deletePrintingSchema
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: consumerID
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: printingSchemaID
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          "$ref": "#/components/responses/SuccessResponse"
+  "/consumer/budget":
+    post:
+      tags:
+      - Print Requests
+      summary: Calculate Budgets for New Request
+      operationId: calculateBudget
+      security:
+      - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                printRequest:
+                  "$ref": "#/components/schemas/BudgetRequest"
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '200':
+          description: Map of budgets and the new print request ID.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BudgetResponse"
+  "/consumer/printrequest/{printRequestID}/submit":
+    post:
+      tags:
+      - Print Requests
+      summary: Submit Print Request
+      operationId: submitPrintRequest
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: printRequestID
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/SubmitRequest"
+      responses:
+        '200':
+          description: Success or failure response.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/SubmitResponse"
+  "/printdocument":
+    post:
+      tags:
+      - External Integration
+      summary: Create Request from Document
+      operationId: createRequestFromDocument
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Success response with new request ID.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/CreateSuccessResponse"
+  "/printdocument/{id}":
+    get:
+      tags:
+      - External Integration
+      summary: Get Documents for Request
+      operationId: getDocumentsForRequest
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: List of documents for the request.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DocumentListResponse"
+  "/printdocument/{id}/budget":
+    post:
+      tags:
+      - External Integration
+      summary: Calculate Budgets for Existing Request
+      operationId: calculateBudgetForExistingRequest
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: integer
+                format: int64
+      responses:
+        '200':
+          description: Map of budgets.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/BudgetResponse"
+  "/consumer/{id}/notify":
+    post:
+      tags:
+      - Notifications
+      summary: Send Notification
+      operationId: sendNotification
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+              required:
+              - message
+      responses:
+        '204':
+          description: Notification sent.
+        '500':
+          description: Error sending notification.
+  "/consumer/subscribe":
+    get:
+      tags:
+      - Notifications
+      summary: Subscribe to Notifications (SSE)
+      operationId: subscribeToNotifications
+      parameters:
+      - name: username
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: password
+        in: query
+        required: true
+        schema:
+          type: string
+          format: password
+      responses:
+        '200':
+          description: SSE stream established.
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        '401':
+          description: Unauthorized.
+        '404':
+          description: Not Found.
+  "/consumer/notifications":
+    get:
+      tags:
+      - Notifications
+      summary: Get All Notifications
+      operationId: getConsumerNotifications
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of notifications.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/Notification"
+  "/notifications/{notificationId}":
+    delete:
+      tags:
+      - Notifications
+      summary: Delete Notification
+      operationId: deleteNotification
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: notificationId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          "$ref": "#/components/responses/SuccessResponse"
+    put:
+      tags:
+      - Notifications
+      summary: Mark Notification as Read
+      operationId: readNotification
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: notificationId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          "$ref": "#/components/responses/SuccessResponse"
+        '404':
+          description: Not Found.
+  "/paypal/ipn/{printRequestID}":
+    post:
+      tags:
+      - PayPal IPN
+      summary: IPN for Print Request Payment
+      operationId: ipnPrintRequestPayment
+      parameters:
+      - name: printRequestID
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                payer_email:
+                  type: string
+                mc_gross:
+                  type: number
+                payment_status:
+                  type: string
+                txn_id:
+                  type: string
+              required:
+              - payer_email
+              - mc_gross
+              - payment_status
+              - txn_id
+      responses:
+        '204':
+          description: IPN received.
+  "/paypal/ipn/consumer/{consumerID}":
+    post:
+      tags:
+      - PayPal IPN
+      summary: IPN for Consumer Balance Load-Up
+      operationId: ipnConsumerBalanceLoadUp
+      parameters:
+      - name: consumerID
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                payer_email:
+                  type: string
+                mc_gross:
+                  type: number
+                payment_status:
+                  type: string
+              required:
+              - payer_email
+              - mc_gross
+              - payment_status
+      responses:
+        '204':
+          description: IPN received.
+  "/documents/{id}":
+    get:
+      tags:
+      - Print Shop Management
+      summary: Download a Document
+      operationId: downloadDocument
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: The document file.
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+        '401':
+          description: Unauthorized.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Not Found.
+  "/printshops/{id}/pricetable/papers":
+    post:
+      tags:
+      - Price Tables
+      summary: Add Paper Prices
+      operationId: addPaperItem
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/PaperTableItem"
+      responses:
+        '200':
+          "$ref": "#/components/responses/SuccessResponse"
+    put:
+      tags:
+      - Price Tables
+      summary: Edit Paper Prices
+      operationId: editPaperItem
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/PaperTableItem"
+      responses:
+        '200':
+          "$ref": "#/components/responses/SuccessResponse"
+  "/printshops/{id}/pricetable/deletepaper":
+    post:
+      tags:
+      - Price Tables
+      summary: Delete Paper Prices
+      operationId: deletePaperItem
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/PaperTableItem"
+      responses:
+        '200':
+          "$ref": "#/components/responses/SuccessResponse"
+  "/printshops/{id}/pricetable/rings":
+    post:
+      tags:
+      - Price Tables
+      summary: Add Ring Binding Prices
+      operationId: addRingItem
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/RingTableItem"
+      responses:
+        '200':
+          "$ref": "#/components/responses/SuccessResponse"
+    put:
+      tags:
+      - Price Tables
+      summary: Edit Ring Binding Prices
+      operationId: editRingItem
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/RingTableItem"
+      responses:
+        '200':
+          "$ref": "#/components/responses/SuccessResponse"
+  "/printshops/{id}/pricetable/deletering":
+    post:
+      tags:
+      - Price Tables
+      summary: Delete Ring Binding Prices
+      operationId: deleteRingItem
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/RingTableItem"
+      responses:
+        '200':
+          "$ref": "#/components/responses/SuccessResponse"
+  "/printshops/{id}/pricetable/covers":
+    post:
+      tags:
+      - Price Tables
+      summary: Add Cover Prices
+      operationId: addCoverItem
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CoverTableItem"
+      responses:
+        '200':
+          "$ref": "#/components/responses/SuccessResponse"
+    put:
+      tags:
+      - Price Tables
+      summary: Edit Cover Prices
+      operationId: editCoverItem
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CoverTableItem"
+      responses:
+        '200':
+          "$ref": "#/components/responses/SuccessResponse"
+  "/printshops/{id}/pricetable/deletecover":
+    post:
+      tags:
+      - Price Tables
+      summary: Delete Cover Prices
+      operationId: deleteCoverItem
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CoverTableItem"
+      responses:
+        '200':
+          "$ref": "#/components/responses/SuccessResponse"
+  "/printshops/{printShopID}/pricetable/editstapling":
+    put:
+      tags:
+      - Print Shop Management
+      summary: Edit Stapling Price
+      operationId: editStaplingPrice
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: printShopID
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+              example: '0.02'
+      responses:
+        '200':
+          "$ref": "#/components/responses/SuccessResponse"
+  "/printshops/{printShopID}/employees":
+    get:
+      tags:
+      - Print Shop Management
+      summary: Get All Employees
+      operationId: getEmployees
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: printShopID
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: List of employees.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/EmployeeListResponse"
+    post:
+      tags:
+      - Print Shop Management
+      summary: Add New Employee
+      operationId: addEmployee
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: printShopID
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        description: Details for the new employee to be created.
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/NewEmployee"
+      responses:
+        '200':
+          description: A success or failure response. On success, includes the new
+            employee's ID.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/EmployeeCreationResponse"
+    put:
+      tags:
+      - Print Shop Management
+      summary: Edit an Employee
+      operationId: editEmployee
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: printShopID
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        description: An Employee object with the ID of the employee to update and
+          the new field values.
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/UpdateEmployee"
+      responses:
+        '200':
+          description: A success or failure response.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/EmployeeEditResponse"
+  "/printshops/{printShopID}/employees/{employeeID}":
+    delete:
+      tags:
+      - Print Shop Management
+      summary: Delete Employee
+      operationId: deleteEmployee
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: printShopID
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: employeeID
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          "$ref": "#/components/responses/SuccessResponse"
+  "/printshops/stats":
+    get:
+      tags:
+      - Print Shop Management
+      summary: Get Print Shop Statistics
+      operationId: getPrintShopStats
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Shop statistics.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PrintShopStatsResponse"
+  "/printshop":
+    get:
+      tags:
+      - Print Shop Management
+      summary: Get Manager's Print Shop
+      operationId: getManagerPrintShop
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Manager's print shop details.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PrintShopResponse"
+  "/request/register":
+    post:
+      tags:
+      - Registration Requests
+      summary: Submit Registration Request
+      operationId: submitRegistrationRequest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/RegisterRequest"
+      responses:
+        '200':
+          description: Submitted registration request.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/RegisterRequest"
+  "/request/accept/{id}":
+    post:
+      tags:
+      - Registration Requests
+      summary: Accept Registration Request
+      operationId: acceptRegistrationRequest
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          "$ref": "#/components/responses/SuccessResponse"
+  "/request/reject/{printRequestID}":
+    post:
+      tags:
+      - Registration Requests
+      summary: Reject Registration Request
+      operationId: rejectRegistrationRequest
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: printRequestID
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+      responses:
+        '200':
+          "$ref": "#/components/responses/SuccessResponse"
+  "/requests/pending":
+    get:
+      tags:
+      - Registration Requests
+      summary: Get Pending Registration Requests
+      operationId: getPendingRegistrationRequests
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: List of pending requests.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/RegisterRequest"
+  "/printshops/{id}/reviews":
+    get:
+      tags:
+      - Reviews
+      summary: Get Print Shop Reviews
+      operationId: getPrintShopReviews
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: List of reviews.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/PublicReview"
+        '404':
+          description: Not Found.
+    post:
+      tags:
+      - Reviews
+      summary: Add Review
+      operationId: addPrintShopReview
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/NewReviewRequest"
+      responses:
+        '200':
+          description: The new review.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Review"
+        '404':
+          description: Not Found.
+  "/printshops/{printShopId}/reviews/{reviewId}":
+    put:
+      tags:
+      - Reviews
+      summary: Edit Review
+      operationId: editPrintShopReview
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: printShopId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: reviewId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              "$ref": "#/components/schemas/NewReviewRequest"
+      responses:
+        '200':
+          description: The updated review.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Review"
+        '401':
+          description: Unauthorized.
+        '404':
+          description: Not Found.
+    delete:
+      tags:
+      - Reviews
+      summary: Delete Review
+      operationId: deletePrintShopReview
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: printShopId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: reviewId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: The deleted review.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Review"
+        '401':
+          description: Unauthorized.
+        '404':
+          description: Not Found.
+  "/printshops":
+    get:
+      tags:
+      - Print Shops
+      summary: Get All Print Shops
+      operationId: getPrintShops
+      responses:
+        '200':
+          description: A list of all registered print shops.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  "$ref": "#/components/schemas/PrintShop"
+  "/printshops/nearest":
+    get:
+      tags:
+      - Print Shops
+      summary: Find Nearest Print Shops
+      operationId: getNearestPrintShops
+      parameters:
+      - name: latitude
+        in: query
+        required: true
+        schema:
+          type: number
+          format: double
+      - name: longitude
+        in: query
+        required: true
+        schema:
+          type: number
+          format: double
+      responses:
+        '200':
+          description: A map of distances to print shops, sorted from nearest to farthest.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  printshops:
+                    type: object
+                    additionalProperties:
+                      "$ref": "#/components/schemas/PrintShop"
+                    description: A map where the key is the distance (as a string)
+                      and the value is the PrintShop object.
+  "/printshops/{id}":
+    get:
+      tags:
+      - Print Shops
+      summary: Get Print Shop by ID
+      operationId: getPrintShopById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: The requested print shop.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PrintShop"
+        '404':
+          description: Not Found. The print shop with the given ID does not exist.
+  "/printshops/{id}/pricetable":
+    get:
+      tags:
+      - Print Shops
+      summary: Get Price Table
+      operationId: getPrintShopPriceTable
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: A detailed price table for the specified print shop.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PriceTableResponse"
+  "/printshops/requests":
+    get:
+      tags:
+      - Print Shop - Queue Management
+      summary: Get Active Requests
+      description: Returns a list of PENDING and IN_PROGRESS print requests for the
+        authenticated employee's print shop.
+      operationId: getPrintShopActiveRequests
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: A list of active print requests.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PrintRequestListResponse"
+  "/printshops/history":
+    get:
+      tags:
+      - Print Shop - Queue Management
+      summary: Get History of Requests
+      description: Returns a list of LIFTED (completed) print requests for the authenticated
+        employee's print shop.
+      operationId: getPrintShopHistoryRequests
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: A history of completed print requests.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PrintRequestHistoryResponse"
+  "/printshops/satisfied":
+    get:
+      tags:
+      - Print Shop - Queue Management
+      summary: Get Satisfied (Ready for Pickup) Requests
+      description: Returns a list of FINISHED print requests for the authenticated
+        employee's print shop.
+      operationId: getPrintShopSatisfiedRequests
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: A list of satisfied print requests.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  satisfiedrequests:
+                    type: array
+                    items:
+                      "$ref": "#/components/schemas/PrintRequest"
+  "/printshops/requests/{id}":
+    get:
+      tags:
+      - Print Shop - Queue Management
+      summary: Get a Specific Print Request
+      operationId: getPrintShopRequestById
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: Details of a specific print request.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/SinglePrintRequestResponse"
+    post:
+      tags:
+      - Print Shop - Queue Management
+      summary: Change Print Request Status
+      description: Advances the status of a print request (e.g., from PENDING to IN_PROGRESS).
+      operationId: changePrintRequestStatus
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: The request status was successfully updated.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ChangeStatusResponse"
+  "/printshops/requests/cancel/{id}":
+    post:
+      tags:
+      - Print Shop - Queue Management
+      summary: Cancel a Print Request
+      operationId: cancelPrintShopRequest
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        required: true
+        content:
+          text/plain:
+            schema:
+              type: string
+              description: The reason for cancelling the request.
+      responses:
+        '200':
+          description: Success or failure response.
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/responses/SuccessResponse"
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        username:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+          readOnly: true
+    Consumer:
+      allOf:
+      - "$ref": "#/components/schemas/User"
+      - type: object
+        properties:
+          name:
+            type: string
+          email:
+            type: string
+            format: email
+          latitude:
+            type: string
+          longitude:
+            type: string
+          printingSchemas:
+            type: array
+            items:
+              "$ref": "#/components/schemas/PrintingSchema"
+          notifications:
+            type: array
+            items:
+              "$ref": "#/components/schemas/Notification"
+          balance:
+            "$ref": "#/components/schemas/Money"
+    Admin:
+      allOf:
+      - "$ref": "#/components/schemas/User"
+      - type: object
+        properties:
+          email:
+            type: string
+            format: email
+          balance:
+            "$ref": "#/components/schemas/Money"
+    Manager:
+      allOf:
+      - "$ref": "#/components/schemas/User"
+      - type: object
+        properties:
+          name:
+            type: string
+          email:
+            type: string
+            format: email
+          printShop:
+            "$ref": "#/components/schemas/PrintShop"
+    Employee:
+      allOf:
+      - "$ref": "#/components/schemas/User"
+      - type: object
+        properties:
+          name:
+            type: string
+          printShop:
+            "$ref": "#/components/schemas/PrintShop"
+            readOnly: true
+    NewEmployee:
+      type: object
+      description: Schema for creating a new employee.
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+          writeOnly: true
+        name:
+          type: string
+      required:
+      - username
+      - password
+      - name
+    UpdateEmployee:
+      type: object
+      description: Schema for updating an existing employee.
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        password:
+          type: string
+          format: password
+          writeOnly: true
+        name:
+          type: string
+      required:
+      - id
+      - username
+      - password
+      - name
+    Money:
+      type: object
+      properties:
+        currency:
+          type: string
+        integerPart:
+          type: integer
+        fractionalPart:
+          type: integer
+    PrintingSchema:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        paperSpecs:
+          type: string
+        bindingSpecs:
+          type: string
+        coverSpecs:
+          type: string
+        deleted:
+          type: boolean
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        read:
+          type: boolean
+    PrintRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        cost:
+          type: number
+          format: double
+        arrivalTimestamp:
+          type: string
+          format: date-time
+        finishedTimestamp:
+          type: string
+          format: date-time
+        deliveredTimestamp:
+          type: string
+          format: date-time
+        empAttended:
+          type: string
+        empDelivered:
+          type: string
+        status:
+          type: string
+          enum:
+          - NOT_PAYED
+          - PENDING
+          - IN_PROGRESS
+          - FINISHED
+          - LIFTED
+        payPalSaleID:
+          type: string
+        consumer:
+          "$ref": "#/components/schemas/Consumer"
+        documents:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Document"
+        paymentType:
+          type: string
+    Document:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        totalPages:
+          type: integer
+        specs:
+          type: array
+          items:
+            "$ref": "#/components/schemas/DocumentSpec"
+    DocumentSpec:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        firstPage:
+          type: integer
+        lastPage:
+          type: integer
+        printingSchema:
+          "$ref": "#/components/schemas/PrintingSchema"
+    PrintShop:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        address:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        nif:
+          type: string
+        logo:
+          type: string
+        avgRating:
+          type: number
+          format: float
+        balance:
+          "$ref": "#/components/schemas/Money"
+    RegisterRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        managerName:
+          type: string
+        managerUsername:
+          type: string
+        managerEmail:
+          type: string
+          format: email
+        managerPassword:
+          type: string
+          writeOnly: true
+        pShopAddress:
+          type: string
+        pShopLatitude:
+          type: number
+          format: double
+        pShopLongitude:
+          type: number
+          format: double
+        pShopNIF:
+          type: string
+        pShopName:
+          type: string
+        pShopDateRequest:
+          type: string
+          readOnly: true
+        pShopDateRequestAccepted:
+          type: string
+          readOnly: true
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        description:
+          type: string
+        rating:
+          type: integer
+    PaperTableItem:
+      type: object
+      properties:
+        infLim:
+          type: integer
+        supLim:
+          type: integer
+        colors:
+          type: string
+        priceA4SIMPLEX:
+          type: string
+        priceA4DUPLEX:
+          type: string
+        priceA3SIMPLEX:
+          type: string
+        priceA3DUPLEX:
+          type: string
+    RingTableItem:
+      type: object
+      properties:
+        ringType:
+          type: string
+        infLim:
+          type: integer
+        supLim:
+          type: integer
+        price:
+          type: string
+    CoverTableItem:
+      type: object
+      properties:
+        coverType:
+          type: string
+        priceA4:
+          type: string
+        priceA3:
+          type: string
+    LoginSuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        externalURL:
+          type: string
+        user:
+          oneOf:
+          - "$ref": "#/components/schemas/Consumer"
+          - "$ref": "#/components/schemas/Admin"
+          - "$ref": "#/components/schemas/Manager"
+          - "$ref": "#/components/schemas/Employee"
+    LoginFailureResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+    ConsumerRegistrationSuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        consumer:
+          "$ref": "#/components/schemas/Consumer"
+    ConsumerRegistrationFailureResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        error:
+          type: string
+    ConsumerInfoResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        consumer:
+          "$ref": "#/components/schemas/Consumer"
+    PrintingSchemaListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        pschemas:
+          type: array
+          items:
+            "$ref": "#/components/schemas/PrintingSchema"
+    CreateSuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        id:
+          type: integer
+          format: int64
+    BudgetRequest:
+      type: object
+      properties:
+        printshops:
+          type: array
+          items:
+            type: integer
+            format: int64
+        files:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              specs:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      format: int64
+                    from:
+                      type: integer
+                    to:
+                      type: integer
+    BudgetResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        budgets:
+          type: object
+          additionalProperties:
+            type: string
+        printRequestID:
+          type: integer
+          format: int64
+    SubmitRequest:
+      type: object
+      properties:
+        printshopID:
+          type: integer
+          format: int64
+        budget:
+          type: number
+          format: double
+        paymentMethod:
+          type: string
+    SubmitResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+    DocumentListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        documents:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Document"
+    EmployeeListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        employees:
+          type: array
+          items:
+            "$ref": "#/components/schemas/Employee"
+    EmployeeCreationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        id:
+          type: integer
+          format: int64
+        message:
+          type: string
+    EmployeeEditResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+    PrintShopStatsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        nPendingRequests:
+          type: integer
+        nInProgressRequests:
+          type: integer
+        nFinished:
+          type: integer
+        nEmployees:
+          type: integer
+        pshopProfit:
+          type: string
+    PrintShopResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        printshop:
+          "$ref": "#/components/schemas/PrintShop"
+    PrintRequestListResponse:
+      type: object
+      properties:
+        printrequest:
+          type: array
+          items:
+            "$ref": "#/components/schemas/PrintRequest"
+        success:
+          type: boolean
+    PrintRequestHistoryResponse:
+      type: object
+      properties:
+        historyrequests:
+          type: array
+          items:
+            "$ref": "#/components/schemas/PrintRequest"
+        success:
+          type: boolean
+    PrintRequestSatisfiedResponse:
+      type: object
+      properties:
+        satisfiedrequests:
+          type: array
+          items:
+            "$ref": "#/components/schemas/PrintRequest"
+        success:
+          type: boolean
+    SinglePrintRequestResponse:
+      type: object
+      properties:
+        printrequest:
+          "$ref": "#/components/schemas/PrintRequest"
+        success:
+          type: boolean
+    ChangeStatusResponse:
+      type: object
+      properties:
+        newStatus:
+          type: string
+          enum:
+          - IN_PROGRESS
+          - FINISHED
+          - LIFTED
+        success:
+          type: boolean
+    PriceTableResponse:
+      type: object
+      properties:
+        printcopy:
+          "$ref": "#/components/schemas/PapersTable"
+        rings:
+          "$ref": "#/components/schemas/RingsTable"
+        stapling:
+          type: number
+          format: float
+        covers:
+          "$ref": "#/components/schemas/CoversTable"
+        success:
+          type: boolean
+    PapersTable:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          "$ref": "#/components/schemas/PaperTableItem"
+      description: A map where the key is the color type (e.g., 'BW', 'COLOR') and
+        the value is a list of paper price ranges.
+    RingsTable:
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          "$ref": "#/components/schemas/RingTableItem"
+      description: A map where the key is the ring material (e.g., 'PLASTIC', 'SPIRAL')
+        and the value is a list of ring price ranges.
+    CoversTable:
+      type: object
+      additionalProperties:
+        "$ref": "#/components/schemas/CoverTableItem"
+      description: A map where the key is the cover material (e.g., 'CRISTAL_ACETATE')
+        and the value is an object with prices for A4 and A3 formats.
+    SatisfiedRequest:
+      type: object
+      properties:
+        printrequest:
+          "$ref": "#/components/schemas/PrintRequest"
+        printshop:
+          type: string
+    PublicReview:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        description:
+          type: string
+        rating:
+          type: integer
+        username:
+          type: string
+    NewReviewRequest:
+      type: object
+      properties:
+        review:
+          type: string
+        rating:
+          type: integer
+  responses:
+    SuccessResponse:
+      description: A generic success response.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer

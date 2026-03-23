@@ -1,0 +1,33 @@
+{
+  "groups": [
+    {
+      "name": "spring.liquibase",
+      "type": "it.fabioformosa.quartzmanager.api.persistence.PersistenceConfig$PersistenceDatasourceProps",
+      "sourceType": "it.fabioformosa.quartzmanager.api.persistence.PersistenceConfig",
+      "sourceMethod": "persistenceDatasourceProps()"
+    },
+    {
+      "name": "spring.quartz",
+      "type": "it.fabioformosa.quartzmanager.api.persistence.QuartzPersistencePropConfig",
+      "sourceType": "it.fabioformosa.quartzmanager.api.persistence.QuartzPersistencePropConfig"
+    }
+  ],
+  "properties": [
+    {
+      "name": "spring.liquibase.change-log",
+      "type": "java.lang.String",
+      "sourceType": "it.fabioformosa.quartzmanager.api.persistence.PersistenceConfig$PersistenceDatasourceProps"
+    },
+    {
+      "name": "spring.liquibase.contexts",
+      "type": "java.lang.String",
+      "sourceType": "it.fabioformosa.quartzmanager.api.persistence.PersistenceConfig$PersistenceDatasourceProps"
+    },
+    {
+      "name": "spring.quartz.properties",
+      "type": "java.util.Properties",
+      "sourceType": "it.fabioformosa.quartzmanager.api.persistence.QuartzPersistencePropConfig"
+    }
+  ],
+  "hints": []
+}

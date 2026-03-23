@@ -1,0 +1,212 @@
+openapi: 3.0.1
+info:
+  title: Corona-Warn-App Verification Server
+  version: 'v1'
+paths:
+  /version/v1/testresult:
+    post:
+      summary: Retrieves the internal COVID-19 test result for a given registration token.
+      description: >-
+        Gets the result of a COVID-19 Test for a registration token associated
+        with a Hashed GUID. This endpoint is for internal use and will not
+        process tokens associated with TeleTANs.
+      operationId: getInternalTestState
+      requestBody:
+        description: The registration token for which to retrieve the test result.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationToken'
+      responses:
+        '200':
+          description: Testresult retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalTestResult'
+        '400':
+          description: Bad Request. The session has an unknown source of trust.
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          description: Forbidden. The operation is not allowed, e.g., the token is a TeleTAN or a DOB hash check failed.
+          content:
+            application/json:
+              schema:
+                type: object
+        '404':
+          description: RegistrationToken not found.
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /version/v1/tan/verify:
+    post:
+      summary: Verify provided Tan
+      description: The provided Tan is verified to be formerly issued by the verification server.
+      operationId: verifyTan
+      requestBody:
+        description: The TAN to be verified.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Tan'
+      responses:
+        '200':
+          description: Tan is valid an formerly issued by the verification server.
+          headers:
+            X-CWA-TELETAN-TYPE:
+              description: Type of the TeleTan (TEST or EVENT). Only present if the TAN was a TeleTAN.
+              schema:
+                type: string
+                enum: [TEST, EVENT]
+        '404':
+          description: Tan could not be verified.
+          content:
+            application/json:
+              schema:
+                type: object
+  /version/v1/tan/teletan:
+    post:
+      summary: Request generation of a teleTAN
+      description: A teleTAN is a human readable TAN with 7 characters which is supposed to be issued via call line.
+      operationId: createTeleTan
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-CWA-TELETAN-TYPE
+          in: header
+          required: false
+          description: The type of teleTAN to create. Defaults to TEST.
+          schema:
+            type: string
+            enum: [TEST, EVENT]
+      responses:
+        '201':
+          description: TeleTan created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeleTan'
+        '401':
+          description: JWT is invalid or does not have the required role.
+          content:
+            application/json:
+              schema:
+                type: object
+        '429':
+          description: Rate Limit exceed. Try again later.
+          content:
+            application/json:
+              schema:
+                type: object
+
+components:
+  schemas:
+    RegistrationTokenRequest:
+      type: object
+      required:
+        - key
+        - keyType
+      properties:
+        key:
+          type: string
+          description: The key which can be a teletan or a hashed guid.
+        keyDob:
+          type: string
+          description: SHA-256 hash of GUID and date of birth. This field is only used when keyType is GUID.
+          pattern: '^[XxA-Fa-f0-9]([A-Fa-f0-9]{63})$'
+        keyType:
+          type: string
+          description: The type of key.
+          enum:
+            - GUID
+            - TELETAN
+    RegistrationToken:
+      type: object
+      required:
+        - registrationToken
+      properties:
+        registrationToken:
+          type: string
+          description: The registration token.
+          pattern: '^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}$'
+          format: uuid
+        responsePadding:
+          type: string
+          description: Optional field for response padding.
+    
+    InternalTestResult:
+      type: object
+      description: The test result model for internal test result requests.
+      required:
+        - testResult
+        - sc
+        - testId
+      allOf: # Using allOf to represent inheritance
+        - $ref: '#/components/schemas/TestResult'
+        - type: object
+          properties:
+            testId:
+              type: string
+              description: The hashed GUID of the user, returned for internal tracking.
+
+    TestResult:
+      type: object
+      description: The test result model.
+      required:
+        - testResult
+        - sc
+      properties:
+        testResult:
+          type: integer
+          description: |
+            The numerical result of the COVID-19 test.
+            * 0: PENDING
+            * 1: NEGATIVE
+            * 2: POSITIVE
+            * 3: INVALID
+            * 4: REDEEMED
+            * 5: QUICK_PENDING
+            * 6: QUICK_NEGATIVE
+            * 7: QUICK_POSITIVE
+            * 8: QUICK_INVALID
+            * 9: QUICK_REDEEMED
+        sc:
+          type: integer
+          format: int64
+          description: Sample collection timestamp (epoch seconds).
+        labId:
+          type: string
+          description: The ID of the lab that performed the test.
+        responsePadding:
+          type: string
+          description: Random padding for the response.
+    Tan:
+      type: object
+      description: The transaction number model.
+      required:
+        - tan
+      properties:
+        tan:
+          type: string
+          description: The transaction number (TAN).
+          pattern: '^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}$'
+          format: uuid
+        responsePadding:
+          type: string
+          description: Optional field for response padding.
+    TeleTan:
+      type: object
+      description: The teleTAN model.
+      required:
+        - value
+      properties:
+        value:
+          type: string
+          description: The value of the teleTAN.

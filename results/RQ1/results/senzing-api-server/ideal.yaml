@@ -1,0 +1,3361 @@
+paths:
+  /:
+    get:
+      tags:
+      - Admin
+      summary: Gets a root-level response from the server. This returns the same as
+        the GET /heartbeat endpoint for now, but may change in the future to provide
+        additional information.
+      description: The root operation can be used to ensure that the HTTP server is
+        indeed running, but this operation does not call upon the underlying native
+        Senzing API and therefore does not ensure the Senzing initialization or configuration
+        is valid.
+      operationId: root
+      parameters: []
+      responses:
+        '200':
+          description: Successful response confirming the server is running.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzBaseResponse'
+        '500':
+          description: An unexpected server error occurred.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzErrorResponse'
+  /heartbeat:
+    get:
+      tags:
+      - Admin
+      summary: Gets a heartbeat from the server to make sure it is up and running.
+      description: The heartbeat operation can be used to ensure that the HTTP server
+        is indeed running. This operation does not call upon the underlying native
+        Senzing API and therefore does not ensure the Senzing initialization or configuration
+        is valid.
+      operationId: heartbeat
+      parameters: []
+      responses:
+        '200':
+          description: Successful heartbeat response, confirming the server is running.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzBaseResponse'
+        '500':
+          description: An unexpected server error occurred.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzErrorResponse'
+  /specifications/open-api:
+    get:
+      tags:
+      - Admin
+      summary: Gets this Open API specification to describe the API.
+      description: 'This operation can be used to obtain the Open API specification
+        in JSON format. The specification can either be the ''data'' field of a standard
+        response (i.e.: a response with a ''meta'', ''links'' and ''data'' field)
+        or as raw format where the root JSON document is the Open API specification
+        JSON.'
+      operationId: openApiSpecification
+      parameters:
+      - name: asRaw
+        in: query
+        required: false
+        description: Set to `true` to return the raw OpenAPI specification JSON directly.
+          If `false` (the default), returns a standard SzOpenApiSpecResponse object
+          containing the specification.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful response containing the OpenAPI specification.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzOpenApiSpecResponseOrRawJson'
+  /license:
+    get:
+      tags:
+      - Admin
+      summary: Get the license information.
+      description: This operation will obtain license information for the underlying
+        native Senzing API.
+      operationId: license
+      parameters:
+      - name: withRaw
+        in: query
+        required: false
+        description: Set to `true` to include the raw JSON response from the underlying
+          native API in the `rawData` field of the response. Defaults to `false`.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful response containing the license information.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzLicenseResponse'
+  /version:
+    get:
+      tags:
+      - Admin
+      summary: Get the full version information.
+      description: This operation will obtain the full version information for the
+        server. Much of the same information is available in the 'meta' segment of
+        every JSON response.
+      operationId: version
+      parameters:
+      - name: withRaw
+        in: query
+        required: false
+        description: Set to `true` to include the raw JSON response from the underlying
+          native API in the `rawData` field of the response. Defaults to `false`.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful response containing the version information.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzVersionResponse'
+  /data-sources:
+    post:
+      tags:
+      - Config
+      summary: Adds one or more new data sources to the current default configuration
+        and reinitializes with the newly modified configuration.
+      description: Obtains the current default configuration, adds the specified data
+        sources, and sets the modified configuration as the new default configuration,
+        returning the complete set of all configured data sources. New data sources
+        can be specified via the 'dataSource' query parameter and/or the request body.
+      operationId: addDataSources
+      parameters:
+      - name: dataSource
+        in: query
+        required: false
+        description: A data source code to be created. This parameter can be repeated
+          for multiple data sources. The data source ID will be auto-generated.
+        schema:
+          type: array
+          items:
+            type: string
+      - name: withRaw
+        in: query
+        required: false
+        description: Set to `true` to include the raw JSON response from the underlying
+          native API in the `rawData` field of the response. Defaults to `false`.
+        schema:
+          type: boolean
+          default: false
+      requestBody:
+        description: The data source(s) to create. This can be provided as a single
+          data source descriptor or an array of data source descriptors. A descriptor
+          can be a simple string (data source code) or a full data source object (with
+          code and optional ID).
+        required: false
+        content:
+          application/json; charset=UTF-8:
+            schema:
+              oneOf:
+              - $ref: '#/components/schemas/SzDataSourceDescriptor'
+              - type: array
+                items:
+                  $ref: '#/components/schemas/SzDataSourceDescriptor'
+          text/plain; charset=UTF-8:
+            schema:
+              type: string
+              description: A single, unquoted data source code.
+      responses:
+        '200':
+          description: Successful response containing the complete list of all configured
+            data sources after the additions.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzDataSourcesResponse'
+    get:
+      tags:
+        - "Config"
+      summary: "Get a list of configured data sources."
+      description: "This operation will provide a list of data source codes as well as a list of detailed descriptions of each data source."
+      operationId: "getDataSources"
+      parameters:
+        - name: "withRaw"
+          in: "query"
+          required: false
+          description: "Set to `true` to include the raw JSON response from the underlying native API in the `rawData` field of the response. Defaults to `false`."
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: "Successful response containing the list of configured data sources."
+          content:
+            "application/json; charset=UTF-8":
+              schema:
+                $ref: '#/components/schemas/SzDataSourcesResponse'
+
+  /data-sources/{dataSourceCode}:
+    get:
+      tags:
+      - Config
+      summary: Gets the details on the specified data source.
+      description: This operation provides details on a specific data source identified
+        by the data source code in the requested path.
+      operationId: getDataSource
+      parameters:
+      - name: dataSourceCode
+        in: path
+        required: true
+        description: The data source code identifying the data source.
+        schema:
+          type: string
+      - name: withRaw
+        in: query
+        required: false
+        description: Set to `true` to include the raw JSON response from the underlying
+          native API in the `rawData` field of the response. Defaults to `false`.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful response containing the details for the specified
+            data source.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzDataSourceResponse'
+  /data-sources/{dataSourceCode}/records:
+    post:
+      tags:
+      - Entity Data
+      summary: Load a new record specified in a data source with either an auto-generated
+        record ID or a RECORD_ID specified in the payload.
+      description: This operation loads a single record using the data source identified
+        by the data source code in the request path. The provided record in the request
+        body is described in JSON using the Senzing Generic Entity Specification.
+        If the record data does not contain a RECORD_ID, one will be automatically
+        generated and returned in the response.
+      operationId: addRecordWithReturnedRecordId
+      parameters:
+      - name: dataSourceCode
+        in: path
+        required: true
+        description: The data source code for the record being loaded.
+        schema:
+          type: string
+      - name: loadId
+        in: query
+        required: false
+        description: An optional load ID to associate with the loaded record.
+        schema:
+          type: string
+      - name: withInfo
+        in: query
+        required: false
+        description: Set to `true` to include entity resolution information in the
+          response. Defaults to `false`.
+        schema:
+          type: boolean
+          default: false
+      - name: withRaw
+        in: query
+        required: false
+        description: Set to `true` to include the raw JSON response from the underlying
+          native API in the `rawData` field of the response. This is only returned
+          if `withInfo` is also `true`. Defaults to `false`.
+        schema:
+          type: boolean
+          default: false
+      requestBody:
+        description: The record data as a JSON object, described by the Senzing Generic
+          Entity Specification. The DATA_SOURCE field will be added or validated against
+          the `dataSourceCode` path parameter.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Successful response containing the record ID of the loaded
+            record and optionally the resolution info.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzLoadRecordResponse'
+  /data-sources/{dataSourceCode}/records/{recordId}:
+    put:
+      tags:
+        - "Entity Data"
+      summary: "Load a new record or replace a record in a data source with a specific record ID."
+      description: "This operation loads a single record using the data source and record ID specified in the request path. If the record already exists, it is replaced. The provided record in the request body is described in JSON using the Senzing Generic Entity Specification."
+      operationId: "addRecord"
+      parameters:
+        - name: "dataSourceCode"
+          in: "path"
+          required: true
+          description: "The data source code for the record being loaded."
+          schema:
+            type: string
+        - name: "recordId"
+          in: "path"
+          required: true
+          description: "The record ID to assign to the record."
+          schema:
+            type: string
+        - name: "loadId"
+          in: "query"
+          required: false
+          description: "An optional load ID to associate with the loaded record."
+          schema:
+            type: string
+        - name: "withInfo"
+          in: "query"
+          required: false
+          description: "Set to `true` to include entity resolution information in the response. Defaults to `false`."
+          schema:
+            type: boolean
+            default: false
+        - name: "withRaw"
+          in: "query"
+          required: false
+          description: "Set to `true` to include the raw JSON response from the underlying native API in the `rawData` field of the response. This is only returned if `withInfo` is also `true`. Defaults to `false`."
+          schema:
+            type: boolean
+            default: false
+      requestBody:
+        description: "The record data as a JSON object, described by the Senzing Generic Entity Specification. The DATA_SOURCE and RECORD_ID fields will be added or validated against the path parameters."
+        required: true
+        content:
+          "application/json":
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: "Successful response containing the record ID of the loaded record and optionally the resolution info."
+          content:
+            "application/json; charset=UTF-8":
+              schema:
+                $ref: '#/components/schemas/SzLoadRecordResponse'
+    delete:
+      tags:
+        - "Entity Data"
+      summary: "Delete a record given its data source and record ID."
+      description: "This operation deletes a single record identified by the data source code and record ID in the request path. Resolution information about how the deletion affected other entities may be returned if 'withInfo' is set to true."
+      operationId: "deleteRecord"
+      parameters:
+        - name: "dataSourceCode"
+          in: "path"
+          required: true
+          description: "The data source code for the record being deleted."
+          schema:
+            type: string
+        - name: "recordId"
+          in: "path"
+          required: true
+          description: "The record ID of the record being deleted."
+          schema:
+            type: string
+        - name: "loadId"
+          in: "query"
+          required: false
+          description: "An optional load ID to associate with this deletion operation."
+          schema:
+            type: string
+        - name: "withInfo"
+          in: "query"
+          required: false
+          description: "Set to `true` to include entity resolution information in the response. Defaults to `false`."
+          schema:
+            type: boolean
+            default: false
+        - name: "withRaw"
+          in: "query"
+          required: false
+          description: "Set to `true` to include the raw JSON response from the underlying native API in the `rawData` field of the response. This is only returned if `withInfo` is also `true`. Defaults to `false`."
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: "Successful response, indicating the record was deleted. May optionally contain resolution info."
+          content:
+            "application/json; charset=UTF-8":
+              schema:
+                $ref: '#/components/schemas/SzDeleteRecordResponse'
+    get:
+      tags:
+      - Entity Data
+      summary: Get an entity record by data source and record ID.
+      description: Gets details on a specific entity record identified by the data
+        source code and record ID specified in the request path.
+      operationId: getRecord
+      parameters:
+      - name: dataSourceCode
+        in: path
+        required: true
+        description: The data source code for the requested record.
+        schema:
+          type: string
+      - name: recordId
+        in: path
+        required: true
+        description: The record ID for the requested record.
+        schema:
+          type: string
+      - name: withRaw
+        in: query
+        required: false
+        description: Set to `true` to include the raw JSON response from the underlying
+          native API in the `rawData` field of the response. Defaults to `false`.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful response containing the details for the specified
+            record.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzRecordResponse'
+  /data-sources/{dataSourceCode}/records/{recordId}/reevaluate:
+    post:
+      tags:
+      - Entity Data
+      summary: Reevaluate a record identified by a data source and record ID.
+      description: This operation reevaluates a single record identified by the data
+        source code and record ID in the request path. Resolution information about
+        how the reevaluation affected other entities may be returned if 'withInfo'
+        is set to true.
+      operationId: reevaluateRecord
+      parameters:
+      - name: dataSourceCode
+        in: path
+        required: true
+        description: The data source code for the record being reevaluated.
+        schema:
+          type: string
+      - name: recordId
+        in: path
+        required: true
+        description: The record ID of the record being reevaluated.
+        schema:
+          type: string
+      - name: withInfo
+        in: query
+        required: false
+        description: Set to `true` to include entity resolution information in the
+          response. Defaults to `false`.
+        schema:
+          type: boolean
+          default: false
+      - name: withRaw
+        in: query
+        required: false
+        description: Set to `true` to include the raw JSON response from the underlying
+          native API in the `rawData` field of the response. This is only returned
+          if `withInfo` is also `true`. Defaults to `false`.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful response, indicating the record was reevaluated.
+            May optionally contain resolution info.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzReevaluateResponse'
+  /data-sources/{dataSourceCode}/records/{recordId}/entity:
+    get:
+      tags:
+      - Entity Data
+      summary: Get a resolved entity by data source and record ID.
+      description: Gets the details on a resolved entity that contains the record
+        identified by the data source code and record ID in the specified request
+        path.
+      operationId: getEntityByRecordId
+      parameters:
+      - name: dataSourceCode
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: recordId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: withRaw
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: withRelated
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzRelationshipMode'
+      - name: forceMinimal
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: detailLevel
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzDetailLevel'
+      - name: featureMode
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzFeatureMode'
+      - name: withFeatureStats
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: withInternalFeatures
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful response containing the resolved entity data.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzEntityResponse'
+  /entities/{entityId}:
+    get:
+      tags:
+      - Entity Data
+      summary: Get a resolved entity by entity ID.
+      description: 'Gets the details on a resolved entity that is identified by the
+        entity ID specified in the request path. NOTE: Entity IDs are transient and
+        may be recycled or repurposed as new records are loaded. An alternative way
+        to identify an entity is by one of its constituent records.'
+      operationId: getEntityByEntityId
+      parameters:
+      - name: entityId
+        in: path
+        required: true
+        description: The unique numeric ID that identifies the entity being requested.
+        schema:
+          type: integer
+          format: int64
+      - name: withRaw
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: withRelated
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzRelationshipMode'
+      - name: forceMinimal
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: detailLevel
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzDetailLevel'
+      - name: featureMode
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzFeatureMode'
+      - name: withFeatureStats
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: withInternalFeatures
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful response containing the resolved entity data.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzEntityResponse'
+  /entities:
+    get:
+      tags:
+      - Entity Data
+      summary: Search for entities that would resolve to or relate to the provided
+        entity features.
+      description: Finds all entities that would resolve or relate to the search candidate
+        features specified by the 'attr' or 'attrs' query parameters. This uses deterministic
+        entity resolution rules, not keyword search.
+      operationId: searchEntitiesByGet
+      parameters:
+      - name: attrs
+        in: query
+        required: false
+        description: A URL-encoded JSON object describing the entity attributes to
+          search for. If this is provided, the 'attr' parameter is ignored.
+        schema:
+          type: string
+      - name: attr
+        in: query
+        required: false
+        description: A repeatable parameter for simple key:value searches (e.g., 'NAME_FULL:Joe
+          Schmoe').
+        schema:
+          type: array
+          items:
+            type: string
+      - name: includeOnly
+        in: query
+        required: false
+        description: A repeatable parameter to indicate which result types should
+          be included.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzAttributeSearchResultType'
+      - name: forceMinimal
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: detailLevel
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzDetailLevel'
+      - name: featureMode
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzFeatureMode'
+      - name: withFeatureStats
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: withInternalFeatures
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: withRelationships
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: withRaw
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful response containing the search results.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzAttributeSearchResponse'
+  /search-entities:
+    post:
+      tags:
+      - Entity Data
+      summary: Search for entities that would match or relate to the provided entity
+        features.
+      description: Finds all entities that would resolve or relate to the search candidate
+        features specified in the JSON request body. This is similar to 'GET /entities'
+        but allows for sensitive search criteria to be sent in the request body instead
+        of in the URL.
+      operationId: searchEntitiesByPost
+      parameters:
+      - name: includeOnly
+        in: query
+        required: false
+        description: A repeatable parameter to indicate which result types should
+          be included.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzAttributeSearchResultType'
+      - name: forceMinimal
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: detailLevel
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzDetailLevel'
+      - name: featureMode
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzFeatureMode'
+      - name: withFeatureStats
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: withInternalFeatures
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: withRelationships
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: withRaw
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      requestBody:
+        description: A JSON object describing the entity attributes to search for,
+          in the same format as an entity record.
+        required: true
+        content:
+          application/json; charset=UTF-8:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Successful response containing the search results.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzAttributeSearchResponse'
+  /reevaluate-entity:
+    post:
+      tags:
+      - Entity Data
+      summary: Reevaluate an entity identified by its entity ID.
+      description: Reevaluates an entity identified by the entity ID specified via
+        the 'entityId' query parameter. Resolution information about how the reevaluation
+        affected other entities may be returned if 'withInfo' is set to true.
+      operationId: reevaluateEntity
+      parameters:
+      - name: entityId
+        in: query
+        required: true
+        description: The entity ID of the entity to reevaluate.
+        schema:
+          type: integer
+          format: int64
+      - name: withInfo
+        in: query
+        required: false
+        description: Set to `true` to include entity resolution information in the
+          response. Defaults to `false`.
+        schema:
+          type: boolean
+          default: false
+      - name: withRaw
+        in: query
+        required: false
+        description: Set to `true` to include the raw JSON response from the underlying
+          native API in the `rawData` field of the response. This is only returned
+          if `withInfo` is also `true`. Defaults to `false`.
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful response, indicating the entity was reevaluated.
+            May optionally contain resolution info.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzReevaluateResponse'
+  /entity-paths:
+    get:
+      tags:
+      - Entity Graph
+      summary: Finds a path between two entities identified by entity ID or by data
+        sources and record IDs of constituent records.
+      description: This operation finds the path between two entities and returns
+        a description of that entity path and the entities on the path.
+      operationId: findEntityPath
+      parameters:
+      - name: from
+        in: query
+        required: true
+        description: The identifier for the starting entity of the path. This can
+          be a numeric entity ID or a string-encoded record identifier.
+        schema:
+          $ref: '#/components/schemas/SzEntityIdentifier'
+      - name: to
+        in: query
+        required: true
+        description: The identifier for the ending entity of the path. This must be
+          of the same type as the 'from' parameter.
+        schema:
+          $ref: '#/components/schemas/SzEntityIdentifier'
+      - name: maxDegrees
+        in: query
+        required: false
+        description: The maximum number of degrees of separation for the path.
+        schema:
+          type: integer
+          format: int32
+          default: 3
+          minimum: 1
+      - name: x
+        in: query
+        required: false
+        description: A repeatable parameter identifying an entity to avoid in the
+          path. This can be a numeric entity ID or a string-encoded record identifier.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzEntityIdentifier'
+      - name: avoidEntities
+        in: query
+        required: false
+        description: A comma-separated or JSON array of entity identifiers to avoid
+          in the path.
+        schema:
+          $ref: '#/components/schemas/SzEntityIdentifiers'
+      - name: forbidAvoided
+        in: query
+        required: false
+        description: If true, strictly forbids the 'avoided' entities from the path.
+          If false, they will be avoided if possible but may be included as a last
+          resort.
+        schema:
+          type: boolean
+          default: false
+      - name: s
+        in: query
+        required: false
+        description: A repeatable parameter specifying a data source code. At least
+          one of the entities in the path must have a record from one of the specified
+          data sources.
+        schema:
+          type: array
+          items:
+            type: string
+      - name: forceMinimal
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: detailLevel
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzDetailLevel'
+      - name: featureMode
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzFeatureMode'
+      - name: withFeatureStats
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: withInternalFeatures
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: withRaw
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful response containing the entity path and the data
+            for the entities on the path.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzEntityPathResponse'
+  /entity-networks:
+    get:
+      tags:
+      - Entity Graph
+      summary: Finds the entity network around one or more entities.
+      description: This operation finds the entity network around one or more specified
+        entities. It attempts to find paths between them and can also 'build out'
+        to find other nearby related entities.
+      operationId: findEntityNetwork
+      parameters:
+      - name: e
+        in: query
+        required: false
+        description: A repeatable parameter identifying an entity to include in the
+          network. This can be a numeric entity ID or a string-encoded record identifier.
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzEntityIdentifier'
+      - name: entities
+        in: query
+        required: false
+        description: A comma-separated or JSON array of entity identifiers to include
+          in the network. Merged with the 'e' parameter.
+        schema:
+          $ref: '#/components/schemas/SzEntityIdentifiers'
+      - name: maxDegrees
+        in: query
+        required: false
+        description: The maximum number of degrees for finding paths between the specified
+          entities.
+        schema:
+          type: integer
+          format: int32
+          default: 3
+          minimum: 0
+      - name: buildOut
+        in: query
+        required: false
+        description: The number of degrees to 'build out' from the found entities
+          to discover other related entities.
+        schema:
+          type: integer
+          format: int32
+          default: 1
+          minimum: 0
+      - name: maxEntities
+        in: query
+        required: false
+        description: The maximum number of entities to return in the network.
+        schema:
+          type: integer
+          format: int32
+          default: 1000
+          minimum: 0
+      - name: forceMinimal
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: detailLevel
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzDetailLevel'
+      - name: featureMode
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzFeatureMode'
+      - name: withFeatureStats
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: withInternalFeatures
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: withRaw
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful response containing the entity network.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzEntityNetworkResponse'
+  
+  /data-sources/{dataSourceCode}/records/{recordId}/entity/why:
+    get:
+      tags:
+      - Entity Data
+      summary: Returns an analysis of why the entity for the record with the respective
+        data source code and record ID resolved.
+      description: This operation provides an anlysis of why the records in an entity
+        resolved. The subject entity is the one containing the record identified by
+        the data source code and record ID in the request path.
+      operationId: whyEntityByRecordID
+      parameters:
+      - name: dataSourceCode
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: recordId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: forceMinimal
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: detailLevel
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzDetailLevel'
+      - name: featureMode
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzFeatureMode'
+      - name: withFeatureStats
+        in: query
+        required: false
+        description: Set to `true` to include resolution statistics for features.
+          Defaults to `true` for 'why' operations.
+        schema:
+          type: boolean
+          default: true
+      - name: withInternalFeatures
+        in: query
+        required: false
+        description: Set to `true` to include 'expressed' features that are derived
+          composite keys. Defaults to `true` for 'why' operations.
+        schema:
+          type: boolean
+          default: true
+      - name: withRelationships
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: withRaw
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful response containing the 'why' analysis for the entity.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzWhyEntityResponse'
+  /entities/{entityId}/why:
+    get:
+      tags:
+      - Entity Data
+      summary: Returns an analysis of why the entity for the respective entity ID
+        resolved.
+      description: This operation provides an anlysis of why the records in an entity
+        resolved. The subject entity is identified by the entity ID in the request
+        path.
+      operationId: whyEntityByEntityID
+      parameters:
+      - name: entityId
+        in: path
+        required: true
+        description: The unique numeric ID that identifies the entity.
+        schema:
+          type: integer
+          format: int64
+      - name: forceMinimal
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: detailLevel
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzDetailLevel'
+      - name: featureMode
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzFeatureMode'
+      - name: withFeatureStats
+        in: query
+        required: false
+        description: Set to `true` to include resolution statistics for features.
+          Defaults to `true` for 'why' operations.
+        schema:
+          type: boolean
+          default: true
+      - name: withInternalFeatures
+        in: query
+        required: false
+        description: Set to `true` to include 'expressed' features that are derived
+          composite keys. Defaults to `true` for 'why' operations.
+        schema:
+          type: boolean
+          default: true
+      - name: withRelationships
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: withRaw
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful response containing the 'why' analysis for the entity.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzWhyEntityResponse'
+  /why/records:
+    get:
+      tags:
+      - Entity Data
+      summary: Returns an analysis of why the records identified by the data source
+        and record ID's in the query parameters resolved or did not resolve.
+      description: This operation provides an anlysis of why two records, each identified
+        by a data source code and record ID, resolved or did not resolve.
+      operationId: whyRecords
+      parameters:
+      - name: dataSource1
+        in: query
+        required: true
+        description: The data source code for the first record.
+        schema:
+          type: string
+      - name: recordId1
+        in: query
+        required: true
+        description: The record ID for the first record.
+        schema:
+          type: string
+      - name: dataSource2
+        in: query
+        required: true
+        description: The data source code for the second record.
+        schema:
+          type: string
+      - name: recordId2
+        in: query
+        required: true
+        description: The record ID for the second record.
+        schema:
+          type: string
+      - name: forceMinimal
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: detailLevel
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzDetailLevel'
+      - name: featureMode
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzFeatureMode'
+      - name: withFeatureStats
+        in: query
+        required: false
+        description: Set to `true` to include resolution statistics for features.
+          Defaults to `true` for 'why' operations.
+        schema:
+          type: boolean
+          default: true
+      - name: withInternalFeatures
+        in: query
+        required: false
+        description: Set to `true` to include 'expressed' features that are derived
+          composite keys. Defaults to `true` for 'why' operations.
+        schema:
+          type: boolean
+          default: true
+      - name: withRelationships
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: withRaw
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful response containing the 'why' analysis for the two
+            records.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzWhyRecordsResponse'
+  /why/entities:
+    get:
+      tags:
+      - Entity Data
+      summary: Returns an analysis of why the two entities related, did not relate,
+        or did not resolve.
+      description: This operation provides an analysis of why two entities related,
+        did not relate, or did not resolve. The entities are identified either by
+        entity IDs or by data source code and record ID pairs.
+      operationId: whyEntities
+      parameters:
+      - name: entity1
+        in: query
+        required: true
+        description: The identifier for the first entity. This can be a numeric entity
+          ID or a string-encoded record identifier.
+        schema:
+          $ref: '#/components/schemas/SzEntityIdentifier'
+      - name: entity2
+        in: query
+        required: true
+        description: The identifier for the second entity. This must be of the same
+          type as the 'entity1' parameter.
+        schema:
+          $ref: '#/components/schemas/SzEntityIdentifier'
+      - name: forceMinimal
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: detailLevel
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzDetailLevel'
+      - name: featureMode
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzFeatureMode'
+      - name: withFeatureStats
+        in: query
+        required: false
+        description: Set to `true` to include resolution statistics for features.
+          Defaults to `true` for 'why' operations.
+        schema:
+          type: boolean
+          default: true
+      - name: withInternalFeatures
+        in: query
+        required: false
+        description: Set to `true` to include 'expressed' features that are derived
+          composite keys. Defaults to `true` for 'why' operations.
+        schema:
+          type: boolean
+          default: true
+      - name: withRelationships
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: withRaw
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful response containing the 'why' analysis for the two
+            entities.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzWhyEntitiesResponse'
+  /bulk-data/analyze:
+    post:
+      tags:
+      - Bulk Data
+      summary: Analyze a bulk data set of records.
+      description: Analyzes a bulk data file of records to provide statistics before
+        loading. The data can be provided directly in the request body or as a 'data'
+        part in a multipart/form-data request.
+      operationId: analyzeBulkRecords
+      parameters:
+      - name: progressPeriod
+        in: query
+        required: false
+        description: For SSE connections, this is the suggested maximum time in milliseconds
+          between progress events. This is ignored for standard HTTP requests.
+        schema:
+          type: integer
+          format: int64
+          default: 3000
+      requestBody:
+        description: The bulk record data, which can be a JSON array, a JSON-Lines
+          file, or a CSV file.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+              format: binary
+          application/x-jsonlines:
+            schema:
+              type: string
+              format: binary
+          text/csv:
+            schema:
+              type: string
+              format: binary
+          text/plain:
+            schema:
+              type: string
+              format: binary
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: string
+                  format: binary
+                  description: The bulk data file to be analyzed.
+      responses:
+        '200':
+          description: Successful response containing the analysis of the bulk data.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzBulkDataAnalysisResponse'
+  /bulk-data/load:
+    post:
+      tags:
+      - Bulk Data
+      summary: Load the records in the provided bulk data set.
+      description: Provides a means to load a bulk data file of records. The records
+        are encoded as JSON, JSON-Lines, or CSV. The data can be provided directly
+        or as a multipart form.
+      operationId: loadBulkRecords
+      parameters:
+      - name: dataSource
+        in: query
+        required: false
+        description: An optional overriding data source to assign to all records.
+        schema:
+          type: string
+      - name: mapDataSources
+        in: query
+        required: false
+        description: A URL-encoded JSON object mapping inbound data source codes to
+          target data source codes.
+        schema:
+          type: string
+      - name: mapDataSource
+        in: query
+        required: false
+        description: A repeatable, colon-delimited string for mapping data sources
+          (e.g., ':FROM_DS:TO_DS').
+        schema:
+          type: array
+          items:
+            type: string
+      - name: loadId
+        in: query
+        required: false
+        description: An optional load ID to associate with the loaded records.
+        schema:
+          type: string
+      - name: maxFailures
+        in: query
+        required: false
+        description: The maximum number of failures before aborting the load. A value
+          of 0 means no limit.
+        schema:
+          type: integer
+          format: int32
+          default: 0
+      - name: progressPeriod
+        in: query
+        required: false
+        description: For SSE connections, the suggested time in milliseconds between
+          progress events.
+        schema:
+          type: integer
+          format: int64
+          default: 3000
+      requestBody:
+        description: The bulk record data, which can be a JSON array, a JSON-Lines
+          file, or a CSV file.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+              format: binary
+          application/x-jsonlines:
+            schema:
+              type: string
+              format: binary
+          text/csv:
+            schema:
+              type: string
+              format: binary
+          text/plain:
+            schema:
+              type: string
+              format: binary
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: string
+                  format: binary
+                  description: The bulk data file to be loaded.
+      responses:
+        '200':
+          description: Successful response containing the statistics of the bulk load
+            operation.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzBulkLoadResponse'
+  /virtual-entities:
+    get:
+      tags:
+      - Entity Data
+      summary: Builds a virtual entity by simulating the resolution of the specified
+        records.
+      description: This operation simulates the resolution of one or more specified
+        records into a single entity and returns the simulated 'virtual' entity.
+      operationId: getVirtualEntityByRecordIds
+      parameters:
+      - name: r
+        in: query
+        required: false
+        description: A repeatable parameter identifying a record to include in the
+          virtual entity, encoded as a string (e.g., ':CUSTOMERS:12345').
+        schema:
+          type: array
+          items:
+            type: string
+      - name: records
+        in: query
+        required: false
+        description: A comma-separated or JSON array of record identifiers to include
+          in the virtual entity. Merged with the 'r' parameter.
+        schema:
+          $ref: '#/components/schemas/SzEntityIdentifiers'
+      - name: withRaw
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: forceMinimal
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: detailLevel
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzDetailLevel'
+      - name: featureMode
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/SzFeatureMode'
+      - name: withFeatureStats
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      - name: withInternalFeatures
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful response containing the simulated virtual entity.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzVirtualEntityResponse'
+  /entities/{entityId}/how:
+    get:
+      tags:
+      - Entity Data
+      summary: Returns an analysis of how the entity for the respective entity ID
+        resolved.
+      description: This operation provides an analysis of how the records in an entity
+        resolved. The subject entity is identified by the entity ID in the request
+        path.
+      operationId: howEntityByEntityId
+      parameters:
+      - name: entityId
+        in: path
+        required: true
+        description: The unique numeric ID that identifies the entity for which to
+          perform the analysis.
+        schema:
+          type: integer
+          format: int64
+      - name: withRaw
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful response containing the 'how' analysis for the entity.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzHowEntityResponse'
+  /data-sources/{dataSourceCode}/records/{recordId}/entity/how:
+    get:
+      tags:
+      - Entity Data
+      summary: Returns an analysis of how the entity for the record with the respective
+        data source code and record ID resolved.
+      description: This operation provides an analysis of how the records in an entity
+        resolved. The subject entity is the one containing the record identified by
+        the data source code and record ID in the request path.
+      operationId: howEntityByRecordID
+      parameters:
+      - name: dataSourceCode
+        in: path
+        required: true
+        description: The data source code for the record.
+        schema:
+          type: string
+      - name: recordId
+        in: path
+        required: true
+        description: The record ID for the record.
+        schema:
+          type: string
+      - name: withRaw
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful response containing the 'how' analysis for the entity.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzHowEntityResponse'
+  /attribute-types:
+    get:
+      tags:
+      - Config
+      summary: Get a list of configured attribute types.
+      description: This operation will provide a list of attribute types that are
+        configured. The client can filter the returned list of attribute types using
+        various query parameters.
+      operationId: getAttributeTypes
+      parameters:
+      - name: withInternal
+        in: query
+        required: false
+        description: Set to `true` to include internal attribute types that are generally
+          not mapped by users. Defaults to false.
+        schema:
+          type: boolean
+          default: false
+      - name: attributeClass
+        in: query
+        required: false
+        description: If specified, filters the list to attribute types of a specific
+          class.
+        schema:
+          $ref: '#/components/schemas/SzAttributeClass'
+      - name: featureType
+        in: query
+        required: false
+        description: If specified, filters the list to attribute types belonging to
+          a specific feature type.
+        schema:
+          type: string
+      - name: withRaw
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful response containing the list of attribute types.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzAttributeTypesResponse'
+  /attribute-types/{attributeCode}:
+    get:
+      tags:
+      - Config
+      summary: Get the attribute type identified by the attribute code.
+      description: This operation will provide a description of a single attribute
+        type for the specified attribute type code.
+      operationId: getAttributeType
+      parameters:
+      - name: attributeCode
+        in: path
+        required: true
+        description: The attribute code that uniquely identifies the attribute type.
+        schema:
+          type: string
+      - name: withRaw
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        '200':
+          description: Successful response containing the details for the specified
+            attribute type.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzAttributeTypeResponse'
+  /configs/active:
+    get:
+      tags:
+      - Config
+      summary: Gets the current active configuration as raw JSON, no interpretation.
+      description: This operation returns the JSON configuration that is currently
+        being used by the native Senzing API initialized by the running server. No
+        processing or interpretation is performed on the JSON.
+      operationId: getActiveConfig
+      parameters: []
+      responses:
+        '200':
+          description: Successful response containing the raw active configuration.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzConfigResponse'
+  /configs/template:
+    get:
+      tags:
+      - Config
+      summary: Gets the base template configuration as raw JSON, no interpretation.
+        This is the initial configuration for a new repository.
+      description: This operation returns a template base JSON configuration that
+        can be modified or customized by the caller. No processing or interpretation
+        is performed on the JSON.
+      operationId: getTemplateConfig
+      parameters: []
+      responses:
+        '200':
+          description: Successful response containing the raw template configuration.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzConfigResponse'
+  /server-info:
+    get:
+      tags:
+      - Admin
+      summary: Get info regarding the server's state and supported features.
+      description: This operation provides server information describing the options
+        with which the server was started. This can be used to determine if the admin
+        operations are enabled or if only read operations may be invoked.
+      operationId: getServerInfo
+      parameters: []
+      responses:
+        '200':
+          description: Successful response containing the server information.
+          content:
+            application/json; charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/SzServerInfoResponse'
+components:
+  schemas:
+    SzBaseResponse:
+      type: object
+      description: Represents the base information included in all responses, including
+        meta-data and links.
+      properties:
+        meta:
+          $ref: '#/components/schemas/SzMeta'
+        links:
+          $ref: '#/components/schemas/SzLinks'
+      required:
+      - meta
+      - links
+    SzErrorResponse:
+      type: object
+      description: Describes an error response from the API, including one or more
+        errors.
+      allOf:
+      - $ref: '#/components/schemas/SzBaseResponse'
+      - type: object
+        properties:
+          errors:
+            type: array
+            description: The list of errors that occurred.
+            items:
+              $ref: '#/components/schemas/SzError'
+        required:
+        - errors
+    SzMeta:
+      type: object
+      description: Provides meta-data about the response, including timing and versioning
+        information.
+      properties:
+        server:
+          type: string
+          description: The descriptive name of the server that produced the response.
+        httpMethod:
+          $ref: '#/components/schemas/SzHttpMethod'
+        httpStatusCode:
+          type: integer
+          format: int32
+          description: The HTTP status code of the response.
+        timestamp:
+          type: string
+          format: date-time
+          description: The timestamp of when the request was completed.
+        version:
+          type: string
+          description: The version number of the Senzing REST API server.
+        restApiVersion:
+          type: string
+          description: The version of the Senzing REST API specification that is implemented.
+        nativeApiVersion:
+          type: string
+          description: The version of the underlying native Senzing API.
+        nativeApiBuildVersion:
+          type: string
+          description: The build version for the underlying native Senzing API.
+        nativeApiBuildNumber:
+          type: string
+          description: The build number for the underlying native Senzing API.
+        nativeApiBuildDate:
+          type: string
+          format: date-time
+          description: The build date for the underlying native Senzing API.
+        configCompatibilityVersion:
+          type: string
+          description: The configuration compatibility version for the underlying
+            native Senzing API.
+        timings:
+          type: object
+          nullable: true
+          description: A map of timing measurements for the operation, where keys
+            describe the operation and values are the duration in milliseconds.
+          additionalProperties:
+            type: integer
+            format: int64
+    SzLinks:
+      type: object
+      description: Provides links related to the response.
+      properties:
+        self:
+          type: string
+          format: uri
+          description: The URI for the original request.
+          nullable: true
+        openApiSpecification:
+          type: string
+          format: uri
+          description: A link to the OpenAPI specification for the API.
+          nullable: true
+    SzError:
+      type: object
+      description: Describes a single error, possibly with an error code.
+      properties:
+        code:
+          type: string
+          nullable: true
+          description: The internal error code associated with the error.
+        message:
+          type: string
+          description: The message describing the error.
+    SzHttpMethod:
+      type: string
+      description: The HTTP method that was used for the operation.
+      enum:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+    SzOpenApiSpecResponse:
+      type: object
+      description: A standard response object containing the OpenAPI specification
+        in its 'data' property.
+      allOf:
+      - $ref: '#/components/schemas/SzBaseResponse'
+      - type: object
+        properties:
+          data:
+            type: object
+            description: The OpenAPI specification in JSON format.
+            additionalProperties: {}
+    SzOpenApiSpecResponseOrRawJson:
+      description: The response for this operation, which can either be a standard
+        wrapper object (SzOpenApiSpecResponse) or the raw OpenAPI specification JSON
+        itself.
+      oneOf:
+      - $ref: '#/components/schemas/SzOpenApiSpecResponse'
+      - type: object
+        description: The raw OpenAPI specification in JSON format.
+        additionalProperties: {}
+    SzResponseWithRawData:
+      type: object
+      description: A base response object that includes a 'rawData' field for the
+        raw JSON response from the underlying native API.
+      allOf:
+      - $ref: '#/components/schemas/SzBaseResponse'
+      - type: object
+        properties:
+          rawData:
+            type: object
+            nullable: true
+            description: The raw JSON response from the underlying native API. This
+              will be a JSON string.
+            additionalProperties: {}
+    SzLicenseResponse:
+      type: object
+      description: A response containing the Senzing license information.
+      allOf:
+      - $ref: '#/components/schemas/SzResponseWithRawData'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzLicenseResponseData'
+        required:
+        - data
+    SzLicenseResponseData:
+      type: object
+      description: The data object for a license response, containing the license
+        details.
+      properties:
+        license:
+          $ref: '#/components/schemas/SzLicenseInfo'
+      required:
+      - license
+    SzLicenseInfo:
+      type: object
+      description: Describes the details of a Senzing product license.
+      properties:
+        customer:
+          type: string
+          description: The customer information associated with the license.
+        contract:
+          type: string
+          description: The contract information associated with the license.
+        licenseType:
+          type: string
+          description: The description of the type of license.
+        licenseLevel:
+          type: string
+          description: The description of the license level.
+        billing:
+          type: string
+          description: The billing information associated with the license.
+        issuanceDate:
+          type: string
+          format: date-time
+          description: The issuance date for the license.
+        expirationDate:
+          type: string
+          format: date-time
+          description: The expiration date for the license.
+        recordLimit:
+          type: integer
+          format: int64
+          description: The record limit associated with the license.
+    SzVersionResponse:
+      type: object
+      description: A response containing the Senzing version information.
+      allOf:
+      - $ref: '#/components/schemas/SzResponseWithRawData'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzVersionInfo'
+        required:
+        - data
+    SzVersionInfo:
+      type: object
+      description: Describes the version information for the API Server, REST API
+        specification, and the native Senzing API.
+      properties:
+        apiServerVersion:
+          type: string
+          description: The version of the REST API Server implementation.
+        restApiVersion:
+          type: string
+          description: The version of the REST API Specification that is implemented.
+        nativeApiVersion:
+          type: string
+          description: The version for the underlying runtime native Senzing API.
+        nativeApiBuildVersion:
+          type: string
+          description: The build version for the underlying runtime native Senzing
+            API.
+        nativeApiBuildNumber:
+          type: string
+          description: The build number for the underlying runtime native Senzing
+            API.
+        nativeApiBuildDate:
+          type: string
+          format: date-time
+          description: The build date for the underlying runtime native Senzing API.
+        configCompatibilityVersion:
+          type: string
+          description: The configuration compatibility version for the underlying
+            runtime native Senzing API.
+    SzDataSourcesResponse:
+      type: object
+      description: The response containing a set of configured data sources.
+      allOf:
+      - $ref: '#/components/schemas/SzResponseWithRawData'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzDataSourcesResponseData'
+        required:
+        - data
+    SzDataSourcesResponseData:
+      type: object
+      description: Provides a list of data source codes and a mapping to their detailed
+        information.
+      properties:
+        dataSources:
+          type: array
+          description: The list of all configured data source codes.
+          items:
+            type: string
+          uniqueItems: true
+        dataSourceDetails:
+          type: object
+          description: A map of data source codes to their detailed SzDataSource information.
+          additionalProperties:
+            $ref: '#/components/schemas/SzDataSource'
+    SzDataSource:
+      type: object
+      description: Describes a configured data source, including its code and internal
+        ID.
+      properties:
+        dataSourceCode:
+          type: string
+          description: The unique code for the data source.
+        dataSourceId:
+          type: integer
+          format: int32
+          nullable: true
+          description: The internal numeric ID for the data source.
+      required:
+      - dataSourceCode
+    SzDataSourceResponse:
+      type: object
+      description: A response containing the details for a single data source.
+      allOf:
+      - $ref: '#/components/schemas/SzResponseWithRawData'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzDataSourceResponseData'
+        required:
+        - data
+    SzDataSourceResponseData:
+      type: object
+      description: The data object for a single data source response.
+      properties:
+        dataSource:
+          $ref: '#/components/schemas/SzDataSource'
+      required:
+      - dataSource
+    SzDataSourceDescriptor:
+      description: Describes a data source to be created, either as a simple string
+        code or as a full data source object.
+      oneOf:
+      - type: string
+        description: The data source code.
+      - $ref: '#/components/schemas/SzDataSource'
+    SzLoadRecordResponse:
+      type: object
+      description: The response containing the record ID of the record that was loaded
+        and optional resolution information.
+      allOf:
+      - $ref: '#/components/schemas/SzResponseWithRawData'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzLoadRecordResponseData'
+        required:
+        - data
+    SzLoadRecordResponseData:
+      type: object
+      description: The data payload for a response from loading a record.
+      properties:
+        recordId:
+          type: string
+          nullable: true
+          description: The record ID of the record that was loaded.
+        info:
+          nullable: true
+          $ref: '#/components/schemas/SzResolutionInfo'
+    SzResolutionInfo:
+      type: object
+      description: Provides information about the resolution of an entity, including
+        affected and flagged entities.
+      properties:
+        dataSource:
+          type: string
+          nullable: true
+          description: The data source of the primary record that was the focus of
+            the resolution.
+        recordId:
+          type: string
+          nullable: true
+          description: The record ID of the primary record that was the focus of the
+            resolution.
+        affectedEntities:
+          type: array
+          description: The set of entity IDs for entities that were affected by the
+            resolution.
+          items:
+            type: integer
+            format: int64
+          uniqueItems: true
+        flaggedEntities:
+          type: array
+          description: A list of entities that were flagged as interesting or relevant
+            during the resolution.
+          items:
+            $ref: '#/components/schemas/SzFlaggedEntity'
+    SzFlaggedEntity:
+      type: object
+      description: Describes an entity that was flagged as relevant during an entity
+        resolution operation.
+      properties:
+        entityId:
+          type: integer
+          format: int64
+          nullable: true
+          description: The entity ID of the flagged entity.
+        degrees:
+          type: integer
+          format: int32
+          nullable: true
+          description: The number of degrees of separation this entity is from the
+            entity that was directly affected.
+        flags:
+          type: array
+          description: The set of flags that were triggered for this entity.
+          items:
+            type: string
+          uniqueItems: true
+        sampleRecords:
+          type: array
+          description: A sample of records from the flagged entity.
+          items:
+            $ref: '#/components/schemas/SzFlaggedRecord'
+    SzFlaggedRecord:
+      type: object
+      description: Describes a sample record from a flagged entity, including the
+        flags that were triggered.
+      properties:
+        dataSource:
+          type: string
+          nullable: true
+          description: The data source of the sample record.
+        recordId:
+          type: string
+          nullable: true
+          description: The record ID of the sample record.
+        flags:
+          type: array
+          description: The set of flags that were triggered for this specific record.
+          items:
+            type: string
+          uniqueItems: true
+    SzDeleteRecordResponse:
+      type: object
+      description: The response for a successful record deletion operation. May contain
+        resolution info if requested.
+      allOf:
+      - $ref: '#/components/schemas/SzResponseWithRawData'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzDeleteRecordResponseData'
+        required:
+        - data
+    SzDeleteRecordResponseData:
+      type: object
+      description: The data payload for a record deletion response, which may contain
+        information about how the deletion affected other entities.
+      properties:
+        info:
+          nullable: true
+          $ref: '#/components/schemas/SzResolutionInfo'
+    SzReevaluateResponse:
+      type: object
+      description: The response for a successful record reevaluation operation. May
+        contain resolution info if requested.
+      allOf:
+      - $ref: '#/components/schemas/SzResponseWithRawData'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzReevaluateResponseData'
+        required:
+        - data
+    SzReevaluateResponseData:
+      type: object
+      description: The data payload for a record reevaluation response, which may
+        contain information about how the reevaluation affected other entities.
+      properties:
+        info:
+          nullable: true
+          $ref: '#/components/schemas/SzResolutionInfo'
+    SzRecordResponse:
+      type: object
+      description: The response containing the data for a single entity record.
+      allOf:
+      - $ref: '#/components/schemas/SzResponseWithRawData'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzRecordResponseData'
+        required:
+        - data
+    SzRecordResponseData:
+      type: object
+      description: The data payload for a response containing a single record.
+      properties:
+        record:
+          $ref: '#/components/schemas/SzEntityRecord'
+      required:
+      - record
+    SzEntityRecord:
+      type: object
+      description: Describes a single record from a data source, including its features
+        and raw data.
+      properties:
+        dataSource:
+          type: string
+          description: The data source code for the record.
+        recordId:
+          type: string
+          description: The record ID for the record.
+        featureReferences:
+          type: array
+          description: The list of feature references for the entity features contributed
+            by this record.
+          items:
+            $ref: '#/components/schemas/SzFeatureReference'
+        lastSeenTimestamp:
+          type: string
+          format: date-time
+          nullable: true
+          description: The timestamp that the record was most recently loaded or updated.
+        addressData:
+          type: array
+          items:
+            type: string
+          description: An array of addresses associated with the record, formatted
+            for readability.
+        characteristicData:
+          type: array
+          items:
+            type: string
+          description: An array of characteristics associated with the record, formatted
+            for readability.
+        identifierData:
+          type: array
+          items:
+            type: string
+          description: An array of identifiers associated with the record, formatted
+            for readability.
+        nameData:
+          type: array
+          items:
+            type: string
+          description: An array of names associated with the record, formatted for
+            readability.
+        phoneData:
+          type: array
+          items:
+            type: string
+          description: An array of phone numbers associated with the record, formatted
+            for readability.
+        relationshipData:
+          type: array
+          items:
+            type: string
+          description: An array of relationship data items associated with the record.
+        otherData:
+          type: array
+          items:
+            type: string
+          description: An array of other data items associated with the record.
+        originalSourceData:
+          type: object
+          nullable: true
+          description: The original source data that was used to load the record,
+            as a JSON object.
+          additionalProperties: true
+    SzFeatureReference:
+      type: object
+      description: Describes a record's reference to an entity feature.
+      properties:
+        internalId:
+          type: integer
+          format: int64
+          nullable: true
+          description: The internal ID identifying the feature.
+        usageType:
+          type: string
+          nullable: true
+          description: The usage type associated with the feature for this record
+            (e.g., 'HOME', 'WORK').
+    SzRelationshipMode:
+      type: string
+      description: Controls how related entities are returned.
+      enum:
+      - NONE
+      - PARTIAL
+      - FULL
+      default: PARTIAL
+    SzDetailLevel:
+      type: string
+      description: Specifies the level of detail for the entity data.
+      enum:
+      - MINIMAL
+      - BRIEF
+      - SUMMARY
+      - VERBOSE
+      default: VERBOSE
+    SzFeatureMode:
+      type: string
+      description: Specifies how feature values for entities should be returned.
+      enum:
+      - NONE
+      - REPRESENTATIVE
+      - WITH_DUPLICATES
+      - ATTRIBUTED
+      default: WITH_DUPLICATES
+    SzRelationshipType:
+      type: string
+      description: Describes how an entity is related to another.
+      enum:
+      - POSSIBLE_MATCH
+      - POSSIBLE_RELATION
+      - DISCLOSED_RELATION
+    SzEntityResponse:
+      type: object
+      description: The response containing the data for a single resolved entity and
+        its related entities.
+      allOf:
+      - $ref: '#/components/schemas/SzResponseWithRawData'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzEntityData'
+        required:
+        - data
+    SzEntityData:
+      type: object
+      description: The data payload for a response containing a resolved entity and
+        its network of related entities.
+      properties:
+        resolvedEntity:
+          $ref: '#/components/schemas/SzResolvedEntity'
+        relatedEntities:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzRelatedEntity'
+      required:
+      - resolvedEntity
+    SzRelatedEntity:
+      type: object
+      description: Describes an entity that is related to another entity, including
+        how it is related.
+      allOf:
+      - $ref: '#/components/schemas/SzBaseRelatedEntity'
+      - type: object
+        properties:
+          disclosed:
+            type: boolean
+            description: True if the relationship is explicitly disclosed, otherwise
+              false.
+          ambiguous:
+            type: boolean
+            description: True if the relationship is an ambiguous possible match,
+              otherwise false.
+          relationType:
+            $ref: '#/components/schemas/SzRelationshipType'
+    SzBaseRelatedEntity:
+      type: object
+      description: Provides the common fields for a related or matched entity, including
+        the match details.
+      allOf:
+      - $ref: '#/components/schemas/SzResolvedEntity'
+      - type: object
+        properties:
+          matchLevel:
+            type: integer
+            format: int32
+            nullable: true
+            description: The integer match level describing how the entity matched.
+          matchKey:
+            type: string
+            nullable: true
+            description: The match key describing what features matched.
+          resolutionRuleCode:
+            type: string
+            nullable: true
+            description: The code for the resolution rule that was triggered.
+    SzResolvedEntity:
+      type: object
+      description: Describes a resolved entity, composed of one or more records.
+      properties:
+        entityId:
+          type: integer
+          format: int64
+          nullable: true
+        entityName:
+          type: string
+          nullable: true
+        bestName:
+          type: string
+          nullable: true
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzMatchedRecord'
+        recordSummaries:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzDataSourceRecordSummary'
+        addressData:
+          type: array
+          items:
+            type: string
+        characteristicData:
+          type: array
+          items:
+            type: string
+        identifierData:
+          type: array
+          items:
+            type: string
+        nameData:
+          type: array
+          items:
+            type: string
+        phoneData:
+          type: array
+          items:
+            type: string
+        relationshipData:
+          type: array
+          items:
+            type: string
+        otherData:
+          type: array
+          items:
+            type: string
+        features:
+          type: object
+          description: A map of feature types to a list of feature values for that
+            type.
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/SzEntityFeature'
+        partial:
+          type: boolean
+          description: True if the entity data is only partially populated, otherwise
+            false.
+        lastSeenTimestamp:
+          type: string
+          format: date-time
+          nullable: true
+    SzMatchedRecord:
+      type: object
+      description: Describes a record that is a constituent of a resolved entity,
+        including how it matched.
+      allOf:
+      - $ref: '#/components/schemas/SzEntityRecord'
+      - type: object
+        properties:
+          matchLevel:
+            type: integer
+            format: int32
+            nullable: true
+          matchKey:
+            type: string
+            nullable: true
+          resolutionRuleCode:
+            type: string
+            nullable: true
+    SzDataSourceRecordSummary:
+      type: object
+      description: Provides a summary of how many records from a data source contribute
+        to an entity.
+      properties:
+        dataSource:
+          type: string
+        recordCount:
+          type: integer
+          format: int32
+        topRecordIds:
+          type: array
+          items:
+            type: string
+    SzEntityFeature:
+      type: object
+      description: Describes a feature for an entity, including its primary value
+        and any duplicate values.
+      properties:
+        primaryId:
+          type: integer
+          format: int64
+          nullable: true
+        primaryValue:
+          type: string
+          nullable: true
+        usageType:
+          type: string
+          nullable: true
+        duplicateValues:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
+        featureDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzEntityFeatureDetail'
+    SzEntityFeatureDetail:
+      type: object
+      description: Describes the details of a specific feature value, including optional
+        statistics.
+      properties:
+        internalId:
+          type: integer
+          format: int64
+          nullable: true
+        featureValue:
+          type: string
+        statistics:
+          nullable: true
+          $ref: '#/components/schemas/SzEntityFeatureStatistics'
+    SzEntityFeatureStatistics:
+      type: object
+      description: Describes the resolution statistics for a feature value.
+      properties:
+        usedForCandidates:
+          type: boolean
+          nullable: true
+        usedForScoring:
+          type: boolean
+          nullable: true
+        entityCount:
+          type: integer
+          format: int64
+          nullable: true
+        candidateCapReached:
+          type: boolean
+          nullable: true
+        scoringCapReached:
+          type: boolean
+          nullable: true
+        suppressed:
+          type: boolean
+          nullable: true
+    SzAttributeSearchResultType:
+      type: string
+      description: Describes how an entity matched the search criteria.
+      enum:
+      - MATCH
+      - POSSIBLE_MATCH
+      - POSSIBLE_RELATION
+      - NAME_ONLY_MATCH
+    SzAttributeSearchResponse:
+      type: object
+      description: The response for an entity search operation.
+      allOf:
+      - $ref: '#/components/schemas/SzResponseWithRawData'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzAttributeSearchResponseData'
+        required:
+        - data
+    SzAttributeSearchResponseData:
+      type: object
+      description: The data payload for an entity search response.
+      properties:
+        searchResults:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzAttributeSearchResult'
+      required:
+      - searchResults
+    SzAttributeSearchResult:
+      type: object
+      description: Describes a single entity that matched the search criteria.
+      allOf:
+      - $ref: '#/components/schemas/SzBaseRelatedEntity'
+      - type: object
+        properties:
+          resultType:
+            $ref: '#/components/schemas/SzAttributeSearchResultType'
+          bestNameScore:
+            type: integer
+            format: int32
+            nullable: true
+            description: The best name score between the search criteria and this
+              result.
+          featureScores:
+            type: object
+            description: A map of feature types to the scores for those features.
+            additionalProperties:
+              type: array
+              items:
+                $ref: '#/components/schemas/SzSearchFeatureScore'
+          relatedEntities:
+            type: array
+            description: The entities related to this search result.
+            items:
+              $ref: '#/components/schemas/SzRelatedEntity'
+    SzSearchFeatureScore:
+      type: object
+      description: Describes the score between a feature from the search criteria
+        and a feature from a candidate entity.
+      properties:
+        featureType:
+          type: string
+        inboundFeature:
+          type: string
+        candidateFeature:
+          type: string
+        score:
+          type: integer
+          format: int32
+          nullable: true
+        nameScoringDetails:
+          nullable: true
+          $ref: '#/components/schemas/SzNameScoring'
+    SzNameScoring:
+      type: object
+      description: Describes the detailed scoring between two name features.
+      properties:
+        fullNameScore:
+          type: integer
+          format: int32
+          nullable: true
+        surnameScore:
+          type: integer
+          format: int32
+          nullable: true
+        givenNameScore:
+          type: integer
+          format: int32
+          nullable: true
+        generationScore:
+          type: integer
+          format: int32
+          nullable: true
+        orgNameScore:
+          type: integer
+          format: int32
+          nullable: true
+    SzEntityIdentifier:
+      description: Identifies an entity, either by its numeric entity ID or by a record
+        ID (which can be a string or a JSON object).
+      oneOf:
+      - type: integer
+        format: int64
+      - $ref: '#/components/schemas/SzRecordId'
+      - type: string
+        description: A string-encoded record ID, e.g., ':CUSTOMERS:12345'
+    SzEntityIdentifiers:
+      description: A flexible list of entity identifiers, which can be provided as
+        a JSON array or a comma-separated string.
+      oneOf:
+      - type: array
+        items:
+          $ref: '#/components/schemas/SzEntityIdentifier'
+      - type: string
+        description: A comma-separated list of entity identifiers.
+    SzEntityPathResponse:
+      type: object
+      description: The response containing the path between two entities.
+      allOf:
+      - $ref: '#/components/schemas/SzResponseWithRawData'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzEntityPathData'
+        required:
+        - data
+    SzEntityPathData:
+      type: object
+      description: The data payload for an entity path response, containing the path
+        itself and the data for the entities on the path.
+      properties:
+        entityPath:
+          $ref: '#/components/schemas/SzEntityPath'
+        entities:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzEntityData'
+      required:
+      - entityPath
+      - entities
+    SzEntityPath:
+      type: object
+      description: Describes the path between two entities as a sequence of entity
+        IDs.
+      properties:
+        startEntityId:
+          type: integer
+          format: int64
+        endEntityId:
+          type: integer
+          format: int64
+        entityIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+      required:
+      - startEntityId
+      - endEntityId
+      - entityIds
+    SzRecordId:
+      type: object
+      description: Identifies a record by its data source code and record ID.
+      properties:
+        src:
+          type: string
+          description: The data source code.
+        id:
+          type: string
+          description: The record ID within the data source.
+      required:
+      - src
+      - id
+    SzEntityNetworkResponse:
+      type: object
+      description: The response containing the network of related entities.
+      allOf:
+      - $ref: '#/components/schemas/SzResponseWithRawData'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzEntityNetworkData'
+        required:
+        - data
+    SzEntityNetworkData:
+      type: object
+      description: The data payload describing an entity network, containing the paths
+        and the entities themselves.
+      properties:
+        entityPaths:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzEntityPath'
+        entities:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzEntityData'
+      required:
+      - entityPaths
+      - entities
+    SzMatchLevel:
+      type: string
+      enum:
+      - NO_MATCH
+      - RESOLVED
+      - POSSIBLY_SAME
+      - POSSIBLY_RELATED
+      - NAME_ONLY
+      - DISCLOSED
+    SzRelationDirection:
+      type: string
+      enum:
+      - OUTBOUND
+      - INBOUND
+      - BIDIRECTIONAL
+    SzScoringBucket:
+      type: string
+      enum:
+      - NOT_SCORED
+      - SAME
+      - CLOSE
+      - LIKELY
+      - PLAUSIBLE
+      - UNLIKELY
+      - NO_CHANCE
+    SzScoringFrequency:
+      type: string
+      enum:
+      - ALWAYS_ONE
+      - ONE
+      - FEW
+      - MANY
+      - VERY_MANY
+      - NAME
+    SzWhyEntityResponse:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/SzResponseWithRawData'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzWhyEntityResponseData'
+    SzWhyEntityResponseData:
+      type: object
+      properties:
+        whyResults:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzWhyEntityResult'
+        entities:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzEntityData'
+    SzWhyEntityResult:
+      type: object
+      properties:
+        perspective:
+          $ref: '#/components/schemas/SzWhyPerspective'
+        matchInfo:
+          $ref: '#/components/schemas/SzWhyMatchInfo'
+    SzWhyPerspective:
+      type: object
+      properties:
+        internalId:
+          type: integer
+          format: int64
+          nullable: true
+        entityId:
+          type: integer
+          format: int64
+          nullable: true
+        focusRecords:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzFocusRecordId'
+          uniqueItems: true
+    SzFocusRecordId:
+      type: object
+      properties:
+        dataSource:
+          type: string
+        recordId:
+          type: string
+    SzWhyMatchInfo:
+      type: object
+      properties:
+        whyKey:
+          type: string
+          nullable: true
+        matchLevel:
+          $ref: '#/components/schemas/SzMatchLevel'
+        resolutionRule:
+          type: string
+          nullable: true
+        candidateKeys:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/SzCandidateKey'
+        featureScores:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/SzFeatureScore'
+        disclosedRelations:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzDisclosedRelation'
+    SzCandidateKey:
+      type: object
+      properties:
+        featureId:
+          type: integer
+          format: int64
+          nullable: true
+        featureType:
+          type: string
+        featureValue:
+          type: string
+    SzFeatureScore:
+      type: object
+      properties:
+        featureId:
+          type: integer
+          format: int64
+          nullable: true
+        featureType:
+          type: string
+        featureValue:
+          type: string
+        usageType:
+          type: string
+          nullable: true
+        scoringBucket:
+          $ref: '#/components/schemas/SzScoringBucket'
+        scoringBehavior:
+          $ref: '#/components/schemas/SzScoringBehavior'
+    SzScoringBehavior:
+      type: object
+      properties:
+        code:
+          type: string
+        frequency:
+          $ref: '#/components/schemas/SzScoringFrequency'
+        exclusive:
+          type: boolean
+        stable:
+          type: boolean
+    SzDisclosedRelation:
+      type: object
+      properties:
+        domain:
+          type: string
+        direction:
+          $ref: '#/components/schemas/SzRelationDirection'
+        roles1:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
+        roles2:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
+        relatedFeatures:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzRelatedFeatures'
+    SzRelatedFeatures:
+      type: object
+      properties:
+        feature1:
+          $ref: '#/components/schemas/SzScoredFeature'
+        feature2:
+          $ref: '#/components/schemas/SzScoredFeature'
+    SzScoredFeature:
+      type: object
+      properties:
+        featureId:
+          type: integer
+          format: int64
+          nullable: true
+        featureType:
+          type: string
+        featureValue:
+          type: string
+        usageType:
+          type: string
+          nullable: true
+    SzWhyRecordsResponse:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/SzResponseWithRawData'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzWhyRecordsResponseData'
+    SzWhyRecordsResponseData:
+      type: object
+      properties:
+        whyResult:
+          $ref: '#/components/schemas/SzWhyRecordsResult'
+        entities:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzEntityData'
+    SzWhyRecordsResult:
+      type: object
+      properties:
+        perspective1:
+          $ref: '#/components/schemas/SzWhyPerspective'
+        perspective2:
+          $ref: '#/components/schemas/SzWhyPerspective'
+        matchInfo:
+          $ref: '#/components/schemas/SzWhyMatchInfo'
+    SzWhyEntitiesResponse:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/SzResponseWithRawData'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzWhyEntitiesResponseData'
+    SzWhyEntitiesResponseData:
+      type: object
+      properties:
+        whyResult:
+          $ref: '#/components/schemas/SzWhyEntitiesResult'
+        entities:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzEntityData'
+    SzWhyEntitiesResult:
+      type: object
+      properties:
+        entityId1:
+          type: integer
+          format: int64
+          nullable: true
+        entityId2:
+          type: integer
+          format: int64
+          nullable: true
+        matchInfo:
+          $ref: '#/components/schemas/SzWhyMatchInfo'
+    SzBulkDataStatus:
+      type: string
+      enum:
+      - NOT_STARTED
+      - IN_PROGRESS
+      - ABORTED
+      - COMPLETED
+    SzBulkDataAnalysisResponse:
+      type: object
+      description: The response describing the analysis of bulk data records.
+      allOf:
+      - $ref: '#/components/schemas/SzBaseResponse'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzBulkDataAnalysis'
+        required:
+        - data
+    SzBulkDataAnalysis:
+      type: object
+      description: Describes the analysis performed on a set of bulk data records.
+      properties:
+        status:
+          $ref: '#/components/schemas/SzBulkDataStatus'
+        characterEncoding:
+          type: string
+        mediaType:
+          type: string
+          nullable: true
+        recordCount:
+          type: integer
+          format: int32
+        recordsWithRecordIdCount:
+          type: integer
+          format: int32
+        recordsWithDataSourceCount:
+          type: integer
+          format: int32
+        analysisByDataSource:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzDataSourceRecordAnalysis'
+    SzDataSourceRecordAnalysis:
+      type: object
+      description: Provides statistics for records belonging to a specific data source
+        within a bulk data set.
+      properties:
+        dataSource:
+          type: string
+          nullable: true
+          description: The data source code. This is null for records that had no
+            data source specified.
+        recordCount:
+          type: integer
+          format: int32
+        recordsWithRecordIdCount:
+          type: integer
+          format: int32
+      required:
+      - recordCount
+      - recordsWithRecordIdCount
+    SzBulkLoadResponse:
+      type: object
+      description: The response describing the result of loading bulk data.
+      allOf:
+      - $ref: '#/components/schemas/SzBaseResponse'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzBulkLoadResult'
+        required:
+        - data
+    SzBulkLoadResult:
+      type: object
+      description: Describes the result from loading a set of bulk data records.
+      allOf:
+      - $ref: '#/components/schemas/SzBaseBulkLoadResult'
+      - type: object
+        properties:
+          status:
+            $ref: '#/components/schemas/SzBulkDataStatus'
+          characterEncoding:
+            type: string
+          mediaType:
+            type: string
+          missingDataSourceCount:
+            type: integer
+            format: int32
+          resultsByDataSource:
+            type: array
+            items:
+              $ref: '#/components/schemas/SzDataSourceBulkLoadResult'
+    SzDataSourceBulkLoadResult:
+      type: object
+      description: Provides bulk data load statistics specific to a given data source.
+      allOf:
+      - $ref: '#/components/schemas/SzBaseBulkLoadResult'
+      - type: object
+        properties:
+          dataSource:
+            type: string
+            nullable: true
+        required:
+        - dataSource
+    SzBaseBulkLoadResult:
+      type: object
+      description: Provides the base set of properties for describing the result of
+        a bulk load operation.
+      properties:
+        recordCount:
+          type: integer
+          format: int32
+        loadedRecordCount:
+          type: integer
+          format: int32
+        incompleteRecordCount:
+          type: integer
+          format: int32
+        failedRecordCount:
+          type: integer
+          format: int32
+        topErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzBulkLoadError'
+      required:
+      - recordCount
+      - loadedRecordCount
+      - incompleteRecordCount
+      - failedRecordCount
+      - topErrors
+    SzBulkLoadError:
+      type: object
+      description: Describes a specific error that occurred during a bulk load and
+        how many times it occurred.
+      properties:
+        error:
+          $ref: '#/components/schemas/SzError'
+        occurrenceCount:
+          type: integer
+          format: int32
+      required:
+      - error
+      - occurrenceCount
+    SzVirtualEntityResponse:
+      type: object
+      description: The response containing the data for a simulated virtual entity.
+      allOf:
+      - $ref: '#/components/schemas/SzResponseWithRawData'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzVirtualEntityData'
+        required:
+        - data
+    SzVirtualEntityData:
+      type: object
+      description: The data payload for a virtual entity, containing the single resolved
+        entity.
+      properties:
+        resolvedEntity:
+          $ref: '#/components/schemas/SzResolvedEntity'
+      required:
+      - resolvedEntity
+    SzHowEntityResponse:
+      type: object
+      allOf:
+      - $ref: '#/components/schemas/SzResponseWithRawData'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzHowEntityResult'
+    SzHowEntityResult:
+      type: object
+      properties:
+        finalStates:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzVirtualEntity'
+        resolutionSteps:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/SzResolutionStep'
+    SzResolutionStep:
+      type: object
+      properties:
+        stepNumber:
+          type: integer
+          format: int32
+        inboundVirtualEntity:
+          $ref: '#/components/schemas/SzVirtualEntity'
+        candidateVirtualEntity:
+          $ref: '#/components/schemas/SzVirtualEntity'
+        matchInfo:
+          $ref: '#/components/schemas/SzHowMatchInfo'
+        resolvedVirtualEntityId:
+          type: string
+    SzVirtualEntity:
+      type: object
+      properties:
+        virtualEntityId:
+          type: string
+        singleton:
+          type: boolean
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzVirtualEntityRecord'
+          uniqueItems: true
+    SzVirtualEntityRecord:
+      type: object
+      properties:
+        dataSource:
+          type: string
+        recordId:
+          type: string
+        internalId:
+          type: integer
+          format: int64
+          nullable: true
+    SzHowMatchInfo:
+      type: object
+      properties:
+        matchKey:
+          type: string
+          nullable: true
+        resolutionRule:
+          type: string
+          nullable: true
+        featureScores:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/SzFeatureScore'
+    SzAttributeClass:
+      type: string
+      description: Enumerates the various classes of attribute types (and features).
+      enum:
+      - ADDRESS
+      - CHARACTERISTIC
+      - IDENTIFIER
+      - NAME
+      - OBSERVATION
+      - PHONE
+      - RELATIONSHIP
+      - OTHER
+    SzAttributeNecessity:
+      type: string
+      description: Describes the necessity for this attribute type within its feature
+        type.
+      enum:
+      - REQUIRED
+      - SUFFICIENT
+      - PREFERRED
+      - OPTIONAL
+    SzAttributeTypesResponse:
+      type: object
+      description: The response containing a list of attribute types.
+      allOf:
+      - $ref: '#/components/schemas/SzResponseWithRawData'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzAttributeTypesResponseData'
+        required:
+        - data
+    SzAttributeTypesResponseData:
+      type: object
+      description: The data payload containing a list of attribute types.
+      properties:
+        attributeTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/SzAttributeType'
+      required:
+      - attributeTypes
+    SzAttributeType:
+      type: object
+      description: Describes a configured attribute type.
+      properties:
+        attributeCode:
+          type: string
+        defaultValue:
+          type: string
+          nullable: true
+        necessity:
+          $ref: '#/components/schemas/SzAttributeNecessity'
+        attributeClass:
+          $ref: '#/components/schemas/SzAttributeClass'
+        featureType:
+          type: string
+          nullable: true
+        advanced:
+          type: boolean
+        internal:
+          type: boolean
+      required:
+      - attributeCode
+      - necessity
+      - attributeClass
+      - advanced
+      - internal
+    SzAttributeTypeResponse:
+      type: object
+      description: The response containing a single attribute type.
+      allOf:
+      - $ref: '#/components/schemas/SzResponseWithRawData'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzAttributeTypeResponseData'
+        required:
+        - data
+    SzAttributeTypeResponseData:
+      type: object
+      description: The data payload containing a single attribute type.
+      properties:
+        attributeType:
+          $ref: '#/components/schemas/SzAttributeType'
+      required:
+      - attributeType
+    SzConfigResponse:
+      type: object
+      description: A response containing a raw JSON configuration in its 'rawData'
+        field.
+      allOf:
+      - $ref: '#/components/schemas/SzResponseWithRawData'
+    SzServerInfoResponse:
+      type: object
+      description: A response containing the server info.
+      allOf:
+      - $ref: '#/components/schemas/SzBaseResponse'
+      - type: object
+        properties:
+          data:
+            $ref: '#/components/schemas/SzServerInfo'
+        required:
+        - data
+    SzServerInfo:
+      type: object
+      description: Provides information about the server's features and current state.
+      properties:
+        concurrency:
+          type: integer
+          format: int32
+          description: The number of Senzing worker threads pooled for handling requests.
+        activeConfigId:
+          type: integer
+          format: int64
+          description: The active configuration ID being used by the API server.
+        dynamicConfig:
+          type: boolean
+          description: Whether the server will automatically pick up the latest default
+            configuration if it changes.
+        readOnly:
+          type: boolean
+          description: Whether the server was started in read-only mode.
+        adminEnabled:
+          type: boolean
+          description: Whether admin features (like modifying configuration) are enabled.
+        webSocketsMessageMaxSize:
+          type: integer
+          format: int32
+          description: The maximum size for inbound text or binary messages when using
+            Web Sockets.
+        infoQueueConfigured:
+          type: boolean
+          description: Whether an asynchronous INFO queue has been configured.
+      required:
+      - concurrency
+      - activeConfigId
+      - dynamicConfig
+      - readOnly
+      - adminEnabled
+      - webSocketsMessageMaxSize
+      - infoQueueConfigured

@@ -1,0 +1,418 @@
+openapi: 3.0.1
+info:
+  title: Quartz Manager - Scheduler API
+  version: '1.0'
+paths:
+  /quartz-manager/auth/login:
+    post:
+      tags:
+        - authentication-controller
+      summary: Authenticates a user and returns a token.
+      operationId: login
+      requestBody:
+        description: User credentials
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  description: The user's username.
+                password:
+                  type: string
+                  format: password
+                  description: The user's password.
+      responses:
+        '200':
+          description: Authentication successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserTokenState'
+        '401':
+          description: Unauthorized - Username or password are incorrect!
+  /quartz-manager/scheduler:
+    get:
+      tags:
+        - scheduler-controller
+      summary: Get the scheduler details
+      operationId: getScheduler
+      security:
+        - quartz-manager-auth: []
+      responses:
+        '200':
+          description: Return the scheduler config
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchedulerDTO'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+  /quartz-manager/scheduler/pause:
+    get:
+      tags:
+        - scheduler-controller
+      summary: Get paused the scheduler
+      operationId: pause
+      security:
+        - quartz-manager-auth: []
+      responses:
+        '204':
+          description: Got paused successfully
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+  /quartz-manager/scheduler/resume:
+    get:
+      tags:
+        - scheduler-controller
+      summary: Get resumed the scheduler
+      operationId: resume
+      security:
+        - quartz-manager-auth: []
+      responses:
+        '204':
+          description: Got resumed successfully
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+  /quartz-manager/scheduler/run:
+    get:
+      tags:
+        - scheduler-controller
+      summary: Start the scheduler
+      operationId: run
+      security:
+        - quartz-manager-auth: []
+      responses:
+        '204':
+          description: Got started successfully
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+  /quartz-manager/scheduler/stop:
+    get:
+      tags:
+        - scheduler-controller
+      summary: Stop the scheduler
+      operationId: stop
+      security:
+        - quartz-manager-auth: []
+      responses:
+        '204':
+          description: Got stopped successfully
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /quartz-manager/jobs:
+    get:
+      tags:
+        - job-controller
+      summary: Get the list of job classes eligible for Quartz-Manager
+      operationId: listJobs
+      security:
+        - quartz-manager-auth: []
+      responses:
+        '200':
+          description: Return a list of qualified java classes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /quartz-manager/simple-triggers/{name}:
+    get:
+      tags:
+        - simple-trigger-controller
+      summary: Get a simple trigger by name
+      operationId: getSimpleTrigger
+      security:
+        - quartz-manager-auth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Got the trigger by its name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleTriggerDTO'
+        '404':
+          description: Trigger not found
+        '500':
+          description: Internal Server Error
+    put:
+      tags:
+        - simple-trigger-controller
+      summary: Reschedule a simple trigger
+      operationId: rescheduleSimpleTrigger
+      security:
+        - quartz-manager-auth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimpleTriggerInputDTO'
+      responses:
+        '200':
+          description: Rescheduled a simple trigger
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerDTO'
+        '400':
+          description: Invalid trigger configuration
+        '500':
+          description: Internal Server Error
+    post:
+      tags:
+        - simple-trigger-controller
+      summary: Schedule a new simple trigger
+      operationId: postSimpleTrigger
+      security:
+        - quartz-manager-auth: []
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimpleTriggerInputDTO'
+      responses:
+        '201':
+          description: Scheduled a new simple trigger
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleTriggerDTO'
+        '400':
+          description: Invalid trigger configuration
+        '500':
+          description: Internal Server Error
+
+  /quartz-manager/triggers:
+    get:
+      tags:
+        - trigger-controller
+      summary: Get a list of triggers
+      operationId: listTriggers
+      security:
+        - quartz-manager-auth: []
+      responses:
+        '200':
+          description: Got the trigger list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TriggerKeyDTO'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+components:
+  schemas:
+    UserTokenState:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: The JWT access token.
+        expiresInSec:
+          type: integer
+          format: int64
+          description: The token's expiration time in seconds.
+    TriggerKey:
+      type: object
+      properties:
+        name:
+          type: string
+        group:
+          type: string
+          nullable: true
+    SchedulerDTO:
+      type: object
+      properties:
+        name:
+          type: string
+        instanceId:
+          type: string
+        status:
+          type: string
+          enum:
+            - RUNNING
+            - STOPPED
+            - PAUSED
+        triggerKeys:
+          type: array
+          items:
+            $ref: '#/components/schemas/TriggerKey'
+    
+    SimpleTriggerInputDTO:
+      type: object
+      required:
+        - jobClass
+      properties:
+        jobClass:
+          type: string
+          description: Must not be blank.
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        misfireInstruction:
+          type: string
+          description: The misfire instruction policy.
+          default: 'MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_EXISTING_REPEAT_COUNT'
+          enum:
+            - MISFIRE_INSTRUCTION_FIRE_NOW
+            - MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_EXISTING_REPEAT_COUNT
+            - MISFIRE_INSTRUCTION_RESCHEDULE_NOW_WITH_REMAINING_REPEAT_COUNT
+            - MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_REMAINING_COUNT
+            - MISFIRE_INSTRUCTION_RESCHEDULE_NEXT_WITH_EXISTING_COUNT
+        repeatCount:
+          type: integer
+          format: int32
+        repeatInterval:
+          type: integer
+          format: int64
+          minimum: 1
+        jobDataMap:
+          type: object
+          nullable: true
+          additionalProperties: true
+    TriggerKeyDTO:
+      type: object
+      properties:
+        name:
+          type: string
+        group:
+          type: string
+    JobKeyDTO:
+      type: object
+      properties:
+        name:
+          type: string
+        group:
+          type: string
+    JobDetailDTO:
+      type: object
+      properties:
+        jobClassName:
+          type: string
+        description:
+          type: string
+    JobDataMap:
+      type: object
+      additionalProperties: true
+    TriggerDTO:
+      type: object
+      required:
+        - priority
+        - misfireInstruction
+        - mayFireAgain
+      properties:
+        triggerKeyDTO:
+          $ref: '#/components/schemas/TriggerKeyDTO'
+        priority:
+          type: integer
+          format: int32
+        startTime:
+          type: string
+          format: date-time
+        description:
+          type: string
+        endTime:
+          type: string
+          format: date-time
+        finalFireTime:
+          type: string
+          format: date-time
+        misfireInstruction:
+          type: integer
+          format: int32
+        nextFireTime:
+          type: string
+          format: date-time
+        jobKeyDTO:
+          $ref: '#/components/schemas/JobKeyDTO'
+        jobDetailDTO:
+          $ref: '#/components/schemas/JobDetailDTO'
+        mayFireAgain:
+          type: boolean
+        jobDataMap:
+          $ref: '#/components/schemas/JobDataMap'
+    SimpleTriggerDTO:
+      allOf:
+        - $ref: '#/components/schemas/TriggerDTO'
+        - type: object
+          required:
+            - repeatCount
+            - repeatInterval
+            - timesTriggered
+          properties:
+            repeatCount:
+              type: integer
+              format: int32
+            repeatInterval:
+              type: integer
+              format: int64
+            timesTriggered:
+              type: integer
+              format: int32
+  securitySchemes:
+    quartz-manager-auth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

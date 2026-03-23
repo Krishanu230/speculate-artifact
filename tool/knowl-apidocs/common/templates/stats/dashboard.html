@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenAPI Stats Dashboard</title>
+    <!-- Link the CSS file -->
+    <link rel="stylesheet" href="dashboard.css">
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Root element for React -->
+    <div id="root"></div>
+
+    <!-- React Libraries -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <!-- Data Injection Placeholder (filled by Python) -->
+    <script>
+        // Ensure the placeholder is valid JS syntax when empty
+        window.statsData = {/* STATS_DATA_JSON_PLACEHOLDER */};
+    </script>
+
+    <!-- Link the Dashboard Logic -->
+    <script type="text/javascript" src="dashboard.js"></script>
+</body>
+</html>

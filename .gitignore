@@ -1,0 +1,8 @@
+reviewer.env
+*.env
+!.env.example
+outputs/*
+!outputs/.gitkeep
+**/__pycache__/
+**/.DS_Store
+**/.pytest_cache/

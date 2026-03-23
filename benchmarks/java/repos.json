@@ -1,0 +1,153 @@
+{
+  "cwa-verification-server": {
+    "path": "cwa-verification-server",
+    "language": "java",
+    "framework": "spring",
+    "build_system": "maven",
+    "build_command": "mvn -q compile -DskipTests",
+    "java_version": "11",
+    "multi_module": false,
+    "classes_hint": "target/classes"
+  },
+  "catwatch-backend": {
+    "path": "catwatch/catwatch-backend",
+    "language": "java",
+    "framework": "spring",
+    "build_system": "maven",
+    "build_command": "mvn compile",
+    "java_version": "11",
+    "multi_module": false,
+    "classes_hint": "target/classes"
+  },
+  "restcountries": {
+    "path": "restcountries",
+    "language": "java",
+    "framework": "jersey",
+    "build_system": "maven",
+    "build_command": "mvn -q package -DskipTests",
+    "java_version": "11",
+    "multi_module": false,
+    "classes_hint": "target/classes"
+  },
+  "ocvn": {
+    "path": "ocvn",
+    "language": "java",
+    "framework": "spring",
+    "build_system": "maven",
+    "build_command": "mvn -q -pl web -am compile -DskipTests",
+    "java_version": "8",
+    "multi_module": true,
+    "classes_hint": "web/target/classes"
+  },
+  "management-api-for-apache-cassandra": {
+    "path": "management-api-for-apache-cassandra",
+    "language": "java",
+    "framework": "jersey",
+    "build_system": "maven",
+    "build_command": "mvn -q -pl management-api-server -am compile -DskipTests",
+    "java_version": "8",
+    "multi_module": true,
+    "classes_hint": "management-api-server/target/classes"
+  },
+  "digdag": {
+    "path": "digdag",
+    "language": "java",
+    "framework": "jersey",
+    "build_system": "gradle",
+    "build_command": "./gradlew --no-daemon :digdag-server:classes -x test -x check",
+    "java_version": "11",
+    "multi_module": true,
+    "classes_hint": "digdag-server/build/classes/java/main"
+  },
+  "Ur-Codebin-API": {
+    "path": "Ur-Codebin-API",
+    "language": "java",
+    "framework": "spring",
+    "build_system": "maven",
+    "build_command": "mvn -q compile -DskipTests",
+    "java_version": "11",
+    "multi_module": false,
+    "classes_hint": "target/classes"
+  },
+  "ohsome-api": {
+    "path": "ohsome-api",
+    "language": "java",
+    "framework": "spring",
+    "build_system": "maven",
+    "build_command": "mvn -q compile -DskipTests",
+    "java_version": "11",
+    "multi_module": false,
+    "classes_hint": "target/classes"
+  },
+  "quartz-manager-parent": {
+    "path": "quartz-manager/quartz-manager-parent",
+    "language": "java",
+    "framework": "spring",
+    "build_system": "maven",
+    "build_command": "mvn compile",
+    "java_version": "11",
+    "multi_module": true,
+    "classes_hint": "quartz-manager-starter-api/target/classes"
+  },
+  "features-service": {
+    "path": "features-service",
+    "language": "java",
+    "framework": "jersey",
+    "build_system": "maven",
+    "build_command": "mvn compile",
+    "java_version": "11",
+    "multi_module": false,
+    "classes_hint": "target/classes"
+  },
+  "proxyprint-kitchen": {
+    "path": "proxyprint-kitchen",
+    "language": "java",
+    "framework": "spring",
+    "build_system": "maven",
+    "build_command": "mvn -q compile -DskipTests",
+    "java_version": "11",
+    "multi_module": false,
+    "classes_hint": "target/classes"
+  },
+  "senzing-api-server": {
+    "path": "senzing-api-server",
+    "language": "java",
+    "framework": "jersey",
+    "build_system": "maven",
+    "build_command": "mvn compile",
+    "java_version": "11",
+    "multi_module": false,
+    "classes_hint": "target/classes"
+  },
+  "enviroCar-server": {
+    "path": "enviroCar-server",
+    "language": "java",
+    "framework": "jersey",
+    "build_system": "maven",
+    "build_command": "mvn -q compile -DskipTests",
+    "java_version": "8",
+    "multi_module": true,
+    "classes_hint": "rest/target/classes"
+  },
+  "kafka-rest": {
+    "path": "kafka-rest",
+    "language": "java",
+    "framework": "jersey",
+    "build_system": "maven",
+    "build_command": "mvn compile",
+    "java_version": "11",
+    "multi_module": true,
+    "classes_hint": "kafka-rest/target/classes"
+  },
+  "gravitee-apim-rest-api": {
+    "path": "gravitee-api-management/gravitee-apim-rest-api",
+    "build_root": "gravitee-api-management",
+    "language": "java",
+    "framework": "jersey",
+    "build_system": "maven",
+    "build_command": "mvn -U -DskipTests package",
+    "java_version": "11",
+    "multi_module": true,
+    "classes_hint": "gravitee-apim-rest-api/gravitee-apim-rest-api-management-v4/gravitee-apim-rest-api-management-v4-rest/target/classes"
+  }
+}

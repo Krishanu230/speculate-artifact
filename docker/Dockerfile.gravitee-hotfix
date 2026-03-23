@@ -1,0 +1,4 @@
+FROM knowl-artifact-restcountries
+
+COPY tool/knowl-apidocs/genapidocs_v2/java_analyzer.py /artifact/tool/knowl-apidocs/genapidocs_v2/java_analyzer.py
+COPY scripts/run_java_repo.sh /artifact/scripts/run_java_repo.sh

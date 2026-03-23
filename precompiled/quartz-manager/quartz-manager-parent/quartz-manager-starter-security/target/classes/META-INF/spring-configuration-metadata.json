@@ -1,0 +1,73 @@
+{
+  "groups": [
+    {
+      "name": "quartz-manager.security.accounts.in-memory",
+      "type": "it.fabioformosa.quartzmanager.api.security.properties.InMemoryAccountProperties",
+      "sourceType": "it.fabioformosa.quartzmanager.api.security.properties.InMemoryAccountProperties"
+    },
+    {
+      "name": "quartz-manager.security.jwt",
+      "type": "it.fabioformosa.quartzmanager.api.security.properties.JwtSecurityProperties",
+      "sourceType": "it.fabioformosa.quartzmanager.api.security.properties.JwtSecurityProperties"
+    },
+    {
+      "name": "quartz-manager.security.jwt.cookie-strategy",
+      "type": "it.fabioformosa.quartzmanager.api.security.properties.JwtSecurityProperties$CookieStrategy",
+      "sourceType": "it.fabioformosa.quartzmanager.api.security.properties.JwtSecurityProperties"
+    },
+    {
+      "name": "quartz-manager.security.jwt.header-strategy",
+      "type": "it.fabioformosa.quartzmanager.api.security.properties.JwtSecurityProperties$HeaderStrategy",
+      "sourceType": "it.fabioformosa.quartzmanager.api.security.properties.JwtSecurityProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "quartz-manager.security.accounts.in-memory.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "it.fabioformosa.quartzmanager.api.security.properties.InMemoryAccountProperties",
+      "defaultValue": true
+    },
+    {
+      "name": "quartz-manager.security.accounts.in-memory.users",
+      "type": "java.util.List<it.fabioformosa.quartzmanager.api.security.properties.InMemoryAccountProperties$User>",
+      "sourceType": "it.fabioformosa.quartzmanager.api.security.properties.InMemoryAccountProperties"
+    },
+    {
+      "name": "quartz-manager.security.jwt.cookie-strategy.cookie",
+      "type": "java.lang.String",
+      "sourceType": "it.fabioformosa.quartzmanager.api.security.properties.JwtSecurityProperties$CookieStrategy",
+      "defaultValue": "AUTH-TOKEN"
+    },
+    {
+      "name": "quartz-manager.security.jwt.cookie-strategy.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "it.fabioformosa.quartzmanager.api.security.properties.JwtSecurityProperties$CookieStrategy",
+      "defaultValue": false
+    },
+    {
+      "name": "quartz-manager.security.jwt.expiration-in-sec",
+      "type": "java.lang.Long",
+      "sourceType": "it.fabioformosa.quartzmanager.api.security.properties.JwtSecurityProperties",
+      "defaultValue": 28800
+    },
+    {
+      "name": "quartz-manager.security.jwt.header-strategy.enabled",
+      "type": "java.lang.Boolean",
+      "sourceType": "it.fabioformosa.quartzmanager.api.security.properties.JwtSecurityProperties$HeaderStrategy",
+      "defaultValue": true
+    },
+    {
+      "name": "quartz-manager.security.jwt.header-strategy.header",
+      "type": "java.lang.String",
+      "sourceType": "it.fabioformosa.quartzmanager.api.security.properties.JwtSecurityProperties$HeaderStrategy",
+      "defaultValue": "Authorization"
+    },
+    {
+      "name": "quartz-manager.security.jwt.secret",
+      "type": "java.lang.String",
+      "sourceType": "it.fabioformosa.quartzmanager.api.security.properties.JwtSecurityProperties"
+    }
+  ],
+  "hints": []
+}

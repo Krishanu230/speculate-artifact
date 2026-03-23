@@ -1,0 +1,5938 @@
+paths:
+  /:
+    get:
+      tags:
+        - General
+      summary: Get the root index.
+      description: Get the root index.
+      operationId: getRoot
+      responses:
+        '200':
+          description: The root document of the API, providing entry points to other resources and entity counts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Root'
+  
+  /api-docs:
+    get:
+      tags:
+        - General
+      summary: Get the OpenAPI specification of this service.
+      description: Get the OpenAPI specification of this service.
+      operationId: getApiDocs
+      responses:
+        '200':
+          description: The OpenAPI 3.0 specification for this service. The server URL is dynamically added.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: A valid OpenAPI 3.0 specification document.
+            text/yaml:
+              schema:
+                type: object
+                description: A valid OpenAPI 3.0 specification document.
+        '307':
+          description: Temporary redirect to the HTML user interface for the API documentation. This is triggered when the client's Accept header prefers 'text/html'.
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+  /api-docs/{file}:
+    get:
+      tags:
+        - General
+      summary: Get a static asset for the API documentation UI.
+      description: Serves static files like CSS, JavaScript, and images required for the API's interactive documentation UI.
+      operationId: getApiDocsFile
+      parameters:
+        - name: file
+          in: path
+          required: true
+          description: The name of the static file to retrieve (e.g., 'index.html', 'swagger-ui.css').
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK. The requested static asset is returned. The Content-Type header will vary based on the file's extension (e.g., text/html, text/css, image/png).
+          content:
+            '*/*': 
+              schema:
+                type: string
+                format: binary
+        '303':
+          description: See Other. Returned if the 'file' path parameter is empty, redirecting the client to the 'index.html' file.
+          headers:
+            Location:
+              description: The target URL for the redirect.
+              schema:
+                type: string
+                format: uri
+        '404':
+          description: Not Found. The requested file does not exist on the server.
+
+  /announcements:
+    get:
+      tags:
+        - Announcements
+      summary: Get the list of announcements.
+      description: Get a paginated list of all available announcements.
+      operationId: getAnnouncements
+      parameters:
+        - name: limit
+          in: query
+          description: The number of entities per page.
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+        - name: page
+          in: query
+          description: The page of entities to request.
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: Range
+          in: header
+          description: An alternative to 'limit' and 'page' for pagination, using a range of items (e.g., 'items=0-99').
+          schema:
+            type: string
+            pattern: "^items=\\d+-\\d+$"
+      responses:
+        '200':
+          description: A successful response returning a list of announcements.
+          headers:
+            Content-Range:
+              description: Indicates the range of items returned and the total number of items.
+              schema:
+                type: string
+            Link:
+              description: Contains links for pagination (first, prev, next, last).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Announcements'
+        '206':
+          description: Partial Content. A successful response returning a partial list of announcements as specified by the Range header.
+          headers:
+            Content-Range:
+              description: Indicates the range of items returned and the total number of items.
+              schema:
+                type: string
+            Link:
+              description: Contains links for pagination (first, prev, next, last).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Announcements'
+        '400':
+          description: Bad Request. The request was malformed, e.g., due to invalid pagination parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception' # Assuming we create a standard exception schema
+  /badges:
+    get:
+      tags:
+        - Badges
+      summary: Get the list of badges.
+      description: Get a paginated list of all available achievement badges.
+      operationId: getBadges
+      parameters:
+        - name: Range
+          in: header
+          required: false
+          description: 'Optional HTTP Range header in the format "items=start-end" to request a specific range of badge items.
+
+            '
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          description: 'Optional query parameter. If set, overrides the default maximum number  of items per page (default 100).
+
+            '
+          schema:
+            type: integer
+            format: int32
+        - name: l
+          in: query
+          required: false
+          description: 'Synonym for "limit". If both "limit" and "l" are set, the first  recognized parameter by the server is used.
+
+            '
+          schema:
+            type: integer
+            format: int32
+        - name: page
+          in: query
+          required: false
+          description: 'Optional query parameter. If set, determines which page of items to return  (default 1).
+
+            '
+          schema:
+            type: integer
+            format: int32
+        - name: p
+          in: query
+          required: false
+          description: 'Synonym for "page". If both "page" and "p" are set, the first  recognized parameter by the server is used.
+
+            '
+          schema:
+            type: integer
+            format: int32
+        
+      responses:
+        '200':
+          description: A successful response returning a list of badges.
+          headers:
+            Content-Range:
+              description: Indicates the range of items returned and the total number of items.
+              schema:
+                type: string
+            Link:
+              description: Contains links for pagination (first, prev, next, last).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Badges'
+        '206':
+          description: Partial Content. A successful response returning a partial list of badges as specified by the Range header.
+          headers:
+            Content-Range:
+              description: Indicates the range of items returned and the total number of items.
+              schema:
+                type: string
+            Link:
+              description: Contains links for pagination (first, prev, next, last).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Badges'
+        '400':
+          description: Bad Request. The request was malformed, e.g., due to invalid pagination parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+  /announcements/{id}:
+    get:
+      tags:
+        - Announcements
+      summary: Get a specific announcement by its ID.
+      description: Retrieves a single announcement entity identified by its unique ID.
+      operationId: getAnnouncementById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The unique identifier of the announcement.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The requested announcement was found and is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Announcement'
+        '404':
+          description: The announcement with the specified ID was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+  /confirm/{code}:
+      get:
+        tags:
+          - General # User confirmation is a general administrative task
+        summary: Confirm a user account.
+        description: Confirms a user's account using a special confirmation code, typically received via email. On success, it redirects the user to the application's login page.
+        operationId: confirmUser
+        parameters:
+          - name: code
+            in: path
+            required: true
+            description: The confirmation code for the user account.
+            schema:
+              type: string
+        responses:
+          '303':
+            description: See Other. The user account was successfully confirmed. The user is redirected to the login page of the web application.
+            headers:
+              Location:
+                description: The target URL for the redirect, pointing to the application's login page with the username pre-filled.
+                schema:
+                  type: string
+                  format: uri
+          '400':
+            description: Bad Request. The request was malformed.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Exception'
+          '404':
+            description: Not Found. The provided confirmation code is invalid or has expired and could not be found.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Exception'
+          '500':
+            description: Internal Server Error. An unexpected error occurred, for example, due to a problem with URL encoding.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Exception'
+
+  /groups:
+    get:
+      tags:
+        - Groups
+      summary: Get the groups.
+      description: Get a paginated list of groups. Can be optionally filtered by a search term.
+      operationId: getGroups
+      parameters:
+        - name: q
+          in: query
+          description: A search term to filter groups by name or description.
+          schema:
+            type: string
+        - name: Range
+          in: header
+          description: Specifies the range of items to return, e.g., `items=0-99`. Takes precedence over query parameter pagination.
+          schema:
+            type: string
+            pattern: '^items=\d+-\d+$'
+        - name: limit
+          in: query
+          description: The maximum number of groups to return. Alias 'l' is also supported.
+          schema:
+            type: integer
+            default: 100
+        - name: page
+          in: query
+          description: The page number of the result set to return. Alias 'p' is also supported.
+          schema:
+            type: integer
+            default: 1
+        - name: l
+          in: query
+          description: Alias for the 'limit' parameter.
+          schema:
+            type: integer
+        - name: p
+          in: query
+          description: Alias for the 'page' parameter.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: A successful response returning a list of groups.
+          headers:
+            Content-Range:
+              $ref: '#/components/headers/Content-Range'
+            Link:
+              $ref: '#/components/headers/Link'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Groups'
+        '206':
+          description: Partial Content. A successful response returning a partial list of groups as specified by the Range header.
+          headers:
+            Content-Range:
+              $ref: '#/components/headers/Content-Range'
+            Link:
+              $ref: '#/components/headers/Link'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Groups'
+        '400':
+          description: Bad Request. The request was malformed, e.g., due to invalid pagination parameters.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+    post:
+      tags:
+        - Groups
+      summary: Create a new group.
+      description: Creates a new group owned by the authenticated user.
+      operationId: createGroup
+      security:
+        - basicAuth: [] # Implied by @Authenticated
+      requestBody:
+        description: The group to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupCreate'
+      responses:
+        '201':
+          description: Created. The group was successfully created.
+          headers:
+            Location:
+              description: The URL of the newly created group.
+              schema:
+                type: string
+                format: uri
+        '400':
+          description: Bad Request. The provided group data is invalid or fails validation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+        '401':
+          description: Unauthorized. Authentication is required to create a group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+        '409':
+          description: Conflict. A group with the specified name already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+  
+  /groups/{groupId}:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        description: The unique name of the group.
+        schema:
+          type: string
+    get:
+      tags:
+        - Groups
+      summary: Get a specific group by its ID.
+      description: Retrieves a single group entity identified by its unique ID (which is its name).
+      operationId: getGroupById
+      responses:
+        '200':
+          description: The requested group was found and is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '404':
+          description: The group with the specified ID was not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+    put:
+      tags:
+        - Groups
+      summary: Modify a group.
+      description: >-
+        Updates the properties of an existing group.
+        If the group's name (which is its ID) is changed, this operation
+        will respond with a 303 See Other to the new resource URL.
+        Otherwise, it will respond with a 204 No Content.
+      operationId: modifyGroup
+      security:
+        - basicAuth: []
+      requestBody:
+        description: The group properties to modify.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupModify'
+      responses:
+        '204':
+          description: No Content. The group was successfully updated without changing its name.
+        '303':
+          description: See Other. The group was successfully updated and its name (ID) was changed. The client is redirected to the new URL for the group.
+          headers:
+            Location:
+              description: The new URL of the group.
+              schema:
+                type: string
+                format: uri
+    delete:
+      tags:
+        - Groups
+      summary: Delete a group.
+      description: Deletes an existing group. This operation requires the user to be the owner of the group or an administrator.
+      operationId: deleteGroup
+      security:
+        - basicAuth: []
+      responses:
+        '204':
+          description: No Content. The group was successfully deleted.
+
+  /groups/{groupId}/members:
+    get:
+      tags:
+        - Groups
+      summary: Get the members of a group.
+      description: Retrieves a paginated list of users who are members of the specified group.
+      operationId: getGroupMembers
+      parameters:
+        - name: group
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: p
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: l
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: Range
+          in: header
+          required: false
+          schema:
+            type: string
+        
+      responses:
+        '200':
+          description: A successful response returning a list of members.
+          headers:
+            Content-Range:
+              $ref: '#/components/headers/Content-Range'
+            Link:
+              $ref: '#/components/headers/Link'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Users'
+        '206':
+          description: Partial Content. A successful response returning a partial list of members as specified by the Range header.
+          headers:
+            Content-Range:
+              $ref: '#/components/headers/Content-Range'
+            Link:
+              $ref: '#/components/headers/Link'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Users'
+    post:
+      tags:
+        - Groups
+      summary: Add a member to a group.
+      description: Adds a specified user as a member to the specified group. The authenticated user must be the user being added.
+      operationId: addGroupMember
+      security:
+        - basicAuth: []
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          description: The unique name of the group.
+          schema:
+            type: string
+      requestBody:
+        description: A reference to the user to be added.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserReference'
+      responses:
+        '204':
+          description: No Content. The user was successfully added to the group.
+
+  /groups/{groupId}/members/{memberId}:
+    parameters:
+      - name: groupId
+        in: path
+        required: true
+        description: The unique name of the group.
+        schema:
+          type: string
+      - name: memberId
+        in: path
+        required: true
+        description: The unique name of the user who is a member.
+        schema:
+          type: string
+    delete:
+      tags:
+        - Groups
+      summary: Remove a member from a group.
+      description: Removes a user from their membership in a specified group. This does not delete the user itself.
+      operationId: removeGroupMember
+      security:
+        - basicAuth: []
+      responses:
+        '204':
+          description: No Content. The user was successfully removed from the group.
+
+  /groups/{groupId}/activities:
+    get:
+      tags:
+        - Groups
+        - Activities
+      summary: Get activities for a group.
+      description: Retrieves a paginated list of activities related to a specific group.
+      operationId: getGroupActivities
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user.
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Filter activities by a specific type.
+          schema:
+            type: string
+            enum:
+              - CHANGED_PROFILE
+              - CREATED_GROUP
+              - CHANGED_GROUP
+              - JOINED_GROUP
+              - LEFT_GROUP
+              - DELETED_GROUP
+              - FRIENDED_USER
+              - UNFRIENDED_USER
+              - CREATED_TRACK
+        - name: Range
+          in: header
+          description: Specifies the range of items to return, e.g., `items=0-99`. Takes precedence over query parameter pagination.
+          schema:
+            type: string
+            pattern: '^items=\d+-\d+$'
+        - name: limit
+          in: query
+          description: The maximum number of activities to return. Alias 'l' is also supported.
+          schema:
+            type: integer
+            default: 100
+        - name: page
+          in: query
+          description: The page number of the result set to return. Alias 'p' is also supported.
+          schema:
+            type: integer
+            default: 1
+        - name: l
+          in: query
+          description: Alias for the 'limit' parameter.
+          schema:
+            type: integer
+        - name: p
+          in: query
+          description: Alias for the 'page' parameter.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: A list of activities for the group.
+          headers:
+            Content-Range:
+              $ref: '#/components/headers/Content-Range'
+            Link:
+              $ref: '#/components/headers/Link'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activities'
+        '206':
+          description: A partial list of activities for the group.
+          headers:
+            Content-Range:
+              $ref: '#/components/headers/Content-Range'
+            Link:
+              $ref: '#/components/headers/Link'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activities'
+
+  /groups/{groupId}/activities/{activityId}:
+    get:
+      tags:
+        - Groups
+        - Activities
+      summary: Get a specific activity for a group.
+      description: Retrieves a single activity by its ID, in the context of a specific group.
+      operationId: getGroupActivityById
+      parameters:
+        - name: groupId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: activityId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The requested activity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activity'
+
+  /measurements:
+    get:
+      tags:
+        - Measurements
+      summary: Get the list of measurements.
+      description: Get a paginated list of all available measurements, with options for spatial and temporal filtering.
+      operationId: getMeasurements
+      parameters:
+          - name: bbox
+            in: query
+            description: >-
+              A bounding box in the format `minx,miny,maxx,maxy` to filter the results
+              spatially.
+            required: false
+            schema:
+              type: string
+          - name: nearPoint
+            in: query
+            description: >-
+              A point and a distance in the format `x,y,distance` to filter the results
+              spatially.
+            required: false
+            schema:
+              type: string
+          - name: limit
+            in: query
+            description: The number of results to return.
+            required: false
+            schema:
+              type: integer
+              default: 100
+          - name: page
+            in: query
+            description: The page of results to return.
+            required: false
+            schema:
+              type: integer
+              default: 1
+          - name: after
+            in: query
+            description: 'Temporal filter to retrieve measurements after a specified instant or interval. The format is `YYYY-MM-DDTHH:MM:SSZ` or a comma-separated interval `YYYY-MM-DDTHH:MM:SSZ,YYYY-MM-DDTHH:MM:SSZ`.'
+            required: false
+            schema:
+              type: string
+          - name: before
+            in: query
+            description: 'Temporal filter to retrieve measurements before a specified instant or interval. The format is `YYYY-MM-DDTHH:MM:SSZ` or a comma-separated interval `YYYY-MM-DDTHH:MM:SSZ,YYYY-MM-DDTHH:MM:SSZ`.'
+            required: false
+            schema:
+              type: string
+          - name: begins
+            in: query
+            description: 'Temporal filter to retrieve measurements where the track begins at the specified instant or within the interval. The format is `YYYY-MM-DDTHH:MM:SSZ` or a comma-separated interval `YYYY-MM-DDTHH:MM:SSZ,YYYY-MM-DDTHH:MM:SSZ`.'
+            required: false
+            schema:
+              type: string
+          - name: begunBy
+            in: query
+            description: 'Temporal filter to retrieve measurements where the track is begun by the specified instant or interval. The format is `YYYY-MM-DDTHH:MM:SSZ` or a comma-separated interval `YYYY-MM-DDTHH:MM:SSZ,YYYY-MM-DDTHH:MM:SSZ`.'
+            required: false
+            schema:
+              type: string
+          - name: contains
+            in: query
+            description: 'Temporal filter to retrieve measurements where the track contains the specified instant or interval. The format is `YYYY-MM-DDTHH:MM:SSZ` or a comma-separated interval `YYYY-MM-DDTHH:MM:SSZ,YYYY-MM-DDTHH:MM:SSZ`.'
+            required: false
+            schema:
+              type: string
+          - name: during
+            in: query
+            description: 'Temporal filter to retrieve measurements during a specified instant or interval. The format is `YYYY-MM-DDTHH:MM:SSZ` or a comma-separated interval `YYYY-MM-DDTHH:MM:SSZ,YYYY-MM-DDTHH:MM:SSZ`.'
+            required: false
+            schema:
+              type: string
+          - name: endedBy
+            in: query
+            description: 'Temporal filter to retrieve measurements where the track is ended by the specified instant or interval. The format is `YYYY-MM-DDTHH:MM:SSZ` or a comma-separated interval `YYYY-MM-DDTHH:MM:SSZ,YYYY-MM-DDTHH:MM:SSZ`.'
+            required: false
+            schema:
+              type: string
+          - name: ends
+            in: query
+            description: 'Temporal filter to retrieve measurements where the track ends at the specified instant or interval. The format is `YYYY-MM-DDTHH:MM:SSZ` or a comma-separated interval `YYYY-MM-DDTHH:MM:SSZ,YYYY-MM-DDTHH:MM:SSZ`.'
+            required: false
+            schema:
+              type: string
+          - name: equals
+            in: query
+            description: 'Temporal filter to retrieve measurements where the track time equals the specified instant or interval. The format is `YYYY-MM-DDTHH:MM:SSZ` or a comma-separated interval `YYYY-MM-DDTHH:MM:SSZ,YYYY-MM-DDTHH:MM:SSZ`.'
+            required: false
+            schema:
+              type: string
+          - name: meets
+            in: query
+            description: 'Temporal filter to retrieve measurements where the track meets the specified instant or interval. The format is `YYYY-MM-DDTHH:MM:SSZ` or a comma-separated interval `YYYY-MM-DDTHH:MM:SSZ,YYYY-MM-DDTHH:MM:SSZ`.'
+            required: false
+            schema:
+              type: string
+          - name: metBy
+            in: query
+            description: 'Temporal filter to retrieve measurements where the track is met by the specified instant or interval. The format is `YYYY-MM-DDTHH:MM:SSZ` or a comma-separated interval `YYYY-MM-DDTHH:MM:SSZ,YYYY-MM-DDTHH:MM:SSZ`.'
+            required: false
+            schema:
+              type: string
+          - name: overlapped
+            in: query
+            description: 'Temporal filter to retrieve measurements where the track is overlapped by the specified instant or interval. The format is `YYYY-MM-DDTHH:MM:SSZ` or a comma-separated interval `YYYY-MM-DDTHH:MM:SSZ,YYYY-MM-DDTHH:MM:SSZ`.'
+            required: false
+            schema:
+              type: string
+          - name: overlaps
+            in: query
+            description: 'Temporal filter to retrieve measurements where the track overlaps the specified instant or interval. The format is `YYYY-MM-DDTHH:MM:SSZ` or a comma-separated interval `YYYY-MM-DDTHH:MM:SSZ,YYYY-MM-DDTHH:MM:SSZ`.'
+            required: false
+            schema:
+              type: string
+          - name: Range
+            in: header
+            description: The range of items to return, e.g., items=0-100.
+            required: false
+            schema:
+              type: string
+          - name: p
+            in: query
+            required: false
+            schema:
+              type: integer
+              format: int32
+          - name: l
+            in: query
+            required: false
+            schema:
+              type: integer
+              format: int32
+      responses:
+        '200':
+          description: A successful response returning a list of measurements.
+          headers:
+            Content-Range:
+              $ref: '#/components/headers/Content-Range'
+            Link:
+              $ref: '#/components/headers/Link'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Measurements'
+    post:
+      tags:
+        - Measurements
+      summary: Create a new measurement.
+      description: Creates a new measurement, typically not associated with a specific track.
+      operationId: createMeasurement
+      security:
+        - basicAuth: []
+      requestBody:
+        description: The measurement to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeasurementCreate'
+      responses:
+        '201':
+          description: Created. The measurement was successfully created.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+
+  /measurements/{measurementId}:
+    parameters:
+      - name: measurementId
+        in: path
+        required: true
+        description: The unique identifier of the measurement.
+        schema:
+          type: string
+    get:
+      tags:
+        - Measurements
+      summary: Get a specific measurement by its ID.
+      description: Retrieves a single measurement entity, which is a GeoJSON Feature.
+      operationId: getMeasurementById
+      responses:
+        '200':
+          description: OK. The requested measurement was found and is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Measurement'
+    delete:
+      tags:
+        - Measurements
+      summary: Delete a measurement.
+      description: Deletes an existing measurement. This action requires authentication and ownership.
+      operationId: deleteMeasurement
+      security:
+        - basicAuth: []
+      responses:
+        '204':
+          description: No Content. The measurement was successfully deleted.
+
+  /measurements/{measurementId}/sensor:
+    get:
+      tags:
+        - Measurements
+        - Sensors
+      summary: Get the sensor of a measurement.
+      description: Retrieves the sensor that created a specific measurement.
+      operationId: getMeasurementSensor
+      parameters:
+        - name: measurementId
+          in: path
+          required: true
+          description: The unique identifier of the measurement.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK. The requested sensor was found and is returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sensor'
+
+  /measurements/{measurementId}/sensor/statistics:
+    parameters:
+      - name: measurementId
+        in: path
+        required: true
+        description: The unique identifier of the measurement.
+        schema: { type: string }
+    get:
+      tags: [Measurements, Sensors, Statistics]
+      summary: Get statistics for the sensor that produced this measurement
+      operationId: getMeasurementSensorStatistics
+      responses:
+        '200':
+          description: Aggregate min/avg/max for every phenomenon.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Statistics' }
+        '400':
+          description: Bad Request – malformed ID or validation error.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exception' }
+        '404':
+          description: Measurement or statistics not found.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exception' }
+
+  /measurements/{measurementId}/sensor/statistics/{phen}:
+    parameters:
+      - name: measurementId
+        in: path
+        required: true
+        schema: { type: string }
+      - name: phen
+        in: path
+        required: true
+        description: Phenomenon name (e.g. `CO_CONC`).
+        schema: { type: string }
+    get:
+      tags: [Measurements, Sensors, Statistics]
+      summary: Get statistics for a single phenomenon
+      operationId: getMeasurementSensorStatistic
+      responses:
+        '200':
+          description: Statistic for the requested phenomenon.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Statistic' }
+        '400':
+          description: Bad Request – invalid phenomenon name or ID.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exception' }
+        '404':
+          description: Measurement or statistic not found.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exception' }
+
+  /users:
+    get:
+      tags: [ Users ]
+      summary: List users
+      description: Retrieve a paginated list of user profiles.
+      operationId: getUsers
+      parameters:
+        - name: Range
+          in: header
+          description: Specifies the range of items to return, e.g., `items=0-99`. Takes precedence over query parameter pagination.
+          schema:
+            type: string
+            pattern: '^items=\d+-\d+$'
+        - name: limit
+          in: query
+          description: The maximum number of users to return. Alias 'l' is also supported.
+          schema:
+            type: integer
+            default: 100
+        - name: page
+          in: query
+          description: The page number of the result set to return. Alias 'p' is also supported.
+          schema:
+            type: integer
+            default: 1
+        - name: l
+          in: query
+          description: Alias for the 'limit' parameter.
+          schema:
+            type: integer
+        - name: p
+          in: query
+          description: Alias for the 'page' parameter.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Complete user list (or first page if Range used).
+          headers:
+            Content-Range:
+              $ref: '#/components/headers/Content-Range'
+            Link:
+              $ref: '#/components/headers/Link'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Users'
+        '206':
+          description: Partial content when Range header requested.
+          headers:
+            Content-Range:
+              $ref: '#/components/headers/Content-Range'
+            Link:
+              $ref: '#/components/headers/Link'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Users'
+
+    post:
+      tags: [ Users ]
+      summary: Create a new user
+      description: Register a new user account (no authentication required).
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+      responses:
+        '201':
+          description: Created – Location header points to `/users/{username}`.
+          headers:
+            Location:
+              $ref: '#/components/headers/Location'
+        '409':
+          description: Conflict – username or e-mail already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+
+  /users/{username}/activities:
+    parameters:
+      - name: username
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [ Users, Activities ]
+      summary: List a user’s activities
+      description: Paginated stream of activities caused **by the specified user**.
+      operationId: getUserActivities
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user.
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Filter activities by a specific type.
+          schema:
+            type: string
+            enum:
+              - CHANGED_PROFILE
+              - CREATED_GROUP
+              - CHANGED_GROUP
+              - JOINED_GROUP
+              - LEFT_GROUP
+              - DELETED_GROUP
+              - FRIENDED_USER
+              - UNFRIENDED_USER
+              - CREATED_TRACK
+        - name: Range
+          in: header
+          description: Specifies the range of items to return, e.g., `items=0-99`. Takes precedence over query parameter pagination.
+          schema:
+            type: string
+            pattern: '^items=\d+-\d+$'
+        - name: limit
+          in: query
+          description: The maximum number of activities to return. Alias 'l' is also supported.
+          schema:
+            type: integer
+            default: 100
+        - name: page
+          in: query
+          description: The page number of the result set to return. Alias 'p' is also supported.
+          schema:
+            type: integer
+            default: 1
+        - name: l
+          in: query
+          description: Alias for the 'limit' parameter.
+          schema:
+            type: integer
+        - name: p
+          in: query
+          description: Alias for the 'page' parameter.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Activity list
+          headers:
+            Content-Range: { $ref: '#/components/headers/Content-Range' }
+            Link:          { $ref: '#/components/headers/Link' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Activities' }
+        '206':
+          description: Partial Content (pagination)
+          headers:
+            Content-Range: { $ref: '#/components/headers/Content-Range' }
+            Link:          { $ref: '#/components/headers/Link' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Activities' }
+
+  /users/{username}/activities/{id}:
+    parameters:
+      - name: username
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [ Users, Activities ]
+      summary: Get a user activity by ID
+      operationId: getUserActivityById
+      responses:
+        '200':
+          description: The requested activity.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Activity' }
+
+  /users/{username}/friendActivities:
+    parameters:
+      - name: username
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [ Users, Activities ]
+      summary: List friend activities
+      description: Paginated activities produced **by the user’s friends**.
+      operationId: getFriendActivities
+      parameters:
+          - name: username
+            in: path
+            required: true
+            schema:
+              type: string
+            description: The username whose friend activities are requested.
+          - name: type
+            in: query
+            required: false
+            schema:
+              type: string
+            description: Optional filter specifying the activity type.
+          - name: limit
+            in: query
+            required: false
+            schema:
+              type: integer
+              format: int32
+            description: Optional maximum number of items to return.
+          - name: l
+            in: query
+            required: false
+            schema:
+              type: integer
+              format: int32
+            description: Synonym for "limit".
+          - name: page
+            in: query
+            required: false
+            schema:
+              type: integer
+              format: int32
+            description: Optional page index (1-based).
+          - name: p
+            in: query
+            required: false
+            schema:
+              type: integer
+              format: int32
+            description: Synonym for "page".
+          - name: Range
+            in: header
+            required: false
+            schema:
+              type: string
+            description: Optional header-based range pagination, e.g. "items=0-49".
+        
+      responses:
+        '200':
+          description: Activity list
+          headers:
+            Content-Range: { $ref: '#/components/headers/Content-Range' }
+            Link:          { $ref: '#/components/headers/Link' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Activities' }
+        '206':
+          description: Partial Content (pagination)
+          headers:
+            Content-Range: { $ref: '#/components/headers/Content-Range' }
+            Link:          { $ref: '#/components/headers/Link' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Activities' }
+
+  /users/{username}/friendActivities/{id}:
+    parameters:
+      - name: username
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [ Users, Activities ]
+      summary: Get a friend activity by ID
+      operationId: getFriendActivityById
+      responses:
+        '200':
+          description: The requested activity.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Activity' }
+
+  /users/{username}/avatar:
+    parameters:
+      - name: username
+        in: path
+        required: true
+        description: The unique username.
+        schema:
+          type: string
+    get:
+      tags: [ Users ]
+      summary: Get the avatar of a user (Gravatar redirect)
+      description: >
+        Returns a **307 Temporary Redirect** to the user’s Gravatar image.
+        No authentication is required.
+      operationId: getAvatar
+      parameters:
+        - name: size
+          in: query
+          required: false
+          description: Desired square image size in pixels.
+          schema:
+            type: integer
+            format: int32
+            default: 80
+            minimum: 1
+      responses:
+        '307':
+          description: Temporary redirect to the JPEG avatar.
+          headers:
+            Location:
+              description: The target Gravatar URL.
+              schema:
+                type: string
+                format: uri
+
+
+  /users/{username}/measurements:
+    parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user to whom the measurement will be added.
+          schema:
+            type: string
+    get:
+      tags:
+        - Measurements
+      summary: Get a collection of measurements
+      description: Retrieves a collection of measurements, with optional spatial, temporal, and pagination filters.
+      operationId: getMeasurements
+      parameters:
+        - name: Range
+          in: header
+          required: false
+          schema:
+            type: string
+        - name: bbox
+          in: query
+          description: |-
+            A comma-separated list of four coordinates defining a bounding box
+            in the format `minLon,minLat,maxLon,maxLat`.
+            Example: `7.6,51.9,7.7,52.0`
+          schema:
+            type: string
+            format: bbox
+            pattern: '^-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?$'
+        - name: nearPoint
+          in: query
+          description: |-
+            A comma-separated list of three values `lon,lat,distance` (in meters)
+            defining a point and a radius to search within.
+            Example: `7.6,51.9,1000`
+          schema:
+            type: string
+            pattern: '^-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?$'
+        - name: after
+          in: query
+          description: The time instant to be applied with the `after` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: before
+          in: query
+          description: The time instant to be applied with the `before` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: begins
+          in: query
+          description: The time instant to be applied with the `begins` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: begunBy
+          in: query
+          description: The time instant to be applied with the `begunBy` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: contains
+          in: query
+          description: The time instant to be applied with the `contains` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: during
+          in: query
+          description: The time instant to be applied with the `during` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: endedBy
+          in: query
+          description: The time instant to be applied with the `endedBy` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: ends
+          in: query
+          description: The time instant to be applied with the `ends` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: equals
+          in: query
+          description: The time instant to be applied with the `equals` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: meets
+          in: query
+          description: The time instant to be applied with the `meets` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: metBy
+          in: query
+          description: The time instant to be applied with the `metBy` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: overlapped
+          in: query
+          description: The time instant to be applied with the `overlapped` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: overlaps
+          in: query
+          description: The time instant to be applied with the `overlaps` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          description: The maximum number of measurements to return.
+          schema:
+            type: integer
+            default: 100
+        - name: page
+          in: query
+          description: The page number of the result set to return.
+          schema:
+            type: integer
+            default: 1
+        - name: l
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: p
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        
+      responses:
+        '200':
+          description: A GeoJSON FeatureCollection of measurements matching the query.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Measurements'
+        '400':
+          description: Bad Request. An invalid filter parameter was provided.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+    post:
+      summary: "Add a new measurement to a user's collection"
+      description: "Creates and stores a new measurement, associating it with the specified user. The measurement must be a valid GeoJSON Feature. The authenticated user must match the user in the path."
+      tags:
+        - Measurements
+        - Users
+      operationId: createMeasurementForUser
+      security:
+        - basicAuth: []
+      requestBody:
+        description: The measurement to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeasurementCreate'
+      responses:
+        '201':
+          description: "Measurement created successfully. The Location header contains the URL of the new resource."
+          headers:
+            Location:
+              description: The URI of the newly created measurement.
+              schema:
+                type: string
+                format: uri
+        '400':
+          description: "Bad Request. The request body is malformed or invalid."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+        '401':
+          description: "Unauthorized. Authentication is required and has failed or has not yet been provided."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+        '404':
+          description: "Not Found. The specified sensor ID in the request body does not exist."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+
+
+  /users/{username}/measurements/{measurement}:
+    get:
+      summary: "Get a specific measurement for a user"
+      description: "Retrieves a single measurement by its ID, belonging to a specific user."
+      tags:
+        - Measurements
+        - Users
+      operationId: getMeasurementOfUser
+      security:
+        - basicAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user who owns the measurement.
+          schema:
+            type: string
+        - name: measurement
+          in: path
+          required: true
+          description: The ID of the measurement to retrieve.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "The requested measurement."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Measurement'
+
+    delete:
+      summary: "Delete a specific measurement for a user"
+      description: "Deletes a single measurement by its ID, belonging to a specific user. The authenticated user must have permission to delete it."
+      tags:
+        - Measurements
+        - Users
+      operationId: deleteMeasurementOfUser
+      security:
+        - basicAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user who owns the measurement.
+          schema:
+            type: string
+        - name: measurement
+          in: path
+          required: true
+          description: The ID of the measurement to delete.
+          schema:
+            type: string
+      responses:
+        '204':
+          description: "Measurement deleted successfully."
+
+  /users/{username}/measurements/{measurement}/sensor:
+    get:
+      summary: "Get the sensor of a specific measurement"
+      description: "Retrieves the sensor associated with a single measurement."
+      tags:
+        - Measurements
+        - Users
+        - Sensors
+      operationId: getSensorOfUserMeasurement
+      security:
+        - basicAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user who owns the measurement.
+          schema:
+            type: string
+        - name: measurement
+          in: path
+          required: true
+          description: The ID of the measurement.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "The sensor associated with the measurement."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sensor'
+
+  /users/{username}/measurements/{measurement}/sensor/statistics:
+    get:
+      summary: "Get the statistics for a measurement's sensor"
+      description: "Retrieves the statistical summary for all phenomenons recorded by the sensor associated with a specific measurement."
+      tags:
+        - Measurements
+        - Users
+        - Sensors
+        - Statistics
+      operationId: getStatisticsOfUserMeasurementSensor
+      security:
+        - basicAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user who owns the measurement.
+          schema:
+            type: string
+        - name: measurement
+          in: path
+          required: true
+          description: The ID of the measurement.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "A collection of statistics for the sensor."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistics'
+
+  /users/{username}/measurements/{measurement}/sensor/statistics/{phen}:
+    get:
+      summary: "Get statistics for a specific phenomenon from a measurement's sensor"
+      description: "Retrieves the statistical summary for a single, specified phenomenon, as recorded by the sensor associated with a specific measurement."
+      tags:
+        - Measurements
+        - Users
+        - Sensors
+        - Statistics
+      operationId: getPhenomenonStatisticsOfUserMeasurementSensor
+      security:
+        - basicAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user who owns the measurement.
+          schema:
+            type: string
+        - name: measurement
+          in: path
+          required: true
+          description: The ID of the measurement.
+          schema:
+            type: string
+        - name: phen
+          in: path
+          required: true
+          description: The name of the phenomenon for which to retrieve statistics (e.g., 'CO2').
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "The statistical summary for the requested phenomenon."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistic'
+
+  /users/{username}/tracks:
+    get:
+      tags:
+        - Users
+        - Tracks
+      summary: Get tracks for a specific user
+      description: Retrieves a collection of tracks recorded by a specific user, with optional spatial, temporal, and pagination filters.
+      operationId: getUserTracks
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user.
+          schema:
+            type: string
+        - name: bbox
+          in: query
+          description: |-
+            A comma-separated list of four coordinates defining a bounding box
+            in the format `minLon,minLat,maxLon,maxLat`.
+            Example: `7.6,51.9,7.7,52.0`
+          schema:
+            type: string
+            format: bbox
+            pattern: '^-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?$'
+        - name: status
+          in: query
+          description: Filter tracks by their status.
+          schema:
+            type: string
+            enum: [finished, ongoing]
+            default: finished
+        - name: after
+          in: query
+          description: The time instant or interval to be applied with the `after` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: before
+          in: query
+          description: The time instant or interval to be applied with the `before` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: begins
+          in: query
+          description: The time instant or interval to be applied with the `begins` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: begunBy
+          in: query
+          description: The time instant or interval to be applied with the `begunBy` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: contains
+          in: query
+          description: The time instant or interval to be applied with the `contains` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: during
+          in: query
+          description: The time instant or interval to be applied with the `during` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: endedBy
+          in: query
+          description: The time instant or interval to be applied with the `endedBy` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: ends
+          in: query
+          description: The time instant or interval to be applied with the `ends` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: equals
+          in: query
+          description: The time instant or interval to be applied with the `equals` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: meets
+          in: query
+          description: The time instant or interval to be applied with the `meets` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: metBy
+          in: query
+          description: The time instant or interval to be applied with the `metBy` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: overlapped
+          in: query
+          description: The time instant or interval to be applied with the `overlapped` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: overlaps
+          in: query
+          description: The time instant or interval to be applied with the `overlaps` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: The maximum number of tracks to return.
+          schema:
+            type: integer
+            default: 100
+        - name: page
+          in: query
+          description: The page number of the result set to return.
+          schema:
+            type: integer
+            default: 1
+        - name: Range
+          in: header
+          required: false
+          description: Range header for pagination (e.g., "items=0-99")
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A collection of tracks matching the filter criteria.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tracks'
+        '400':
+          description: Bad Request. An invalid filter parameter was provided.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+        '404':
+          description: Not Found. The user with the specified username does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+    post:
+      tags:
+        - Users
+        - Tracks
+      summary: Create a new track for a user
+      description: |
+        Creates a new track for the specified user. The track itself is a GeoJSON FeatureCollection, where each Feature in the 'features' array represents a measurement. The track metadata is contained in the 'properties' object. Authentication is required, and users can only create tracks for themselves.
+      operationId: createTrackForUser
+      parameters:
+        - name: username
+          in: path
+          description: The name of the user to create the track for.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: The GeoJSON FeatureCollection representing the track to be created.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrackCreate'
+      security:
+        - basicAuth: []
+      responses:
+        '201':
+          description: Track created successfully.
+          headers:
+            Location:
+              description: The URL of the newly created track resource.
+              schema:
+                type: string
+                format: uri
+
+  /users/{username}/tracks/{track}:
+    parameters:
+      - name: username
+        in: path
+        description: The name of the user who owns the track.
+        required: true
+        schema:
+          type: string
+      - name: track
+        in: path
+        description: The ID of the track.
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Users
+        - Tracks
+      summary: Get a specific track for a user
+      description: Retrieves the details of a specific track belonging to the specified user.
+      operationId: getUserTrackById
+      responses:
+        '200':
+          description: The track details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Track'
+
+    put:
+      tags:
+        - Users
+        - Tracks
+      summary: Modify a user's track
+      description: Updates the properties of a specific track. Users can typically only modify their own tracks.
+      operationId: modifyUserTrack
+      requestBody:
+        description: The track properties to modify.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrackModify' # We will define this based on the PUT logic
+      security:
+        - basicAuth: []
+      responses:
+        '204':
+          description: Track modified successfully.
+    delete:
+      tags:
+        - Users
+        - Tracks
+      summary: Delete a user's track
+      description: Deletes a specific track and all its associated measurements.
+      operationId: deleteUserTrack
+      security:
+        - basicAuth: []
+      responses:
+        '204':
+          description: Track deleted successfully.
+  /users/{username}/tracks/{track}/measurements:
+    parameters:
+      - name: username
+        in: path
+        description: The name of the user who owns the track.
+        required: true
+        schema:
+          type: string
+      - name: track
+        in: path
+        description: The ID of the track to retrieve measurements for.
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Measurements
+      summary: Get a collection of measurements
+      description: Retrieves a collection of measurements, with optional spatial, temporal, and pagination filters.
+      operationId: getMeasurements
+      parameters:
+        - name: bbox
+          in: query
+          description: |-
+            A comma-separated list of four coordinates defining a bounding box
+            in the format `minLon,minLat,maxLon,maxLat`.
+            Example: `7.6,51.9,7.7,52.0`
+          schema:
+            type: string
+            format: bbox
+            pattern: '^-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?$'
+        - name: nearPoint
+          in: query
+          description: |-
+            A comma-separated list of three values `lon,lat,distance` (in meters)
+            defining a point and a radius to search within.
+            Example: `7.6,51.9,1000`
+          schema:
+            type: string
+            pattern: '^-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?$'
+        - name: after
+          in: query
+          description: The time instant to be applied with the `after` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: before
+          in: query
+          description: The time instant to be applied with the `before` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: begins
+          in: query
+          description: The time instant to be applied with the `begins` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: begunBy
+          in: query
+          description: The time instant to be applied with the `begunBy` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: contains
+          in: query
+          description: The time instant to be applied with the `contains` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: during
+          in: query
+          description: The time instant to be applied with the `during` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: endedBy
+          in: query
+          description: The time instant to be applied with the `endedBy` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: ends
+          in: query
+          description: The time instant to be applied with the `ends` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: equals
+          in: query
+          description: The time instant to be applied with the `equals` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: meets
+          in: query
+          description: The time instant to be applied with the `meets` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: metBy
+          in: query
+          description: The time instant to be applied with the `metBy` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: overlapped
+          in: query
+          description: The time instant to be applied with the `overlapped` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: overlaps
+          in: query
+          description: The time instant to be applied with the `overlaps` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          description: The maximum number of measurements to return.
+          schema:
+            type: integer
+            default: 100
+        - name: page
+          in: query
+          description: The page number of the result set to return.
+          schema:
+            type: integer
+            default: 1
+        - name: p
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: l
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: A GeoJSON FeatureCollection of measurements matching the query.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Measurements'
+        '400':
+          description: Bad Request. An invalid filter parameter was provided.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+    post:
+      tags:
+        - Users
+        - Tracks
+        - Measurements
+      summary: Add new measurements to a specific track
+      description: Adds one or more new measurements to an existing track for a user.
+      operationId: addMeasurementsToUserTrack
+      requestBody:
+        description: The measurement to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeasurementCreate'
+      security:
+        - basicAuth: []
+      responses:
+        '201':
+          description: Measurements added successfully.
+
+  /users/{username}/tracks/{track}/measurements/{measurementId}:
+    parameters:
+      - name: username
+        in: path
+        description: The name of the user who owns the track.
+        required: true
+        schema:
+          type: string
+      - name: track
+        in: path
+        description: The ID of the track containing the measurement.
+        required: true
+        schema:
+          type: string
+      - name: measurementId
+        in: path
+        description: The ID of the measurement to retrieve or delete.
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Users
+        - Tracks
+        - Measurements
+      summary: Get a specific measurement from a track
+      description: Retrieves a single measurement entity from a specific track.
+      operationId: getMeasurementForUserTrack
+      responses:
+        '200':
+          description: The measurement details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Measurement'
+
+    delete:
+      tags:
+        - Users
+        - Tracks
+        - Measurements
+      summary: Delete a specific measurement from a track
+      description: Deletes a single measurement from a track.
+      operationId: deleteMeasurementForUserTrack
+      security:
+        - basicAuth: []
+      responses:
+        '204':
+          description: Measurement deleted successfully.
+
+  /users/{username}/tracks/{track}/measurements/{measurementId}/sensor:
+    parameters:
+      - name: username
+        in: path
+        description: The name of the user.
+        required: true
+        schema:
+          type: string
+      - name: track
+        in: path
+        description: The ID of the track.
+        required: true
+        schema:
+          type: string
+      - name: measurementId
+        in: path
+        description: The ID of the measurement.
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Users
+        - Tracks
+        - Measurements
+        - Sensors
+      summary: Get the sensor for a specific measurement
+      description: Retrieves the sensor entity that recorded a specific measurement within a track.
+      operationId: getSensorForMeasurementOnUserTrack
+      responses:
+        '200':
+          description: The sensor entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sensor'
+
+  /users/{username}/tracks/{track}/sensor:
+    get:
+      tags:
+        - Users
+        - Tracks
+        - Sensors
+      summary: Get the sensor for a specific track
+      description: Retrieves the sensor that was used to record a specific user's track.
+      operationId: getSensorForUserTrack
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: track
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The sensor entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sensor'
+
+  /users/{username}/tracks/{track}/sensor/statistics:
+    parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: track
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Users
+        - Tracks
+        - Sensors
+        - Statistics
+      summary: Get statistics for a track's sensor
+      description: Retrieves the collection of statistical summaries for the sensor associated with a specific track.
+      operationId: getSensorStatisticsForUserTrack
+      responses:
+        '200':
+          description: A collection of statistics for the sensor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistics'
+        '404':
+          description: Not Found.
+
+  /users/{username}/tracks/{track}/sensor/statistics/{phen}:
+    parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: track
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: phen
+        in: path
+        description: The name of the phenomenon to retrieve the statistic for.
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Users
+        - Tracks
+        - Sensors
+        - Statistics
+      summary: Get a specific statistic for a track's sensor
+      description: Retrieves a single statistical summary for a phenomenon from the sensor associated with a specific track.
+      operationId: getPhenomenonStatisticForUserTrackSensor
+      responses:
+        '200':
+          description: A single statistic object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistic'
+        '404':
+          description: Not Found.
+
+  /users/{username}/tracks/{track}/measurements/{measurementId}/sensor/statistics:
+    parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: track
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: measurementId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Users
+        - Tracks
+        - Measurements
+        - Sensors
+        - Statistics
+      summary: Get statistics for a measurement's sensor
+      description: Retrieves the collection of statistical summaries for the sensor that recorded a specific measurement.
+      operationId: getSensorStatisticsForMeasurementOnUserTrack
+      responses:
+        '200':
+          description: A collection of statistics for the sensor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistics'
+        '404':
+          description: Not Found.
+
+  /users/{username}/tracks/{track}/measurements/{measurementId}/sensor/statistics/{phen}:
+    parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: track
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: measurementId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: phen
+        in: path
+        description: The name of the phenomenon to retrieve the statistic for.
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Users
+        - Tracks
+        - Measurements
+        - Sensors
+        - Statistics
+      summary: Get a specific statistic for a measurement's sensor
+      description: Retrieves a single statistical summary for a phenomenon from the sensor that recorded a specific measurement.
+      operationId: getPhenomenonStatisticForMeasurementOnUserTrackSensor
+      responses:
+        '200':
+          description: A single statistic object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistic'
+        '404':
+          description: Not Found.
+
+  /users/{username}/tracks/{track}/statistics:
+    get:
+      tags:
+        - Users
+        - Tracks
+        - Statistics
+      summary: Get all statistics for a specific track
+      description: Retrieves a collection of all available statistical values for a specific user's track.
+      operationId: getStatisticsForUserTrack
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: track
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A collection of statistics.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistics' # To be defined
+
+  /users/{username}/tracks/{track}/preview:
+    get:
+      tags:
+        - Users
+        - Tracks
+      summary: Get a preview image for a specific track
+      description: Generates and retrieves a PNG image preview of the track's path on a map.
+      operationId: getPreviewForUserTrack
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: track
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The track preview image.
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Not Found.
+  
+  /users/{username}/tracks/{track}/share:
+    get:
+      tags:
+        - Users
+        - Tracks
+      summary: Get a shareable image for a specific track
+      description: Generates and retrieves a PNG image of the track's path and key statistics, suitable for sharing.
+      operationId: getShareImageForUserTrack
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: track
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The track share image.
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Not Found.
+
+  /users/{username}/tracks/{track}/share/{locale}:
+    parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: track
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: locale
+        in: path
+        description: The locale for localizing text on the image (e.g., 'de' for German).
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Users
+        - Tracks
+      summary: Get a localized shareable image for a specific track
+      description: Generates and retrieves a PNG image of the track's path and key statistics, with text localized to the specified language.
+      operationId: getLocalizedShareImageForUserTrack
+      responses:
+        '200':
+          description: The localized track share image.
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Not Found. The user or track does not exist.
+        '500':
+          description: Internal Server Error. Could occur if image processing fails.
+
+  /users/{username}/statistics:
+    parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags: [Users, Statistics]
+      summary: Statistics aggregated for a user
+      operationId: getUserStatistics
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Statistics' }        
+
+  /users/{username}/tracks/{track}/statistics/{phen}:
+    parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: track
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: phen
+        in: path
+        description: The name of the phenomenon to retrieve the statistic for (e.g., 'Speed').
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Users
+        - Tracks
+        - Statistics
+      summary: Get a specific statistic for a track
+      description: Retrieves the statistical summary for a single phenomenon for a specific user's track.
+      operationId: getPhenomenonStatisticForUserTrack
+      responses:
+        '200':
+          description: A single statistic object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistic'
+
+  /users/{username}/userStatistic:
+    parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags: [Users, Statistics]
+      summary: Single statistic object with personal KPIs
+      operationId: getUserStatistic
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Statistic' }   
+  
+  /tracks:
+    get:
+      tags:
+        - Users
+        - Tracks
+      summary: Get tracks for a specific user
+      description: Retrieves a collection of tracks recorded by a specific user, with optional spatial, temporal, and pagination filters.
+      operationId: getUserTracks
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user.
+          schema:
+            type: string
+        - name: bbox
+          in: query
+          description: |-
+            A comma-separated list of four coordinates defining a bounding box
+            in the format `minLon,minLat,maxLon,maxLat`.
+            Example: `7.6,51.9,7.7,52.0`
+          schema:
+            type: string
+            format: bbox
+            pattern: '^-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?$'
+        - name: status
+          in: query
+          description: Filter tracks by their status.
+          schema:
+            type: string
+            enum: [finished, ongoing]
+            default: finished
+        - name: after
+          in: query
+          description: The time instant or interval to be applied with the `after` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: before
+          in: query
+          description: The time instant or interval to be applied with the `before` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: begins
+          in: query
+          description: The time instant or interval to be applied with the `begins` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: begunBy
+          in: query
+          description: The time instant or interval to be applied with the `begunBy` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: contains
+          in: query
+          description: The time instant or interval to be applied with the `contains` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: during
+          in: query
+          description: The time instant or interval to be applied with the `during` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: endedBy
+          in: query
+          description: The time instant or interval to be applied with the `endedBy` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: ends
+          in: query
+          description: The time instant or interval to be applied with the `ends` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: equals
+          in: query
+          description: The time instant or interval to be applied with the `equals` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: meets
+          in: query
+          description: The time instant or interval to be applied with the `meets` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: metBy
+          in: query
+          description: The time instant or interval to be applied with the `metBy` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: overlapped
+          in: query
+          description: The time instant or interval to be applied with the `overlapped` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: overlaps
+          in: query
+          description: The time instant or interval to be applied with the `overlaps` operator. Can be a single ISO 8601 timestamp or two comma-separated timestamps.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: The maximum number of tracks to return.
+          schema:
+            type: integer
+            default: 100
+        - name: page
+          in: query
+          description: The page number of the result set to return.
+          schema:
+            type: integer
+            default: 1
+        - name: Range
+          in: header
+          required: false
+          description: Range header for pagination (e.g., "items=0-99")
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A collection of tracks matching the filter criteria.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tracks'
+        '400':
+          description: Bad Request. An invalid filter parameter was provided.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+        '404':
+          description: Not Found. The user with the specified username does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+    
+    post:
+      tags: [Tracks]
+      security: [{ basicAuth: [] }]
+      summary: Create a track
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TrackCreate' }   # Track or TrackWithMeasurements
+      responses:
+        '201':
+          description: Created
+          headers:
+            Location: { $ref: '#/components/headers/Location' }
+
+
+  /tracks/{trackId}:
+    parameters:
+      - name: trackId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Tracks]
+      summary: Get a track
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Track' }
+    put:
+      tags: [Tracks]
+      security: [{ basicAuth: [] }]
+      summary: Modify a track
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TrackModify' }
+      responses:
+        '204': { description: No Content }
+    delete:
+      tags: [Tracks]
+      security: [{ basicAuth: [] }]
+      summary: Delete a track
+      responses:
+        '204': { description: No Content }
+
+  /tracks/{trackId}/sensor:
+    parameters:
+      - name: trackId
+        in: path
+        required: true
+        description: The ID of the track.
+        schema:
+          type: string
+    get:
+      tags:
+        - Tracks
+        - Sensors
+      summary: Get the sensor of a track.
+      description: Get the sensor that recorded the specified track.
+      operationId: getTrackSensor
+      responses:
+        '200':
+          description: The sensor object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sensor'
+        '404':
+          description: Track or Sensor not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+
+  /tracks/{trackId}/share:
+    get:
+      responses:
+        '200':
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+    parameters:
+      - name: trackId
+        in: path
+        required: true
+        description: Unique identifier of the track.
+        schema: { type: string }
+
+  /tracks/{trackId}/statistics:
+    parameters:
+      - name: trackId
+        in: path
+        required: true
+        description: The ID of the track.
+        schema:
+          type: string
+    get:
+      tags:
+        - Tracks
+        - Statistics
+      summary: Get statistics for a track.
+      description: Get all available statistical summaries for the specified track.
+      operationId: getTrackStatistics
+      responses:
+        '200':
+          description: A collection of statistics.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistics'
+        '404':
+          description: Track not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+
+  /tracks/{trackId}/statistics/{phen}:
+    parameters:
+      - name: trackId
+        in: path
+        required: true
+        description: The ID of the track.
+        schema:
+          type: string
+      - name: phen
+        in: path
+        required: true
+        description: The name of the phenomenon (e.g., "Speed", "CO2").
+        schema:
+          type: string
+    get:
+      tags:
+        - Tracks
+        - Statistics
+      summary: Get a single phenomenon statistic for a track.
+      description: Get the statistical summary for a single, specified phenomenon for a given track.
+      operationId: getTrackStatisticByPhenomenon
+      responses:
+        '200':
+          description: The statistic for the requested phenomenon.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistic'
+        '404':
+          description: Track or phenomenon not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+
+  /tracks/{trackId}/share/{locale}:
+    parameters:
+      - name: trackId
+        in: path
+        required: true
+        description: The ID of the track.
+        schema:
+          type: string
+      - name: locale
+        in: path
+        required: true
+        description: The locale for the shareable image (e.g., 'en', 'de').
+        schema:
+          type: string
+    get:
+      tags:
+        - Tracks
+      summary: Get a shareable image for the track.
+      description: Generates and returns a PNG image of the track map with statistics overlaid, localized for the given locale.
+      operationId: getLocalizedShareImage
+      responses:
+        '200':
+          description: A PNG image of the track.
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Track not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+
+  /tracks/{trackId}/measurements:
+    parameters:
+      - name: trackId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags:
+        - Measurements
+      summary: Get a collection of measurements
+      description: Retrieves a collection of measurements, with optional spatial, temporal, and pagination filters.
+      operationId: getMeasurements
+      parameters:
+        - name: bbox
+          in: query
+          description: |-
+            A comma-separated list of four coordinates defining a bounding box
+            in the format `minLon,minLat,maxLon,maxLat`.
+            Example: `7.6,51.9,7.7,52.0`
+          schema:
+            type: string
+            format: bbox
+            pattern: '^-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?$'
+        - name: nearPoint
+          in: query
+          description: |-
+            A comma-separated list of three values `lon,lat,distance` (in meters)
+            defining a point and a radius to search within.
+            Example: `7.6,51.9,1000`
+          schema:
+            type: string
+            pattern: '^-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?$'
+        - name: after
+          in: query
+          description: The time instant to be applied with the `after` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: before
+          in: query
+          description: The time instant to be applied with the `before` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: begins
+          in: query
+          description: The time instant to be applied with the `begins` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: begunBy
+          in: query
+          description: The time instant to be applied with the `begunBy` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: contains
+          in: query
+          description: The time instant to be applied with the `contains` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: during
+          in: query
+          description: The time instant to be applied with the `during` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: endedBy
+          in: query
+          description: The time instant to be applied with the `endedBy` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: ends
+          in: query
+          description: The time instant to be applied with the `ends` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: equals
+          in: query
+          description: The time instant to be applied with the `equals` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: meets
+          in: query
+          description: The time instant to be applied with the `meets` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: metBy
+          in: query
+          description: The time instant to be applied with the `metBy` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: overlapped
+          in: query
+          description: The time instant to be applied with the `overlapped` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: overlaps
+          in: query
+          description: The time instant to be applied with the `overlaps` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          description: The maximum number of measurements to return.
+          schema:
+            type: integer
+            default: 100
+        - name: page
+          in: query
+          description: The page number of the result set to return.
+          schema:
+            type: integer
+            default: 1
+        - name: p
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+        - name: l
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: A GeoJSON FeatureCollection of measurements matching the query.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Measurements'
+        '400':
+          description: Bad Request. An invalid filter parameter was provided.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+    post:
+      tags: [Measurements, Tracks]
+      summary: Create a measurement for this track.
+      operationId: createTrackMeasurement
+      security: [{ basicAuth: [] }]
+      requestBody:
+        description: The measurement to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MeasurementCreate'
+      responses:
+        '201':
+          description: Created.
+          headers:
+            Location:
+              schema: { type: string, format: uri }
+
+  /tracks/{trackId}/measurements/{measurementId}:
+    parameters:
+      - name: trackId
+        in: path
+        required: true
+        description: The ID of the track.
+        schema:
+          type: string
+      - name: measurementId
+        in: path
+        required: true
+        description: The ID of the measurement.
+        schema:
+          type: string
+    get:
+      tags:
+        - Tracks
+        - Measurements
+      summary: Get a specific measurement from a track.
+      description: Retrieves a single measurement by its ID, scoped to a specific track.
+      operationId: getTrackMeasurementById
+      responses:
+        '200':
+          description: The requested measurement object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Measurement'
+        '404':
+          description: Track or Measurement not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+    delete:
+      tags:
+        - Tracks
+        - Measurements
+      summary: Delete a specific measurement from a track.
+      description: Deletes a single measurement from a track. This action is irreversible.
+      operationId: deleteTrackMeasurement
+      security:
+        - basicAuth: []
+      responses:
+        '204':
+          description: The measurement was successfully deleted.
+
+  /tracks/{trackId}/measurements/{measurementId}/sensor:
+    parameters:
+      - name: trackId
+        in: path
+        required: true
+        description: The ID of the track.
+        schema:
+          type: string
+      - name: measurementId
+        in: path
+        required: true
+        description: The ID of the measurement.
+        schema:
+          type: string
+    get:
+      tags:
+        - Tracks
+        - Measurements
+        - Sensors
+      summary: Get the sensor of a specific measurement.
+      description: Retrieves the sensor that recorded a specific measurement within a track.
+      operationId: getTrackMeasurementSensor
+      responses:
+        '200':
+          description: The sensor object for the measurement.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sensor'
+        '404':
+          description: Track, Measurement, or Sensor not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+
+  /tracks/{trackId}/measurements/{measurementId}/sensor/statistics:
+    parameters:
+      - name: trackId
+        in: path
+        required: true
+        description: The ID of the track.
+        schema:
+          type: string
+      - name: measurementId
+        in: path
+        required: true
+        description: The ID of the measurement.
+        schema:
+          type: string
+    get:
+      tags:
+        - Tracks
+        - Measurements
+        - Sensors
+        - Statistics
+      summary: Get statistics for a measurement's sensor.
+      description: Retrieves all available statistical summaries for the sensor associated with a specific measurement.
+      operationId: getTrackMeasurementSensorStatistics
+      responses:
+        '200':
+          description: A collection of statistics for the sensor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistics'
+        '404':
+          description: Track, Measurement, or Sensor not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+
+  /tracks/{trackId}/measurements/{measurementId}/sensor/statistics/{phen}:
+    parameters:
+      - name: trackId
+        in: path
+        required: true
+        description: The ID of the track.
+        schema:
+          type: string
+      - name: measurementId
+        in: path
+        required: true
+        description: The ID of the measurement.
+        schema:
+          type: string
+      - name: phen
+        in: path
+        required: true
+        description: The name of the phenomenon.
+        schema:
+          type: string
+    get:
+      tags:
+        - Tracks
+        - Measurements
+        - Sensors
+        - Statistics
+      summary: Get a single phenomenon statistic for a measurement's sensor.
+      description: Retrieves the statistical summary for a single phenomenon from the sensor associated with a specific measurement.
+      operationId: getTrackMeasurementSensorStatisticByPhenomenon
+      responses:
+        '200':
+          description: The statistic for the requested phenomenon.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistic'
+        '404':
+          description: Track, Measurement, Sensor or Phenomenon not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Exception'
+
+  /tracks/{trackId}/sensor/statistics:
+    parameters:
+      - name: trackId
+        in: path
+        required: true
+        description: Unique identifier of the track.
+        schema: { type: string }
+    get:
+      tags: [Tracks, Sensors, Statistics]
+      summary: Get statistics for the sensor of this track
+      description: Aggregated min / avg / max values for **every** phenomenon, but limited to the sensor that recorded the given track.
+      operationId: getTrackSensorStatistics
+      responses:
+        '200':
+          description: Aggregate statistics.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Statistics' }
+        '400':
+          description: Bad Request – invalid track ID or validation failure.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exception' }
+        '404':
+          description: Track or statistics not found.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exception' }
+
+  /tracks/{trackId}/sensor/statistics/{phen}:
+    parameters:
+      - name: trackId
+        in: path
+        required: true
+        schema: { type: string }
+      - name: phen
+        in: path
+        required: true
+        description: Phenomenon name (e.g. `CO_CONC`).
+        schema: { type: string }
+    get:
+      tags: [Tracks, Sensors, Statistics]
+      summary: Get statistics for one phenomenon of this track’s sensor
+      operationId: getTrackSensorStatistic
+      responses:
+        '200':
+          description: Statistic for the requested phenomenon.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Statistic' }
+        '400':
+          description: Bad Request – malformed phenomenon name or track ID.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exception' }
+        '404':
+          description: Track or statistic not found.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exception' }
+
+  /tracks/{trackId}/preview:
+    parameters:
+      - name: trackId
+        in: path
+        required: true
+        description: Unique identifier of the track.
+        schema: { type: string }
+    get:
+      tags: [Tracks]
+      summary: PNG preview of the track
+      operationId: getTrackPreview
+      responses:
+        '200':
+          content:
+            image/png:
+              schema: { type: string, format: binary }
+
+  /sensors:
+    get:
+      tags: [Sensors]
+      summary: Get sensors
+      description: >
+        Returns a paginated list of sensors.  
+        Supports filtering by `type` **and** by arbitrary key/value pairs that match
+        sensor‐specific properties (e.g. `model=ELM327`).
+      operationId: getSensors
+      parameters:
+        - name: type
+          in: query
+          description: Filter sensors by their type (e.g., 'obd-ii', 'mobile').
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: The maximum number of sensors to return. Alias 'l' is also supported.
+          schema:
+            type: integer
+            default: 100
+        - name: page
+          in: query
+          description: The page number of the result set to return. Alias 'p' is also supported.
+          schema:
+            type: integer
+            default: 1
+        - name: l
+          in: query
+          description: Alias for the 'limit' parameter.
+          schema:
+            type: integer
+        - name: p
+          in: query
+          description: Alias for the 'page' parameter.
+          schema:
+            type: integer
+
+        - name: Range
+          in: header
+          description: Specifies the range of items to return, e.g., `items=0-99`. Takes precedence over query parameter pagination.
+          schema:
+            type: string
+            pattern: '^items=\d+-\d+$'
+      responses:
+        '200':
+          description: Successful list of sensors
+          headers:
+            Content-Range:
+              description: Pagination info (`items start-end/total`)
+              schema: { type: string }
+            Link:
+              description: Pagination links (`first`, `prev`, `next`, `last`)
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Sensors' }
+        '206':
+          description: Partial list (when `Range` header used)
+          headers:
+            Content-Range:
+              description: Pagination info (`items start-end/total`)
+              schema: { type: string }
+            Link:
+              description: Pagination links
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Sensors' }
+        '400':
+          description: Invalid pagination or filter parameters
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exception' }
+
+    post:
+      tags: [Sensors]
+      summary: Create sensor
+      operationId: createSensor
+      security: [{ basicAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SensorCreate' }
+      responses:
+        '201':
+          description: Sensor created
+          headers:
+            Location:
+              description: URL of the new sensor
+              schema: { type: string, format: uri }
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exception' }
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exception' }
+
+  /sensors/{sensorId}:
+    parameters:
+      - name: sensorId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Sensors]
+      summary: Get sensor by ID
+      operationId: getSensorById
+      responses:
+        '200':
+          description: Sensor object
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Sensor' }
+        '404':
+          description: Sensor not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exception' }
+
+  /sensors/{sensorId}/statistics:
+    parameters:
+      - name: sensorId
+        in: path
+        required: true
+        schema: { type: string }
+    get:
+      tags: [Sensors, Statistics]
+      summary: Get statistics for a sensor
+      operationId: getSensorStatistics
+      responses:
+        '200':
+          description: Aggregate statistics for this sensor
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Statistics' }
+        '404':
+          description: Sensor or statistics not found
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exception' }
+
+  /sensors/{sensorId}/statistics/{phen}:
+    parameters:
+      - name: sensorId
+        in: path
+        required: true
+        description: Unique identifier of the sensor.
+        schema: { type: string }
+      - name: phen
+        in: path
+        required: true
+        description: Phenomenon name (e.g. `CO_CONC`).
+        schema: { type: string }
+    get:
+      tags: [Sensors, Statistics]
+      summary: Get statistics for one phenomenon
+      operationId: getSensorStatistic
+      responses:
+        '200':
+          description: Min/avg/max for the requested phenomenon measured by this sensor.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Statistic' }
+
+  /users/{username}:
+    parameters:
+      - name: username
+        in: path
+        required: true
+        description: The unique username (stable identifier).
+        schema: { type: string }
+    get:
+      tags: [Users]
+      summary: Get a user profile
+      operationId: getUserByName
+      responses:
+        '200':
+          description: The user object.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+    put:
+      tags: [Users]
+      security: [{ basicAuth: [] }]
+      summary: Modify a user profile
+      description: |
+        Updates the user’s properties.  
+        If the **username changes**, the server replies `303 See Other`
+        and the `Location` header points to the new URL; otherwise `204`.
+      operationId: modifyUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UserModify' }
+      responses:
+        '204': { description: No Content – updated in-place }
+        '303':
+          description: See Other – username changed
+          headers:
+            Location:
+              description: New canonical URL
+              schema: { type: string, format: uri }
+    delete:
+      tags: [Users]
+      security: [{ basicAuth: [] }]
+      summary: Delete a user account
+      operationId: deleteUser
+      parameters:
+        - name: deleteContent
+          in: query
+          description: Also delete the user’s tracks, measurements, etc.
+          required: false
+          schema: { type: boolean, default: false }
+      responses:
+        '204': { description: No Content – user removed }
+
+  /users/{username}/sensors:
+    parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user.
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Filter sensors by their type (e.g., 'obd-ii', 'mobile').
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: The maximum number of sensors to return. Alias 'l' is also supported.
+          schema:
+            type: integer
+            default: 100
+        - name: page
+          in: query
+          description: The page number of the result set to return. Alias 'p' is also supported.
+          schema:
+            type: integer
+            default: 1
+        - name: l
+          in: query
+          description: Alias for the 'limit' parameter.
+          schema:
+            type: integer
+        - name: p
+          in: query
+          description: Alias for the 'page' parameter.
+          schema:
+            type: integer
+
+        - name: Range
+          in: header
+          description: Specifies the range of items to return, e.g., `items=0-99`. Takes precedence over query parameter pagination.
+          schema:
+            type: string
+            pattern: '^items=\d+-\d+$'
+    get:
+      tags: [Users, Sensors]
+      summary: Get sensors owned by a user
+      operationId: getUserSensors
+      responses:
+        '200':
+          description: List of sensors
+          headers:
+            Content-Range:
+              description: Pagination info
+              schema: { type: string }
+            Link:
+              description: Pagination links
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Sensors' }
+        '206':
+          description: Partial list (pagination)
+          headers:
+            Content-Range:
+              description: Pagination info
+              schema: { type: string }
+            Link:
+              description: Pagination links
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Sensors' }
+
+    post:
+      tags:
+        - Users
+        - Sensors
+      summary: Create a sensor for a user
+      description: Creates a new sensor and associates it with the currently authenticated user.
+      operationId: createSensorForUser
+      security:
+        - basicAuth: []
+      requestBody:
+        description: The details of the sensor to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SensorCreate'
+      responses:
+        '201':
+          description: Sensor created successfully. The Location header contains the URL of the new sensor.
+          headers:
+            Location:
+              description: The URL of the newly created sensor.
+              schema:
+                type: string
+                format: uri
+
+  /users/{username}/sensors/{sensor}:
+    get:
+      tags:
+        - Users
+        - Sensors
+      summary: Get a user's sensor by ID
+      description: Retrieves a specific sensor belonging to a user.
+      operationId: getUserSensorById
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user.
+          schema:
+            type: string
+        - name: sensor
+          in: path
+          required: true
+          description: The ID of the sensor to retrieve.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The requested sensor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sensor'
+
+  /users/{username}/sensors/{sensor}/statistics:
+    get:
+      tags:
+        - Users
+        - Sensors
+        - Statistics
+      summary: Get statistics for a specific sensor
+      description: Retrieves a summary of all statistics for a specific sensor.
+      operationId: getUserSensorStatistics
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user.
+          schema:
+            type: string
+        - name: sensor
+          in: path
+          required: true
+          description: The ID of the sensor.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A collection of statistics for the sensor.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistics'
+
+  /users/{username}/sensors/{sensor}/statistics/{phen}:
+    get:
+      tags:
+        - Users
+        - Sensors
+        - Statistics
+      summary: Get a specific statistic for a sensor
+      description: Retrieves the statistic for a single phenomenon, for a specific sensor.
+      operationId: getUserSensorStatisticByPhenomenon
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user.
+          schema:
+            type: string
+        - name: sensor
+          in: path
+          required: true
+          description: The ID of the sensor.
+          schema:
+            type: string
+        - name: phen
+          in: path
+          required: true
+          description: The name of the phenomenon (e.g., 'CO2', 'Speed').
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The requested statistic.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistic'
+
+  /users/{username}/statistics/{phen}:
+    get:
+      tags:
+        - Users
+        - Statistics
+      summary: Get a specific statistic for a user
+      description: Retrieves the statistic for a single phenomenon, aggregated across all of a user's tracks and sensors.
+      operationId: getUserStatisticByPhenomenon
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user.
+          schema:
+            type: string
+        - name: phen
+          in: path
+          required: true
+          description: The name of the phenomenon (e.g., 'CO2', 'Speed').
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The requested statistic.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistic'
+
+  /users/{username}/friends:
+    get:
+      tags: [Users, Friends]
+      summary: List the user’s friends
+      description: |
+        Returns every user that is already accepted as a friend of **{username}**.
+        The authenticated caller must have `canSeeFriendsOf()` permission for the
+        requested user (see `FriendsResource#get()` Java code).
+      operationId: getFriends
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK – an array wrapper object containing friend profiles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Users'
+        '403':
+          description: Caller is not allowed to see the friend list.
+        '404':
+          description: The **username** does not exist.
+
+    post:
+      tags: [Users, Friends]
+      summary: Send a friend request
+      description: |
+        Creates an *outgoing* friend request from the authenticated caller
+        to **{username}**.  
+        The body must supply the *target* user name (`UserReference`),
+        **and it MUST NOT equal the caller’s own name** – the code throws
+        `BadRequestException` otherwise.
+      operationId: addFriend
+      security: [{ basicAuth: [] }]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserReference'
+      responses:
+        '204':
+          description: Request queued (no body).
+        '400':
+          description: Body is missing or references the caller himself / herself.
+        '401':
+          description: Caller is unauthenticated.
+        '403':
+          description: Caller is not allowed to befriend the target user.
+        '404':
+          description: Target user not found.
+
+  /users/{username}/friends/{friendUsername}:
+    delete:
+      tags: [Users, Friends]
+      summary: Remove a friend (un-friend)
+      operationId: deleteFriend
+      security: [{ basicAuth: [] }]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+        - name: friendUsername
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: Friendship removed.
+        '401':
+          description: Caller unauthenticated.
+        '403':
+          description: Caller not permitted to unfriend.
+        '404':
+          description: Relationship does not exist.
+
+  /users/{username}/friends/incomingRequests:
+    get:
+      tags: [Users, Friends]
+      summary: List incoming friend requests
+      operationId: getIncomingFriendRequests
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Users that **{username}** still has to accept or decline.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Users'
+        '403': { description: Not allowed }
+        '404': { description: User not found }
+
+  /users/{username}/friends/outgoingRequests:
+    get:
+      tags: [Users, Friends]
+      summary: List outgoing friend requests
+      operationId: getOutgoingFriendRequests
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Users to whom **{username}** has sent a request that is still pending.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Users'
+        '403': { description: Not allowed }
+        '404': { description: User not found }
+
+  /users/{username}/friends/declineRequest:
+    post:
+      tags: [Users, Friends]
+      summary: Decline an incoming friend request
+      operationId: declineFriendRequest
+      security: [{ basicAuth: [] }]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserReference'
+      responses:
+        '204':
+          description: Request declined (or relationship removed if it already existed).
+        '401': { description: Unauthenticated }
+        '404': { description: Requesting user not found }
+
+  /users/{username}/fuelings:
+    parameters:
+      - name: username
+        in: path
+        required: true
+        description: The user that owns the fuel-log entries.
+        schema: { type: string }
+    get:
+      tags: [Users, Fuelings]
+      summary: List a user’s fuelings
+      description: Paginated list of fuel stops recorded by **{username}**.
+      operationId: getUserFuelings
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user.
+          schema:
+            type: string
+        - name: Range
+          in: header
+          description: Specifies the range of items to return, e.g., `items=0-99`. Takes precedence over query parameter pagination.
+          schema:
+            type: string
+            pattern: '^items=\d+-\d+$'
+        - name: limit
+          in: query
+          description: The maximum number of fuelings to return. Alias 'l' is also supported.
+          schema:
+            type: integer
+            default: 100
+        - name: page
+          in: query
+          description: The page number of the result set to return. Alias 'p' is also supported.
+          schema:
+            type: integer
+            default: 1
+        - name: l
+          in: query
+          description: Alias for the 'limit' parameter.
+          schema:
+            type: integer
+        - name: p
+          in: query
+          description: Alias for the 'page' parameter.
+          schema:
+            type: integer
+        - name: after
+          in: query
+          description: The time instant to be applied with the `after` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: before
+          in: query
+          description: The time instant to be applied with the `before` operator. Must be a single ISO 8601 timestamp.
+          schema:
+            type: string
+            format: date-time
+        - name: begins
+          in: query
+          schema: { type: string, format: date-time }
+        - name: begunBy
+          in: query
+          schema: { type: string, format: date-time }
+        - name: contains
+          in: query
+          schema: { type: string, format: date-time }
+        - name: during
+          in: query
+          schema: { type: string, format: date-time }
+        - name: endedBy
+          in: query
+          schema: { type: string, format: date-time }
+        - name: ends
+          in: query
+          schema: { type: string, format: date-time }
+        - name: equals
+          in: query
+          schema: { type: string, format: date-time }
+        - name: meets
+          in: query
+          schema: { type: string, format: date-time }
+        - name: metBy
+          in: query
+          schema: { type: string, format: date-time }
+        - name: overlapped
+          in: query
+          schema: { type: string, format: date-time }
+        - name: overlaps
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        '200':
+          description: Full list (or first page when `Range` omitted).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Fuelings' }
+        '206':
+          description: Partial list when `Range` header supplied.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Fuelings' }
+
+    post:
+      tags: [Users, Fuelings]
+      summary: Create a fueling entry
+      operationId: createFueling
+      security: [{ basicAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FuelingCreate' }
+      responses:
+        '201':
+          description: Created – `Location` contains `/users/{username}/fuelings/{id}`.
+          headers:
+            Location:
+              description: Canonical URL of the new fueling entry.
+              schema: { type: string, format: uri }
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exception' }
+        '401':
+          description: Authentication required.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exception' }
+
+  /users/{username}/fuelings/{id}:
+    parameters:
+      - name: username
+        in: path
+        required: true
+        schema: { type: string }
+      - name: id
+        in: path
+        required: true
+        description: Fueling identifier.
+        schema: { type: string }
+    get:
+      tags: [Users, Fuelings]
+      summary: Get a single fueling
+      operationId: getFueling
+      responses:
+        '200':
+          description: The fueling entry.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Fueling' }
+
+    delete:
+      tags: [Users, Fuelings]
+      summary: Delete a fueling
+      operationId: deleteFueling
+      security: [{ basicAuth: [] }]
+      responses:
+        '204':
+          description: No Content – entry deleted.
+
+
+  /users/{username}/groups:
+    parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user who will own the group.
+          schema:
+            type: string
+    get:
+      tags: [ Users, Groups ]
+      summary: Get the groups of a specific user
+      description: Paginated list of groups that the given user belongs to.
+      operationId: getGroupsOfUser
+      parameters:
+        - name: q
+          in: query
+          description: A search term to filter groups by name or description.
+          schema:
+            type: string
+        - name: Range
+          in: header
+          description: Specifies the range of items to return, e.g., `items=0-99`. Takes precedence over query parameter pagination.
+          schema:
+            type: string
+            pattern: '^items=\d+-\d+$'
+        - name: limit
+          in: query
+          description: The maximum number of groups to return. Alias 'l' is also supported.
+          schema:
+            type: integer
+            default: 100
+        - name: page
+          in: query
+          description: The page number of the result set to return. Alias 'p' is also supported.
+          schema:
+            type: integer
+            default: 1
+        - name: l
+          in: query
+          description: Alias for the 'limit' parameter.
+          schema:
+            type: integer
+        - name: p
+          in: query
+          description: Alias for the 'page' parameter.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of the user’s groups
+          headers:
+            Content-Range: { $ref: '#/components/headers/Content-Range' }
+            Link:          { $ref: '#/components/headers/Link' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Groups' }
+        '206':
+          description: Partial list (pagination)
+          headers:
+            Content-Range: { $ref: '#/components/headers/Content-Range' }
+            Link:          { $ref: '#/components/headers/Link' }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Groups' }
+    post:
+      tags:
+        - Users
+        - Groups
+      summary: Create a group for a user
+      description: Creates a new group owned by the specified user.
+      operationId: createUserGroup
+      security:
+        - basicAuth: []
+      requestBody:
+        description: The details of the group to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupCreate'
+      responses:
+        '201':
+          description: Group created successfully. The Location header contains the URL of the new group.
+          headers:
+            Location:
+              description: The URL of the newly created group.
+              schema:
+                type: string
+                format: uri
+
+  /users/{username}/groups/{group}:
+    get:
+      tags:
+        - Users
+        - Groups
+      summary: Get a specific group of a user
+      description: Retrieves the details of a specific group that belongs to a user.
+      operationId: getUserGroup
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user.
+          schema:
+            type: string
+        - name: group
+          in: path
+          required: true
+          description: The name of the group to retrieve.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The requested group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+    put:
+      tags:
+        - Users
+        - Groups
+      summary: Modify a group
+      description: Modifies the properties of a group. The user must be the owner of the group.
+      operationId: modifyUserGroup
+      security:
+        - basicAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user who owns the group.
+          schema:
+            type: string
+        - name: group
+          in: path
+          required: true
+          description: The name of the group to modify.
+          schema:
+            type: string
+      requestBody:
+        description: The properties of the group to modify.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupModify'
+      responses:
+        '204':
+          description: Group modified successfully.
+        '303':
+          description: See Other. Returned if the group's name was changed, redirecting to the new URL.
+          headers:
+            Location:
+              description: The new URL of the group.
+              schema:
+                type: string
+                format: uri
+
+    delete:
+      tags:
+        - Users
+        - Groups
+      summary: Delete a group
+      description: Deletes a group. The user must be the owner of the group.
+      operationId: deleteUserGroup
+      security:
+        - basicAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user who owns the group.
+          schema:
+            type: string
+        - name: group
+          in: path
+          required: true
+          description: The name of the group to delete.
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Group deleted successfully.
+
+  /users/{username}/groups/{group}/activities:
+    get:
+      tags:
+        - Users
+        - Groups
+      summary: Get group activities
+      description: Retrieves the activity stream for a specific group.
+      operationId: getUserGroupActivities
+      parameters:
+        - name: group
+          in: path
+          required: true
+          description: The name of the user who will own the group.
+          schema:
+            type: string
+        - name: username
+          in: path
+          required: true
+          description: The name of the user.
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Filter activities by a specific type.
+          schema:
+            type: string
+            enum:
+              - CHANGED_PROFILE
+              - CREATED_GROUP
+              - CHANGED_GROUP
+              - JOINED_GROUP
+              - LEFT_GROUP
+              - DELETED_GROUP
+              - FRIENDED_USER
+              - UNFRIENDED_USER
+              - CREATED_TRACK
+        - name: Range
+          in: header
+          description: Specifies the range of items to return, e.g., `items=0-99`. Takes precedence over query parameter pagination.
+          schema:
+            type: string
+            pattern: '^items=\d+-\d+$'
+        - name: limit
+          in: query
+          description: The maximum number of activities to return. Alias 'l' is also supported.
+          schema:
+            type: integer
+            default: 100
+        - name: page
+          in: query
+          description: The page number of the result set to return. Alias 'p' is also supported.
+          schema:
+            type: integer
+            default: 1
+        - name: l
+          in: query
+          description: Alias for the 'limit' parameter.
+          schema:
+            type: integer
+        - name: p
+          in: query
+          description: Alias for the 'page' parameter.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: A list of activities for the group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activities'
+
+  /users/{username}/groups/{group}/activities/{id}:
+    get:
+      tags:
+        - Users
+        - Groups
+      summary: Get a specific group activity
+      description: Retrieves a single activity by its ID from a group's activity stream.
+      operationId: getUserGroupActivityById
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user.
+          schema:
+            type: string
+        - name: group
+          in: path
+          required: true
+          description: The name of the group.
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          description: The ID of the activity to retrieve.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The requested activity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Activity'
+
+  /users/{username}/groups/{group}/members:
+    get:
+      tags:
+        - Users
+        - Groups
+      summary: Get group members
+      description: Retrieves a list of all members of a specific group.
+      operationId: getGroupMembersForUser
+      parameters:
+          - name: username
+            in: path
+            required: true
+            schema:
+              type: string
+            description: The username of the user.
+          - name: group
+            in: path
+            required: true
+            schema:
+              type: string
+            description: The name of the group.
+          - name: Range
+            in: header
+            required: false
+            schema:
+              type: string
+            description: Used for range-based pagination (e.g. "items=0-99").
+          - name: page
+            in: query
+            required: false
+            schema:
+              type: integer
+              format: int32
+              default: 1
+            description: The (1-based) page number, for page-based pagination.
+          - name: limit
+            in: query
+            required: false
+            schema:
+              type: integer
+              format: int32
+              default: 100
+            description: Maximum number of items to retrieve per page.
+          - name: p
+            in: query
+            required: false
+            schema:
+              type: integer
+              format: int32
+              default: 1
+            description: Alias for "page".
+          - name: l
+            in: query
+            required: false
+            schema:
+              type: integer
+              format: int32
+              default: 100
+            description: Alias for "limit".
+        
+      responses:
+        '200':
+          description: A list of users who are members of the group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Users'
+
+    post:
+      tags:
+        - Users
+        - Groups
+      summary: Add a member to a group
+      description: Adds a user as a member to a group. The authenticated user is the one being added.
+      operationId: addGroupMemberForUser
+      security:
+        - basicAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user context (must match the authenticated user being added).
+          schema:
+            type: string
+        - name: group
+          in: path
+          required: true
+          description: The name of the group to join.
+          schema:
+            type: string
+      requestBody:
+        description: The name of the user to add as a member. The name in the body must match the authenticated user.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserReference'
+      responses:
+        '204':
+          description: Member added successfully.
+
+  /users/{username}/groups/{group}/members/{member}:
+    delete:
+      tags:
+        - Users
+        - Groups
+      summary: Remove a member from a group
+      description: Removes a user from a group. The authenticated user must be the user being removed.
+      operationId: removeGroupMemberForUser
+      security:
+        - basicAuth: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          description: The name of the user context.
+          schema:
+            type: string
+        - name: group
+          in: path
+          required: true
+          description: The name of the group to leave.
+          schema:
+            type: string
+        - name: member
+          in: path
+          required: true
+          description: The name of the member to remove (must match the authenticated user).
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Member removed successfully.
+
+  /schemas:
+    get:
+      tags: [General]
+      summary: List available JSON Schema names
+      operationId: listSchemas
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: { type: string, format: uri }
+
+  /schemas/{name}:
+    get:
+      tags: [General]
+      summary: Get a specific JSON Schema document
+      operationId: getSchema
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { type: object }
+
+  /termsOfUse:
+    get:
+      tags: [Legal]
+      summary: List versions of the Terms-of-Use (ToU)
+      operationId: getTermsOfUse
+      description: >
+        Returns every published Terms-of-Use document in chronological order
+        (newest first).  The server automatically selects the best-matching
+        language for the `contents` field based on the client’s
+        **Accept-Language** header.
+      responses:
+        '200':
+          description: A collection of Terms-of-Use instances.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [termsOfUse]
+                properties:
+                  termsOfUse:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TermsOfUseInstance'
+      parameters:
+        - name: Range
+          in: header
+          description: Specifies the range of items to return, e.g., `items=0-99`. Takes precedence over query parameter pagination.
+          schema:
+            type: string
+            pattern: '^items=\d+-\d+$'
+        - name: limit
+          in: query
+          description: The maximum number of items to return. Alias 'l' is also supported.
+          schema:
+            type: integer
+            default: 100
+        - name: page
+          in: query
+          description: The page number of the result set to return. Alias 'p' is also supported.
+          schema:
+            type: integer
+            default: 1
+        - name: l
+          in: query
+          description: Alias for the 'limit' parameter.
+          schema:
+            type: integer
+        - name: p
+          in: query
+          description: Alias for the 'page' parameter.
+          schema:
+            type: integer
+  /termsOfUse/{id}:
+    get:
+      tags: [Legal]
+      summary: Get a specific Terms-of-Use instance
+      operationId: getTermsOfUseInstance
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: string}
+      responses:
+        '200':
+          description: The requested Terms-of-Use instance.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TermsOfUseInstance'
+        '404':
+          description: No Terms-of-Use instance with the given ID exists.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Exception'}
+
+  /privacyStatements:
+    get:
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+          description: Maximum number of items to return.
+        - name: l
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+          description: Same as 'limit' (short form).
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+          description: Page number to retrieve.
+        - name: p
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+          description: Same as 'page' (short form).
+        - name: Range
+          in: header
+          required: false
+          schema:
+            type: string
+          description: Use "items=begin-end" for range-based pagination.
+      tags: [Legal]
+      summary: List versions of the Privacy Statement
+      operationId: getPrivacyStatements
+      description: Same behaviour as **GET /termsOfUse**, but for privacy policy.
+      responses:
+        '200':
+          description: A collection of Privacy-Statement instances.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [privacyStatements]
+                properties:
+                  privacyStatements:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PrivacyStatement'
+  
+  /phenomenons:
+    get:
+      summary: Get the phenomenon listing
+      operationId: getPhenomenons
+      tags: [Phenomenons]
+      parameters:
+        - name: q
+          in: query
+          description: A search term to filter groups by name or description.
+          schema:
+            type: string
+        - name: Range
+          in: header
+          description: Specifies the range of items to return, e.g., `items=0-99`. Takes precedence over query parameter pagination.
+          schema:
+            type: string
+            pattern: '^items=\d+-\d+$'
+        - name: limit
+          in: query
+          description: The maximum number of groups to return. Alias 'l' is also supported.
+          schema:
+            type: integer
+            default: 100
+        - name: page
+          in: query
+          description: The page number of the result set to return. Alias 'p' is also supported.
+          schema:
+            type: integer
+            default: 1
+        - name: l
+          in: query
+          description: Alias for the 'limit' parameter.
+          schema:
+            type: integer
+        - name: p
+          in: query
+          description: Alias for the 'page' parameter.
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: The phenomenons
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Phenomenons'
+
+    post:
+      summary: Create a new phenomenon
+      operationId: createPhenomenon
+      tags: [Phenomenons]
+      security: [{ basicAuth: [] }]
+      requestBody:
+        description: Phenomenon to create
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Phenomenon'
+      responses:
+        "201":
+          description: Created. The group was successfully created.
+          headers:
+            Location:
+              description: The URL of the newly created group.
+              schema:
+                type: string
+                format: uri
+
+  /phenomenons/{phenomenonId}:
+    parameters:
+      - name: phenomenonId
+        in: path
+        description: The unique name of the phenomenon (e.g., 'Speed'). Case-sensitive.
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get a phenomenon by id
+      operationId: getPhenomenonById
+      tags: [Phenomenons]
+      responses:
+        "200":
+          description: The phenomenon
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Phenomenon'
+
+  /phenomenons/{phenomenonId}/statistic:
+    parameters:
+      - name: phenomenonId
+        in: path
+        description: The unique name of the phenomenon (e.g., 'Speed'). Case-sensitive.
+        required: true
+        schema:
+          type: string
+    get:
+      summary: Get statistics of a phenomenon
+      operationId: getPhenomenonStatistic
+      tags: [Phenomenons, Statistics]
+      responses:
+        "200":
+          description: The statistic
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statistic'
+
+  /privacyStatements/{id}:
+    get:
+      tags: [Legal]
+      summary: Get a specific Privacy-Statement instance
+      operationId: getPrivacyStatement
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: {type: string}
+      responses:
+        '200':
+          description: The requested Privacy-Statement instance.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PrivacyStatement'
+        '404':
+          description: No Privacy-Statement with the given ID exists.
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Exception'}
+
+  /resetPassword:
+    post:
+      tags: [General]
+      summary: Request a password-reset code
+      description: |
+        Sends a verification e-mail/SMS to the given user.  
+        Body must contain only the **target user** – no code yet.
+      operationId: requestPasswordReset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        '204':
+          description: No Content – reset code dispatched
+
+    put:
+      tags: [General]
+      summary: Confirm password reset
+      description: |
+        Verifies the **code** and actually resets the password for the
+        supplied user.
+      operationId: confirmPasswordReset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetVerification'
+      responses:
+        '204':
+          description: No Content – password was reset
+
+  /statistics:
+    get:
+      tags: [Statistics]
+      summary: Get global statistics
+      description: Aggregate min/avg/max values of every phenomenon across **all** data that the caller is allowed to see.
+      operationId: getStatistics
+      responses:
+        '200':
+          description: Aggregate statistics for every phenomenon.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Statistics' }
+
+  /statistics/{phen}:
+    parameters:
+      - name: phen
+        in: path
+        required: true
+        description: The phenomenon name (e.g. `CO_CONC`).
+        schema: { type: string }
+    get:
+      tags: [Statistics]
+      summary: Get global statistic for one phenomenon
+      operationId: getStatistic
+      responses:
+        '200':
+          description: The statistic object.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Statistic' }
+
+components:
+  schemas:
+    BaseEntity:
+      type: object
+      description: Base properties for entities that have creation and modification timestamps.
+      properties:
+        created:
+          type: string
+          format: date-time
+          description: The timestamp of the entity's creation.
+          readOnly: true
+          nullable: true
+        modified:
+          type: string
+          format: date-time
+          description: The timestamp of the entity's last modification.
+          readOnly: true
+          nullable: true
+    
+    Counts:
+      type: object
+      description: A collection of entity counts for the entire database.
+      required:
+        - activities
+        - announcements
+        - badges
+        - fuelings
+        - groups
+        - measurements
+        - phenomenons
+        - privacyStatements
+        - sensors
+        - statistics
+        - termsOfUse
+        - tracks
+        - users
+        - userstatistic
+      properties:
+        activities:
+          type: integer
+          format: int64
+        announcements:
+          type: integer
+          format: int64
+        badges:
+          type: integer
+          format: int64
+        fuelings:
+          type: integer
+          format: int64
+        groups:
+          type: integer
+          format: int64
+        measurements:
+          type: integer
+          format: int64
+        phenomenons:
+          type: integer
+          format: int64
+        privacyStatements:
+          type: integer
+          format: int64
+        sensors:
+          type: integer
+          format: int64
+        statistics:
+          type: integer
+          format: int64
+        termsOfUse:
+          type: integer
+          format: int64
+        tracks:
+          type: integer
+          format: int64
+        users:
+          type: integer
+          format: int64
+        userstatistic:
+          type: integer
+          format: int64
+    Root:
+      type: object
+      description: The root document of the API, providing entry points to other resources and entity counts.
+      required:
+        - api-docs
+        - schemas
+        - privacyStatements
+        - termsOfUse
+        - counts
+      properties:
+        users:
+          type: string
+          format: uri
+        groups:
+          type: string
+          format: uri
+        tracks:
+          type: string
+          format: uri
+        sensors:
+          type: string
+          format: uri
+        phenomenons:
+          type: string
+          format: uri
+        measurements:
+          type: string
+          format: uri
+        statistics:
+          type: string
+          format: uri
+        announcements:
+          type: string
+          format: uri
+        badges:
+          type: string
+          format: uri
+        "api-docs":
+          type: string
+          format: uri
+        schemas:
+          type: string
+          format: uri
+        privacyStatements:
+          type: string
+          format: uri
+        termsOfUse:
+          type: string
+          format: uri
+        counts:
+          $ref: '#/components/schemas/Counts'
+
+    Announcement:
+      type: object
+      description: A system-wide announcement, potentially with language-specific content.
+      properties:
+        created:
+          type: string
+          format: date-time
+          description: The timestamp of the creation of the announcement.
+          nullable: true
+        modified:
+          type: string
+          format: date-time
+          description: The timestamp of the last modification of the announcement.
+          nullable: true
+        id:
+          type: string
+          description: The unique identifier of the announcement.
+          nullable: true
+        versions:
+          type: string
+          description: A string indicating the versions this announcement applies to.
+          nullable: true
+        category:
+          type: string
+          nullable: true
+        priority:
+          type: string
+          nullable: true
+        content:
+          type: object
+          description: A map of language codes (e.g., 'en', 'de') to the announcement's textual content.
+          additionalProperties:
+            type: string
+          nullable: true
+    Announcements:
+      type: object
+      description: A paginated collection of announcements.
+      required:
+        - announcements
+      properties:
+        announcements:
+          type: array
+          items:
+            $ref: '#/components/schemas/Announcement'
+
+    Geometry:
+      type: object
+      description: A GeoJSON Geometry object.
+      properties:
+        type:
+          type: string
+          enum: [Point, MultiPoint, LineString, MultiLineString, Polygon, MultiPolygon, GeometryCollection]
+        coordinates:
+          type: array
+      required:
+        - type
+        - coordinates
+
+    TrackModify:
+      type: object
+      description: A set of track properties and/or measurements that can be modified.
+      minProperties: 1
+      properties:
+        properties:
+          type: object
+          description: A container for modifiable track metadata.
+          properties:
+            name:
+              type: string
+              description: A new name for the track.
+            description:
+              type: string
+              description: A new description for the track.
+            status:
+              $ref: '#/components/schemas/TrackStatus'
+            sensor:
+              type: string
+              description: The ID of an existing sensor to associate with this track.
+            appVersion:
+              type: string
+              description: The version of the application that recorded the track.
+            obdDevice:
+               type: string
+               description: The name or identifier of the OBD device used.
+            touVersion:
+               type: string
+               description: The version of the Terms of Use accepted by the user at the time of recording.
+            measurementProfile:
+               type: string
+               description: An identifier for the measurement profile used.
+            length:
+              type: number
+              format: double
+        features:
+          type: array
+          description: A new set of measurements to associate with the track. If provided, this will replace existing measurements.
+          items:
+            $ref: '#/components/schemas/MeasurementCreate'
+        type:
+            type: string
+            description: GeoJSON object type
+            enum:
+              - FeatureCollection
+    Point:
+      type: object
+      description: A GeoJSON Point geometry.
+      properties:
+        type:
+          type: string
+          enum: [Point]
+        coordinates:
+          type: array
+          items:
+            type: number
+            format: double
+          minItems: 2
+          maxItems: 3
+      required:
+        - type
+        - coordinates
+
+    Badge:
+      type: object
+      description: Represents an achievement or milestone a user can earn.
+      properties:
+        name:
+          type: string
+          description: The programmatic name of the badge.
+          nullable: true
+        displayName:
+          type: object
+          description: A map of language codes to a human-readable name for the badge.
+          additionalProperties:
+            type: string
+          nullable: true
+        description:
+          type: object
+          description: A map of language codes to a human-readable description of the badge.
+          additionalProperties:
+            type: string
+          nullable: true
+    Badges:
+      type: object
+      description: A paginated collection of badges.
+      required:
+        - badges
+      properties:
+        badges:
+          type: array
+          items:
+            $ref: '#/components/schemas/Badge'    
+          
+    Groups:
+      type: object
+      description: A paginated collection of groups.
+      required:
+        - groups
+      properties:
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+
+    GroupCreate:
+      type: object
+      description: The properties required to create a new group.
+      required:
+        - name
+        - description
+      properties:
+        name:
+          type: string
+          description: The unique name for the new group.
+        description:
+          type: string
+          description: A description for the new group.  
+
+    Group:
+      type: object
+      description: Represents a user-created group.
+      properties:
+        name:
+          type: string
+          description: The unique name of the group.
+          nullable: true
+        description:
+          type: string
+          description: A description of the group.
+          nullable: true
+        owner:
+          $ref: '#/components/schemas/User'
+          nullable: true
+        created:
+          type: string
+          format: date-time
+          description: The timestamp of the group's creation.
+          nullable: true
+        modified:
+          type: string
+          format: date-time
+          description: The timestamp of the group's last modification.
+          nullable: true
+
+    GroupModify:
+      type: object
+      description: The properties of a group that can be modified.
+      properties:
+        name:
+          type: string
+          description: A new unique name for the group.
+        description:
+          type: string
+          description: A new description for the group.
+
+    Gender:
+      type: string
+      description: The gender of the user.
+      enum: [m, f]  
+
+    Users:
+      type: object
+      description: A paginated collection of users.
+      required:
+        - users
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'     
+    
+    UserCreate:
+      type: object
+      description: The properties required to create a new user.
+      required:
+        - name
+        - mail
+        - token
+        - acceptedTermsOfUse
+        - acceptedPrivacyStatement
+      properties:
+        name:
+          type: string
+          description: The desired username. Must be at least 4 characters long and can contain letters, numbers, hyphens, and underscores.
+          pattern: '^[_A-Za-z0-9-]{4,}$'
+        mail:
+          type: string
+          format: email
+          description: The user's email address.
+        token:
+          type: string
+          format: password
+          description: The user's desired password.
+          writeOnly: true
+        acceptedTermsOfUse:
+          type: boolean
+          description: Must be `true` to indicate acceptance of the Terms of Use.
+          enum: [true]
+        acceptedPrivacyStatement:
+          type: boolean
+          description: Must be `true` to indicate acceptance of the Privacy Statement.
+          enum: [true]
+        firstName:
+          type: string
+        lastName:
+          type: string
+        gender:
+          $ref: '#/components/schemas/Gender'
+        dayOfBirth:
+          type: string
+          format: date
+        aboutMe:
+          type: string
+        country:
+          type: string
+        location:
+          $ref: '#/components/schemas/Point'
+        language:
+          type: string
+    
+    User:
+      type: object
+      description: Represents a user of the platform.
+      properties:
+        name:
+          type: string
+          description: The unique username.
+          nullable: true
+        mail:
+          type: string
+          format: email
+          description: The user's email address.
+          nullable: true
+        created:
+          type: string
+          format: date-time
+          description: The timestamp of the user's account creation.
+          nullable: true
+        modified:
+          type: string
+          format: date-time
+          description: The timestamp of the user's last profile modification.
+          nullable: true
+        firstName:
+          type: string
+          nullable: true
+        lastName:
+          type: string
+          nullable: true
+        gender:
+          $ref: '#/components/schemas/Gender'
+          nullable: true
+        dayOfBirth:
+          type: string
+          format: date
+          description: The user's day of birth.
+          nullable: true
+        aboutMe:
+          type: string
+          description: A short biography provided by the user.
+          nullable: true
+        country:
+          type: string
+          nullable: true
+        location:
+          $ref: '#/components/schemas/Point'
+          nullable: true
+        language:
+          type: string
+          description: The user's preferred language code (e.g., 'en', 'de').
+          nullable: true
+        badges:
+          type: array
+          items:
+            type: string
+          description: A list of badges the user has earned.
+          nullable: true
+        acceptedTermsOfUseVersion:
+          type: string
+          description: The version of the Terms of Use the user has accepted.
+          nullable: true
+        acceptedPrivacyStatementVersion:
+          type: string
+          description: The version of the Privacy Statement the user has accepted.
+          nullable: true
+
+    UserReference:
+      type: object
+      description: A reference to a user, identified by their unique name.
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: The unique name of the user to be added as a member.       
+
+    TrackStatus:
+      type: string
+      enum: [finished, ongoing]
+
+    Sensor:
+      type: object
+      description: |-
+        Represents the device that generated a measurement or track.
+        This can be a physical OBD-II dongle or a virtual sensor like the enviroCar Android app.
+      properties:
+        type:
+          type: string
+          description: The type of the sensor (e.g., 'obd-ii', 'mobile').
+        properties:
+          type: object
+          description: >-
+            A collection of key-value pairs describing the sensor. Includes
+            server-generated read-only properties and user-defined properties.
+          properties:
+            id:
+              type: string
+              description: The unique identifier of the sensor.
+              readOnly: true
+            created:
+              type: string
+              format: date-time
+              description: The time the sensor was created, in ISO 8601 format.
+              readOnly: true
+            modified:
+              type: string
+              format: date-time
+              description: The time the sensor was last modified, in ISO 8601 format.
+              readOnly: true
+          additionalProperties: true
+      required:
+        - type
+        - properties
+        
+    SensorCreate:
+      type: object
+      description: The sensor to be created.
+      properties:
+        type:
+          type: string
+          description: The type of the sensor (e.g., 'obd-ii', 'mobile').
+        properties:
+          type: object
+          description: >-
+            An open-ended collection of key-value pairs describing the sensor's properties,
+            such as model, manufacturer, or firmware version. The 'id' property is not allowed here.
+          additionalProperties: true
+      required:
+        - type
+
+    TermsOfUse:
+      type: object
+      description: Paginated collection of all terms-of-use versions.
+      required: [versions]
+      properties:
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TermsOfUseInstance'
+
+    TermsOfUseInstance:
+      type: object
+      description: One concrete Terms-of-Use document.
+      required: [id, issuedDate, contents]
+      properties:
+        id:            {type: string, description: Stable identifier}
+        issuedDate:    {type: string, format: date, description: Publication date}
+        contents:      {type: string, description: The text in the preferred language}
+        created:       {type: string, format: date-time, nullable: true}
+        modified:      {type: string, format: date-time, nullable: true}
+
+    PrivacyStatement:
+      allOf:
+        - $ref: '#/components/schemas/TermsOfUseInstance'
+      description: One concrete Privacy-Statement document.
+
+    PrivacyStatements:
+      type: object
+      description: Paginated collection of privacy-statement versions.
+      required: [versions]
+      properties:
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PrivacyStatement'
+
+    Sensors:
+      type: object
+      required: [sensors]
+      properties:
+        sensors:
+          type: array
+          items: { $ref: '#/components/schemas/Sensor' }
+
+    Measurement:
+      allOf:
+          - $ref: '#/components/schemas/BaseEntity'
+      type: object
+      description: A GeoJSON Feature representing a single measurement point.
+      required: [type, properties]
+      properties:
+        type:
+          type: string
+          enum: [Feature]
+        geometry:
+          $ref: '#/components/schemas/Point'
+          nullable: true
+        properties:
+          type: object
+          properties:
+            id:
+              type: string
+            time:
+              type: string
+              format: date-time
+            phenomenons:
+              type: object
+              description: A map where each key is a phenomenon name and the value is an object containing the measured 'value' and 'unit'.
+              additionalProperties:
+                $ref: '#/components/schemas/Phenomenon_value'
+            # ------- NEW optional fields emitted by the server -------
+            sensor:
+              $ref: '#/components/schemas/Sensor'
+              nullable: true
+            user:
+              $ref: '#/components/schemas/User'
+              nullable: true
+            track:
+              type: string        # identifier only
+              nullable: true
+
+    Measurements:
+        type: object
+        description: A GeoJSON FeatureCollection of measurements.
+        required: [type, features]
+        properties:
+          type:
+            type: string
+            enum: [FeatureCollection]
+          features:
+            type: array
+            items:
+              $ref: '#/components/schemas/Measurement'
+    
+
+    Phenomenon_create_value:
+      type: object
+      description: The measured value for a phenomenon.
+      required:
+        - value
+      properties:
+        value:
+          description: The measured value, which can be a number, boolean, or string.
+          oneOf:
+            - type: number
+            - type: boolean
+            - type: string
+                
+    MeasurementCreate:
+      type: object
+      description: A GeoJSON Feature representing a new measurement to be created.
+      properties:
+        type:
+          type: string
+          enum: [Feature]
+        geometry:
+          $ref: '#/components/schemas/Point'
+        properties:
+          type: object
+          properties:
+            time:
+              type: string
+              format: date-time
+            sensor:
+              type: string
+              description: The ID of the sensor that produced this measurement.
+            phenomenons:
+              type: object
+              description: A map of phenomenon names to their measured values.
+              additionalProperties:
+                $ref: '#/components/schemas/Phenomenon_create_value'
+        required:
+          - type
+          - geometry
+          - properties
+
+    Statistic:
+      type: object
+      description: A statistical summary for a particular phenomenon.
+      required:
+        - phenomenon
+        - min
+        - max
+        - avg
+        - measurements
+        - tracks
+        - users
+        - sensors
+      properties:
+        phenomenon:
+          $ref: '#/components/schemas/Phenomenon'
+        min:
+          type: number
+          format: double
+          description: The minimum value recorded for the phenomenon.
+        max:
+          type: number
+          format: double
+          description: The maximum value recorded for the phenomenon.
+        avg:
+          type: number
+          format: double
+          description: The mean (average) value recorded for the phenomenon.
+        measurements:
+          type: integer
+          format: int64
+          description: The total number of measurements included in this statistic.
+        tracks:
+          type: integer
+          format: int64
+          description: The total number of unique tracks included in this statistic.
+        users:
+          type: integer
+          format: int64
+          description: The total number of unique users included in this statistic.
+        sensors:
+          type: integer
+          format: int64
+          description: The total number of unique sensors included in this statistic.
+
+    Statistics:
+      type: object
+      description: A collection of statistical summaries.
+      properties:
+        statistics:
+          type: array
+          items:
+            $ref: '#/components/schemas/Statistic'
+      required:
+        - statistics
+   
+    Activity:
+      type: object
+      description: Represents a single event that occurred on the platform.
+      additionalProperties: false 
+      properties:
+        time:
+          type: string
+          format: date-time
+        type:
+          $ref: '#/components/schemas/ActivityType'
+        user:
+          $ref: '#/components/schemas/User'
+        group:
+          $ref: '#/components/schemas/Group'
+        other:
+          $ref: '#/components/schemas/User'
+          description: The other user involved in a user-to-user activity (e.g., the friend in a FRIENDED_USER activity).
+        track:
+          $ref: '#/components/schemas/Track'
+
+    Activities:
+      type: object
+      required:
+        - activities
+      additionalProperties: false 
+      properties:
+        activities:
+          type: array
+          items:
+            $ref: '#/components/schemas/Activity'
+
+    ActivityType:
+      type: string
+      enum:
+        - CHANGED_PROFILE
+        - CREATED_GROUP
+        - CHANGED_GROUP
+        - JOINED_GROUP
+        - LEFT_GROUP
+        - DELETED_GROUP
+        - FRIENDED_USER
+        - UNFRIENDED_USER
+        - CREATED_TRACK
+        
+    Track:
+      allOf:
+        - $ref: '#/components/schemas/BaseEntity' # Inherits created, modified
+      type: object
+      description: A track, represented as a GeoJSON FeatureCollection.
+      properties:
+        type:
+          type: string
+          enum: [FeatureCollection]
+        properties:
+          type: object
+          properties:
+            id:
+              type: string
+              description: The unique identifier of the track.
+              readOnly: true
+            name:
+              type: string
+              description: A user-defined name for the track.
+            description:
+              type: string
+              description: A user-defined description of the track.
+            user:
+              $ref: '#/components/schemas/User' # Will define User schema later
+            sensor:
+              $ref: '#/components/schemas/Sensor'
+            status:
+              $ref: '#/components/schemas/TrackStatus'
+            length:
+              type: number
+              format: double
+              description: The calculated length of the track in meters.
+              readOnly: true
+            begin:
+              type: string
+              format: date-time
+              description: The timestamp of the first measurement in the track.
+              readOnly: true
+            end:
+              type: string
+              format: date-time
+              description: The timestamp of the last measurement in the track.
+              readOnly: true
+            appVersion:
+              type: string
+              description: The version of the application that recorded the track.
+            obdDevice:
+               type: string
+               description: The name or identifier of the OBD device used.
+            touVersion:
+               type: string
+               description: The version of the Terms of Use accepted by the user at the time of recording.
+            measurementProfile:
+               type: string
+               description: An identifier for the measurement profile used.
+        features:
+          type: array
+          description: An array of measurement features that make up the track.
+          items:
+            $ref: '#/components/schemas/Measurement' # Will define full Measurement schema later
+      required:
+        - type
+        - properties
+        - features
+
+    Tracks:
+      type: object
+      description: A collection of tracks.
+      required:
+        - tracks
+      properties:
+        tracks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Track'
+
+    UserModify:
+      type: object
+      description: A set of user properties that can be modified. All properties are optional.
+      properties:
+        name:
+          type: string
+          description: A new unique username.
+        mail:
+          type: string
+          format: email
+          description: A new email address for the user.
+        token:
+          type: string
+          description: The user's password.
+        aboutMe:
+          type: string
+        country:
+          type: string
+        dayOfBirth:
+          type: string
+          format: date
+        firstName:
+          type: string
+        lastName:
+          type: string
+        language:
+          type: string
+        acceptedTermsOfUse:
+          type: boolean
+        acceptedPrivacyStatement:
+          type: boolean
+        acceptedTermsOfUseVersion:
+          type: string
+        acceptedPrivacyStatementVersion:
+          type: string
+        location:
+          $ref: '#/components/schemas/Geometry'
+        gender:
+          $ref: '#/components/schemas/Gender'
+        url:
+          type: string
+          format: uri
+
+    Exception:
+      type: object
+      description: A standard error response object.
+      required:
+        - statusCode
+        - reasonPhrase
+      properties:
+        statusCode:
+          type: integer
+          description: The HTTP status code.
+          example: 400
+        reasonPhrase:
+          type: string
+          description: The reason phrase for the HTTP status code.
+          example: "Bad Request"
+        message:
+          type: string
+          description: A human-readable error message.
+          nullable: true
+        details:
+          type: object
+          description: An optional object providing more specific details about the error.
+          nullable: true
+        stackTrace:
+          $ref: '#/components/schemas/StackTrace'
+          nullable: true
+
+    StackTraceElement:
+      type: string
+      example: "org.envirocar.server.rest.resources.AnnouncementsResource.announcements(AnnouncementsResource.java:35)"
+
+    DimensionedNumber:
+      type: object
+      description: A number with a unit of measurement.
+      properties:
+        value:
+          type: number
+          description: The numerical value.
+        unit:
+          type: string
+          description: The unit of measurement.
+      required:
+        - value
+        - unit
+        
+    Fueling:
+      type: object
+      properties:
+        id:               { type: string }
+        fuelType:         { type: string }
+        comment:          { type: string }
+        car:              { $ref: '#/components/schemas/Sensor' }
+        user:             { $ref: '#/components/schemas/User' }
+        cost:             { $ref: '#/components/schemas/DimensionedNumber' }
+        mileage:          { $ref: '#/components/schemas/DimensionedNumber' }
+        volume:           { $ref: '#/components/schemas/DimensionedNumber' }
+        time:             { type: string, format: date-time }
+        missedFuelStop:   { type: boolean }
+        partialFueling:   { type: boolean }
+        created:          { type: string, format: date-time }
+        modified:         { type: string, format: date-time }
+
+    Fuelings:
+      type: object
+      required: [fuelings]
+      properties:
+        fuelings:
+          type: array
+          items: { $ref: '#/components/schemas/Fueling' }
+
+    FuelingCreate:
+      allOf:
+        - $ref: '#/components/schemas/Fueling'
+        - type: object
+          required: [fuelType, car, cost, mileage, volume, time]
+          
+    PasswordResetRequest:
+      description: “Please send me a reset code.”
+      type: object
+      required: [user]
+      properties:
+        user:
+          type: object
+          required:
+            - name
+            - mail
+          properties:
+            name:
+              type: string
+              description: The username of the account.
+            mail:
+              type: string
+              format: email
+              description: The email address associated with the account.
+
+    PasswordResetVerification:
+      type: object
+      description: The payload to finalize a password reset.
+      required:
+        - user
+        - code
+      properties:
+        user:
+          type: object
+          required:
+            - name
+            - token
+          properties:
+            name:
+              type: string
+              description: The username of the account.
+            token:
+              type: string
+              format: password
+              writeOnly: true
+              description: The new password for the account.
+        code:
+          type: string
+          description: The verification code received via email.
+
+
+    TrackCreate:
+      type: object
+      description: A track, represented as a GeoJSON FeatureCollection. The track's measurements are the Features in the 'features' array.
+      properties:
+        type:
+          type: string
+          enum: [FeatureCollection]
+        properties:
+          type: object
+          properties:
+            name:
+              type: string
+              description: A user-defined name for the track.
+            description:
+              type: string
+              description: A user-defined description of the track.
+            sensor:
+              type: string
+              description: The ID of an existing sensor to associate with this track.
+            status:
+              $ref: '#/components/schemas/TrackStatus'
+            appVersion:
+              type: string
+              description: The version of the application that recorded the track.
+            obdDevice:
+               type: string
+               description: The name or identifier of the OBD device used.
+            touVersion:
+               type: string
+               description: The version of the Terms of Use accepted by the user at the time of recording.
+            measurementProfile:
+               type: string
+               description: An identifier for the measurement profile used.
+            length:
+                      type: number
+                      format: double
+                      description: precomputed length of the track
+          required:
+            - sensor
+        features:
+          type: array
+          description: An array of measurement features that make up the track.
+          items:
+            $ref: '#/components/schemas/MeasurementCreate'
+      required:
+        - type
+        - properties
+        - features
+    
+    Phenomenon:
+      allOf:
+        - $ref: '#/components/schemas/BaseEntity' # inherits 'created' and 'modified'
+      type: object
+      properties:
+        name:
+          type: string
+        unit:
+          type: string
+      required:
+        - name
+        - unit
+
+    # The schema for the 'phenomenons' object in a request body
+    Phenomenon_create:
+      type: object
+      description: The phenomenon to be created.
+      properties:
+        name:
+          type: string
+          description: The unique name for the new phenomenon.
+        unit:
+          type: string
+          description: The unit of measurement for the new phenomenon.
+      required:
+        - name
+        - unit
+        - value
+
+    Phenomenons:
+      type: object
+      description: A collection of phenomenon resources.
+      properties:
+        phenomenons:
+          type: array
+          items:
+            $ref: '#/components/schemas/Phenomenon'
+      required:
+        - phenomenons
+
+    StackTrace:
+      type: object
+      properties:
+        type:
+          type: string
+          description: The fully qualified name of the Java exception class.
+        message:
+          type: string
+          description: The message associated with the exception, if any.
+          nullable: true
+        at:
+          type: array
+          description: An array of stack trace elements.
+          items:
+            $ref: '#/components/schemas/StackTraceElement'
+        suppressed:
+          type: array
+          description: An array of suppressed exceptions.
+          items:
+            $ref: '#/components/schemas/StackTrace'
+          nullable: true
+        causedBy:
+          $ref: '#/components/schemas/StackTrace'
+          nullable: true
+        circularReference:
+          description: Indicates a circular reference was detected in the exception chain.
+          $ref: '#/components/schemas/StackTrace'
+          nullable: true

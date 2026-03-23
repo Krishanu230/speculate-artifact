@@ -1,0 +1,204 @@
+openapi: 3.0.1
+info:
+  title: Corona-Warn-App Verification Server
+  version: 'v1'
+paths:
+  /version/v1/registrationToken:
+    post:
+      summary: Get registration Token
+      description: Get a registration token by providing a SHA-256 hasehd GUID or a teleTAN
+      operationId: generateRegistrationToken
+      parameters:
+        - name: cwa-fake
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        description: The registration token request.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationTokenRequest'
+      responses:
+        '201':
+          description: registration token generated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationToken'
+        '400':
+          description: Bad Request. Could be a validation error on the request body, an invalid TeleTAN, or an unknown keyType.
+          content:
+            application/json:
+              schema:
+                type: object # A generic error response is assumed as no model is specified.
+  /version/v1/testresult:
+    post:
+      summary: COVID-19 test result for given RegistrationToken
+      description: >-
+        Gets the result of COVID-19 Test. If the RegistrationToken belongs to a
+        TeleTan the result is always positive.
+      operationId: getTestState
+      parameters:
+        - name: cwa-fake
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        description: The registration token for which to retrieve the test result.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationToken'
+      responses:
+        '200':
+          description: Testresult retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TestResult'
+        '400':
+          description: >-
+            Bad Request. The RegistrationToken is either invalid, not found, or
+            the session is in a corrupted state.
+          content:
+            application/json:
+              schema:
+                type: object
+        '403':
+          description: TestResult of dob hash does not equal to TestResult of hash
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /version/v1/tan:
+    post:
+      summary: Generates a Tan
+      description: >-
+        Generates a TAN on input of Registration Token. With the TAN one can
+        submit his Diagnosis keys. A TAN is only generated if the associated
+        test result is positive.
+      operationId: generateTan
+      parameters:
+        - name: cwa-fake
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        description: The Registration Token for which to generate a TAN.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationToken'
+      responses:
+        '201':
+          description: TAN created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tan'
+        '400':
+          description: >-
+            Bad Request. The Registration Token does not exist, the TAN quota
+            is exceeded, or the test result is not positive.
+          content:
+            application/json:
+              schema:
+                type: object
+
+  
+components:
+  schemas:
+    RegistrationTokenRequest:
+      type: object
+      required:
+        - key
+        - keyType
+      properties:
+        key:
+          type: string
+          description: The key which can be a teletan or a hashed guid.
+        keyDob:
+          type: string
+          description: SHA-256 hash of GUID and date of birth. This field is only used when keyType is GUID.
+          pattern: '^[XxA-Fa-f0-9]([A-Fa-f0-9]{63})$'
+        keyType:
+          type: string
+          description: The type of key.
+          enum:
+            - GUID
+            - TELETAN
+    RegistrationToken:
+      type: object
+      required:
+        - registrationToken
+      properties:
+        registrationToken:
+          type: string
+          description: The registration token.
+          pattern: '^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}$'
+          format: uuid
+        responsePadding:
+          type: string
+          description: Optional field for response padding.
+    TestResult:
+      type: object
+      description: The test result model.
+      required:
+        - testResult
+        - sc
+      properties:
+        testResult:
+          type: integer
+          description: |
+            The numerical result of the COVID-19 test.
+            * 0: PENDING
+            * 1: NEGATIVE
+            * 2: POSITIVE
+            * 3: INVALID
+            * 4: REDEEMED
+            * 5: QUICK_PENDING
+            * 6: QUICK_NEGATIVE
+            * 7: QUICK_POSITIVE
+            * 8: QUICK_INVALID
+            * 9: QUICK_REDEEMED
+        sc:
+          type: integer
+          format: int64
+          description: Sample collection timestamp (epoch seconds).
+        labId:
+          type: string
+          description: The ID of the lab that performed the test.
+        responsePadding:
+          type: string
+          description: Random padding for the response.
+    Tan:
+      type: object
+      description: The transaction number model.
+      required:
+        - tan
+      properties:
+        tan:
+          type: string
+          description: The transaction number (TAN).
+          pattern: '^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}$'
+          format: uuid
+        responsePadding:
+          type: string
+          description: Optional field for response padding.
+    TeleTan:
+      type: object
+      description: The teleTAN model.
+      required:
+        - value
+      properties:
+        value:
+          type: string
+          description: The value of the teleTAN.

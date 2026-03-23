@@ -1,0 +1,470 @@
+---
+openapi: 3.0.1
+info:
+  title: features-service
+  version: '1.0'
+servers:
+- url: http://localhost:8080/
+paths:
+  "/products":
+    get:
+      operationId: getAllProducts
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  "/products/{productName}":
+    get:
+      operationId: getProductByName
+      parameters:
+      - name: productName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Product"
+    post:
+      operationId: addProduct
+      parameters:
+      - name: productName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: successful operation
+          content: {}
+    delete:
+      operationId: deleteProductByName
+      parameters:
+      - name: productName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: successful operation
+          content: {}
+  "/products/{productName}/configurations":
+    get:
+      operationId: getConfigurationsForProduct
+      parameters:
+      - name: productName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  "/products/{productName}/configurations/{configurationName}":
+    get:
+      operationId: getConfigurationWithNameForProduct
+      parameters:
+      - name: productName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: configurationName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ProductConfiguration"
+    post:
+      operationId: addConfiguration
+      parameters:
+      - name: productName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: configurationName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: successful operation
+          content: {}
+    delete:
+      operationId: deleteConfiguration
+      parameters:
+      - name: productName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: configurationName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: successful operation
+          content: {}
+  "/products/{productName}/configurations/{configurationName}/features":
+    get:
+      operationId: getConfigurationActivedFeatures
+      parameters:
+      - name: productName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: configurationName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  "/products/{productName}/configurations/{configurationName}/features/{featureName}":
+    post:
+      operationId: addFeatureToConfiguration
+      parameters:
+      - name: productName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: configurationName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: featureName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: successful operation
+          content: {}
+    delete:
+      operationId: deleteFeature
+      parameters:
+      - name: productName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: configurationName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: featureName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: successful operation
+          content: {}
+  "/products/{productName}/constraints/excludes":
+    post:
+      operationId: addExcludesConstraintToProduct
+      parameters:
+      - name: productName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              properties:
+                sourceFeature:
+                  type: string
+                excludedFeature:
+                  type: string
+      responses:
+        default:
+          description: successful operation
+          content: {}
+  "/products/{productName}/constraints/requires":
+    post:
+      operationId: addRequiresConstraintToProduct
+      parameters:
+      - name: productName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              properties:
+                sourceFeature:
+                  type: string
+                requiredFeature:
+                  type: string
+      responses:
+        default:
+          description: successful operation
+          content: {}
+  "/products/{productName}/constraints/{constraintId}":
+    delete:
+      operationId: deleteConstraint
+      parameters:
+      - name: productName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: constraintId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        default:
+          description: successful operation
+          content: {}
+  "/products/{productName}/features":
+    get:
+      operationId: getFeaturesForProduct
+      parameters:
+      - name: productName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                uniqueItems: true
+                type: array
+                items:
+                  "$ref": "#/components/schemas/Feature"
+  "/products/{productName}/features/{featureName}":
+    put:
+      operationId: updateFeatureOfProduct
+      parameters:
+      - name: productName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: featureName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              properties:
+                description:
+                  type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Feature"
+    post:
+      operationId: addFeatureToProduct
+      parameters:
+      - name: productName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: featureName
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              properties:
+                description:
+                  type: string
+      responses:
+        default:
+          description: successful operation
+          content: {}
+    delete:
+      operationId: deleteFeatureOfProduct
+      parameters:
+      - name: productName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: featureName
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        default:
+          description: successful operation
+          content: {}
+components:
+  schemas:
+    Product:
+      type: object
+      description: "Represents a configurable product with a set of features and constraints."
+      required:
+        - id
+        - name
+        - features
+        - constraints
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+          description: "Server-generated unique identifier for the product."
+        name:
+          type: string
+          description: "The name of the product."
+        features:
+          type: array
+          uniqueItems: true
+          description: "The list of features available for this product."
+          items:
+            $ref: "#/components/schemas/Feature"
+        constraints:
+          type: array
+          uniqueItems: true
+          description: "The list of rules and constraints governing feature selection."
+          items:
+            # We now point to our new, simplified FeatureConstraint schema
+            $ref: "#/components/schemas/SimpleFeatureConstraint"
+
+    Feature:
+      type: object
+      description: "Represents a single, configurable aspect of a Product."
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+          description: "Server-generated unique identifier for the feature."
+        name:
+          type: string
+          description: "The name of the feature."
+        description:
+          type: string
+          nullable: true
+          description: "An optional description of the feature."
+
+    SimpleFeatureConstraint:
+      type: object
+      description: "A rule that governs how features can be configured. The 'type' property indicates which other fields will be present."
+      required:
+        - id
+        - type
+        - sourceFeatureName
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+          description: "Server-generated unique identifier for the constraint."
+        type:
+          type: string
+          description: "The type of the constraint."
+          # The enum is critical here to show the possible values.
+          enum: [requires, excludes]
+        sourceFeatureName:
+          type: string
+          description: "The feature that triggers the constraint."
+        # This property is specific to the 'requires' type
+        requiredFeatureName:
+          type: string
+          description: "The feature that is required by the source feature. Only present when type is 'requires'."
+        # This property is specific to the 'excludes' type
+        excludedFeatureName:
+          type: string
+          description: "The feature that is excluded by the source feature. Only present when type is 'excludes'."
+    ProductConfiguration:
+      type: object
+      description: "Represents a specific configuration of a product, with a set of activated features."
+      required:
+        - id
+        - name
+        - valid
+        - activedFeatures
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+          description: "Server-generated unique identifier for the configuration."
+        name:
+          type: string
+          description: "The unique name of this configuration within its parent product."
+        valid:
+          type: boolean
+          description: "Indicates if the current set of activated features is valid according to the product's constraints. This is re-evaluated on every change."
+          readOnly: true
+        activedFeatures:
+          type: array
+          uniqueItems: true
+          description: "The list of features that are currently active in this configuration."
+          items:
+            $ref: "#/components/schemas/Feature"
+
+    ProductsConfigurationResource:
+      type: object
+    ProductsConfigurationFeaturesResource:
+      type: object
+    ProductsFeaturesResource:
+      type: object
+    ProductsConstraintsResource:
+      type: object

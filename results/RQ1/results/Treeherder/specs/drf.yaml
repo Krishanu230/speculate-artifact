@@ -1,0 +1,3415 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 0.0.0
+paths:
+  /api/auth/login/:
+    get:
+      operationId: auth_login_retrieve
+      description: Verify credentials
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/logout/:
+    get:
+      operationId: auth_logout_retrieve
+      tags:
+      - auth
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/bugzilla-component/:
+    get:
+      operationId: bugzilla_component_list
+      tags:
+      - bugzilla-component
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FilesBugzillaMap'
+          description: ''
+  /api/bugzilla-component/{id}/:
+    get:
+      operationId: bugzilla_component_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bugzilla-component
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilesBugzillaMap'
+          description: ''
+  /api/bugzilla-component/{id}/get_queryset/:
+    get:
+      operationId: bugzilla_component_get_queryset_retrieve
+      description: Gets a set of bug suggestions for this job
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - bugzilla-component
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilesBugzillaMap'
+          description: ''
+  /api/bugzilla/create_bug/:
+    post:
+      operationId: bugzilla_create_bug_create
+      description: Create a bugzilla bug with passed params
+      tags:
+      - bugzilla
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/changelog/:
+    get:
+      operationId: changelog_retrieve
+      description: GET method implementation for list view
+      tags:
+      - changelog
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/failureclassification/:
+    get:
+      operationId: failureclassification_list
+      description: ViewSet for the refdata FailureClassification model
+      tags:
+      - failureclassification
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FailureClassification'
+          description: ''
+  /api/failureclassification/{id}/:
+    get:
+      operationId: failureclassification_retrieve
+      description: ViewSet for the refdata FailureClassification model
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this failure classification.
+        required: true
+      tags:
+      - failureclassification
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FailureClassification'
+          description: ''
+  /api/failurecount/:
+    get:
+      operationId: failurecount_list
+      description: List of failures (optionally by bug) and testruns by day per date
+        range and repo
+      tags:
+      - failurecount
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FailureCount'
+          description: ''
+  /api/failures/:
+    get:
+      operationId: failures_list
+      description: List of intermittent failures by date range and repo (project name)
+      tags:
+      - failures
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Failures'
+          description: ''
+  /api/failuresbybug/:
+    get:
+      operationId: failuresbybug_list
+      description: List of intermittent failure job details by bug, date range and
+        repo (project name)
+      tags:
+      - failuresbybug
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FailuresByBug'
+          description: ''
+  /api/groupsummary/:
+    get:
+      operationId: groupsummary_list
+      description: This yields group names/status summary for the given group and
+        day.
+      tags:
+      - groupsummary
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupName'
+          description: ''
+  /api/infracompare/:
+    get:
+      operationId: infracompare_list
+      tags:
+      - infracompare
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InfraCompare'
+          description: ''
+  /api/jobs/:
+    get:
+      operationId: jobs_list
+      description: This viewset is the jobs endpoint.
+      parameters:
+      - in: query
+        name: build_architecture
+        schema:
+          type: string
+      - in: query
+        name: build_os
+        schema:
+          type: string
+      - in: query
+        name: build_platform
+        schema:
+          type: string
+      - in: query
+        name: build_platform_id
+        schema:
+          type: integer
+      - in: query
+        name: build_system_type
+        schema:
+          type: string
+      - name: count
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: end_time
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: end_time__gt
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: end_time__gte
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: end_time__lt
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: end_time__lte
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: failure_classification_id
+        schema:
+          type: integer
+      - in: query
+        name: id
+        schema:
+          type: integer
+      - in: query
+        name: id__gt
+        schema:
+          type: integer
+      - in: query
+        name: id__gte
+        schema:
+          type: integer
+      - in: query
+        name: id__in
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: id__lt
+        schema:
+          type: integer
+      - in: query
+        name: id__lte
+        schema:
+          type: integer
+      - in: query
+        name: job_group_id
+        schema:
+          type: number
+      - in: query
+        name: job_group_name
+        schema:
+          type: string
+      - in: query
+        name: job_group_symbol
+        schema:
+          type: string
+      - in: query
+        name: job_guid
+        schema:
+          type: string
+      - in: query
+        name: job_guid__in
+        schema:
+          type: array
+          items:
+            type: string
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: job_type_id
+        schema:
+          type: integer
+      - in: query
+        name: job_type_name
+        schema:
+          type: string
+      - in: query
+        name: job_type_symbol
+        schema:
+          type: string
+      - in: query
+        name: last_modified
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: last_modified__gt
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: last_modified__gte
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: last_modified__lt
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: last_modified__lte
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: machine_name
+        schema:
+          type: string
+      - in: query
+        name: machine_platform_architecture
+        schema:
+          type: string
+      - in: query
+        name: machine_platform_os
+        schema:
+          type: string
+      - in: query
+        name: option_collection_hash
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: platform
+        schema:
+          type: string
+      - in: query
+        name: push_id
+        schema:
+          type: integer
+      - in: query
+        name: push_id__gt
+        schema:
+          type: integer
+      - in: query
+        name: push_id__gte
+        schema:
+          type: integer
+      - in: query
+        name: push_id__in
+        schema:
+          type: array
+          items:
+            type: number
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: push_id__lt
+        schema:
+          type: integer
+      - in: query
+        name: push_id__lte
+        schema:
+          type: integer
+      - in: query
+        name: reason
+        schema:
+          type: string
+      - in: query
+        name: ref_data_name
+        schema:
+          type: string
+      - in: query
+        name: result
+        schema:
+          type: string
+      - in: query
+        name: retry_id
+        schema:
+          type: integer
+      - in: query
+        name: signature
+        schema:
+          type: string
+      - in: query
+        name: start_time
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: start_time__gt
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: start_time__gte
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: start_time__lt
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: start_time__lte
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: state
+        schema:
+          type: string
+      - in: query
+        name: submit_time
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: submit_time__gt
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: submit_time__gte
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: submit_time__lt
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: submit_time__lte
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: task_id
+        schema:
+          type: string
+      - in: query
+        name: tier
+        schema:
+          type: integer
+      - in: query
+        name: tier__gt
+        schema:
+          type: integer
+      - in: query
+        name: tier__gte
+        schema:
+          type: integer
+      - in: query
+        name: tier__in
+        schema:
+          type: array
+          items:
+            type: integer
+        description: Multiple values may be separated by commas.
+        explode: false
+        style: form
+      - in: query
+        name: tier__lt
+        schema:
+          type: integer
+      - in: query
+        name: tier__lte
+        schema:
+          type: integer
+      - in: query
+        name: who
+        schema:
+          type: string
+      tags:
+      - jobs
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedJobList'
+          description: ''
+  /api/jobs/{id}/:
+    get:
+      operationId: jobs_retrieve
+      description: This viewset is the jobs endpoint.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this job.
+        required: true
+      tags:
+      - jobs
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+          description: ''
+  /api/machineplatforms/:
+    get:
+      operationId: machineplatforms_retrieve
+      description: A ViewSet for listing all the machine platforms.
+      tags:
+      - machineplatforms
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/optioncollectionhash/:
+    get:
+      operationId: optioncollectionhash_retrieve
+      description: ViewSet for the virtual OptionCollectionHash model
+      tags:
+      - optioncollectionhash
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/perfcompare/results/:
+    get:
+      operationId: perfcompare_results_list
+      tags:
+      - perfcompare
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PerfCompareResults'
+          description: ''
+  /api/performance/alert/:
+    get:
+      operationId: performance_alert_list
+      parameters:
+      - name: cursor
+        required: false
+        in: query
+        description: The pagination cursor value.
+        schema:
+          type: string
+      - in: query
+        name: id
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      tags:
+      - performance
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPerformanceAlertList'
+          description: ''
+    post:
+      operationId: performance_alert_create
+      tags:
+      - performance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PerformanceAlert'
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceAlert'
+          description: ''
+  /api/performance/alert/{id}/:
+    get:
+      operationId: performance_alert_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this performance alert.
+        required: true
+      tags:
+      - performance
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceAlert'
+          description: ''
+    put:
+      operationId: performance_alert_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this performance alert.
+        required: true
+      tags:
+      - performance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PerformanceAlert'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceAlert'
+          description: ''
+    patch:
+      operationId: performance_alert_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this performance alert.
+        required: true
+      tags:
+      - performance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPerformanceAlert'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceAlert'
+          description: ''
+    delete:
+      operationId: performance_alert_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this performance alert.
+        required: true
+      tags:
+      - performance
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/performance/alertsummary/:
+    get:
+      operationId: performance_alertsummary_list
+      description: ViewSet for the performance alert summary model
+      parameters:
+      - in: query
+        name: alerts__series_signature
+        schema:
+          type: integer
+      - in: query
+        name: filter_text
+        schema:
+          type: string
+      - in: query
+        name: framework
+        schema:
+          type: integer
+      - in: query
+        name: hide_improvements
+        schema:
+          type: boolean
+      - in: query
+        name: hide_related_and_invalid
+        schema:
+          type: boolean
+      - in: query
+        name: id
+        schema:
+          type: integer
+      - name: limit
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: repository
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: integer
+      - in: query
+        name: timerange
+        schema:
+          type: number
+      - in: query
+        name: with_assignee
+        schema:
+          type: string
+      tags:
+      - performance
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPerformanceAlertSummaryList'
+          description: ''
+    post:
+      operationId: performance_alertsummary_create
+      description: ViewSet for the performance alert summary model
+      tags:
+      - performance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PerformanceAlertSummary'
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceAlertSummary'
+          description: ''
+  /api/performance/alertsummary-tasks/:
+    get:
+      operationId: performance_alertsummary_tasks_list
+      tags:
+      - performance
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PerformanceAlertSummaryTasks'
+          description: ''
+  /api/performance/alertsummary/{id}/:
+    get:
+      operationId: performance_alertsummary_retrieve
+      description: ViewSet for the performance alert summary model
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this performance alert summary.
+        required: true
+      tags:
+      - performance
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceAlertSummary'
+          description: ''
+    put:
+      operationId: performance_alertsummary_update
+      description: PUT method custom implementation, which allows the status to update
+        itself.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this performance alert summary.
+        required: true
+      tags:
+      - performance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PerformanceAlertSummary'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceAlertSummary'
+          description: ''
+    patch:
+      operationId: performance_alertsummary_partial_update
+      description: ViewSet for the performance alert summary model
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this performance alert summary.
+        required: true
+      tags:
+      - performance
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPerformanceAlertSummary'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceAlertSummary'
+          description: ''
+    delete:
+      operationId: performance_alertsummary_destroy
+      description: ViewSet for the performance alert summary model
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this performance alert summary.
+        required: true
+      tags:
+      - performance
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/performance/bug-template/:
+    get:
+      operationId: performance_bug_template_list
+      parameters:
+      - in: query
+        name: framework
+        schema:
+          type: integer
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      tags:
+      - performance
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PerformanceBugTemplate'
+          description: ''
+  /api/performance/bug-template/{id}/:
+    get:
+      operationId: performance_bug_template_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this performance bug template.
+        required: true
+      tags:
+      - performance
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceBugTemplate'
+          description: ''
+  /api/performance/framework/:
+    get:
+      operationId: performance_framework_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      tags:
+      - performance
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PerformanceFramework'
+          description: ''
+  /api/performance/framework/{id}/:
+    get:
+      operationId: performance_framework_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this performance framework.
+        required: true
+      tags:
+      - performance
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceFramework'
+          description: ''
+  /api/performance/issue-tracker/:
+    get:
+      operationId: performance_issue_tracker_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      tags:
+      - performance
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IssueTracker'
+          description: ''
+  /api/performance/issue-tracker/{id}/:
+    get:
+      operationId: performance_issue_tracker_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this issue tracker.
+        required: true
+      tags:
+      - performance
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssueTracker'
+          description: ''
+  /api/performance/summary/:
+    get:
+      operationId: performance_summary_list
+      tags:
+      - performance
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PerformanceSummary'
+          description: ''
+  /api/performance/tag/:
+    get:
+      operationId: performance_tag_list
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      tags:
+      - performance
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PerformanceTag'
+          description: ''
+  /api/performance/tag/{id}/:
+    get:
+      operationId: performance_tag_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this performance tag.
+        required: true
+      tags:
+      - performance
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceTag'
+          description: ''
+  /api/performance/validity-dashboard/:
+    get:
+      operationId: performance_validity_dashboard_retrieve
+      tags:
+      - performance
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/project/{project}/bug-job-map/:
+    get:
+      operationId: project_bug_job_map_retrieve
+      parameters:
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: project_bug_job_map_create
+      description: Add a new relation between a job and a bug.
+      parameters:
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          description: No response body
+  /api/project/{project}/bug-job-map/{id}/:
+    get:
+      operationId: project_bug_job_map_retrieve_2
+      description: |-
+        Retrieve a bug-job-map entry. pk is a composite key in the form
+        bug_id-job_id
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: project_bug_job_map_destroy
+      description: |-
+        Delete bug-job-map entry. pk is a composite key in the form
+        bug_id-job_id
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/project/{project}/classification/:
+    get:
+      operationId: project_classification_retrieve
+      description: This viewset is responsible for the classification endpoint.
+      parameters:
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/project/{project}/investigated-tests/:
+    get:
+      operationId: project_investigated_tests_list
+      description: Handles creating, reading and deleting investigated tests
+      parameters:
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InvestigatedTestsSerializers'
+          description: ''
+    post:
+      operationId: project_investigated_tests_create
+      description: Handles creating, reading and deleting investigated tests
+      parameters:
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvestigatedTestsSerializers'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestigatedTestsSerializers'
+          description: ''
+  /api/project/{project}/investigated-tests/{id}/:
+    get:
+      operationId: project_investigated_tests_retrieve
+      description: Handles creating, reading and deleting investigated tests
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestigatedTestsSerializers'
+          description: ''
+    put:
+      operationId: project_investigated_tests_update
+      description: Handles creating, reading and deleting investigated tests
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvestigatedTestsSerializers'
+        required: true
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestigatedTestsSerializers'
+          description: ''
+    patch:
+      operationId: project_investigated_tests_partial_update
+      description: Handles creating, reading and deleting investigated tests
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedInvestigatedTestsSerializers'
+      security:
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvestigatedTestsSerializers'
+          description: ''
+    delete:
+      operationId: project_investigated_tests_destroy
+      description: Handles creating, reading and deleting investigated tests
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/project/{project}/job-log-url/:
+    get:
+      operationId: project_job_log_url_retrieve
+      description: |-
+        GET method implementation for list view
+        job_id -- Mandatory filter indicating which job these log belongs to.
+      parameters:
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/project/{project}/job-log-url/{id}/:
+    get:
+      operationId: project_job_log_url_retrieve_2
+      description: Returns a job_log_url object given its ID
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/project/{project}/jobs/:
+    get:
+      operationId: project_jobs_retrieve
+      description: |-
+        GET method implementation for list view
+        Optional parameters (default):
+        - offset (0)
+        - count (10)
+        - return_type (dict)
+      parameters:
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/project/{project}/jobs/{id}/:
+    get:
+      operationId: project_jobs_retrieve_2
+      description: |-
+        GET method implementation for detail view
+
+        Return a single job with log_references and
+        artifact names and links to the artifact blobs.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/project/{project}/jobs/{id}/bug_suggestions/:
+    get:
+      operationId: project_jobs_bug_suggestions_retrieve
+      description: Gets a set of bug suggestions for this job
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/project/{project}/jobs/{id}/similar_jobs/:
+    get:
+      operationId: project_jobs_similar_jobs_retrieve
+      description: Get a list of jobs similar to the one selected.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/project/{project}/jobs/{id}/text_log_errors/:
+    get:
+      operationId: project_jobs_text_log_errors_retrieve
+      description: Gets a list of error lines associated with this job
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/project/{project}/jobs/{id}/text_log_steps/:
+    get:
+      operationId: project_jobs_text_log_steps_retrieve
+      description: Gets a list of steps associated with this job
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/project/{project}/note/:
+    get:
+      operationId: project_note_retrieve
+      description: |-
+        GET method implementation for list view
+        job_id -- Mandatory filter indicating which job these notes belong to.
+      parameters:
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    post:
+      operationId: project_note_create
+      description: POST method implementation
+      parameters:
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      responses:
+        '201':
+          description: No response body
+  /api/project/{project}/note/{id}/:
+    get:
+      operationId: project_note_retrieve_2
+      description: GET method implementation for a note detail
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: project_note_destroy
+      description: Delete a note entry
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/project/{project}/note/push_notes/:
+    get:
+      operationId: project_note_push_notes_retrieve
+      description: |-
+        GET method to get all classifications for a push revision with some
+        job details
+        :param request: Require `revision` as a SHA
+        :param project: Repository of the revision
+        :return:
+      parameters:
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/project/{project}/performance/data/:
+    get:
+      operationId: project_performance_data_retrieve
+      description: This view serves performance test result data
+      parameters:
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/project/{project}/performance/platforms/:
+    get:
+      operationId: project_performance_platforms_retrieve
+      description: All platforms for a particular branch that have performance data
+      parameters:
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/project/{project}/performance/signatures/:
+    get:
+      operationId: project_performance_signatures_retrieve
+      parameters:
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/project/{project}/push/:
+    get:
+      operationId: project_push_retrieve
+      description: GET method for list of ``push`` records with revisions
+      parameters:
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/project/{project}/push/{id}/:
+    get:
+      operationId: project_push_retrieve_2
+      description: GET method implementation for detail view of ``push``
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/project/{project}/push/{id}/status/:
+    get:
+      operationId: project_push_status_retrieve
+      description: |-
+        Return a count of the jobs belonging to this push
+        grouped by job status.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/project/{project}/push/decisiontask/:
+    get:
+      operationId: project_push_decisiontask_retrieve
+      description: Return the decision task ids for the pushes.
+      parameters:
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/project/{project}/push/group_results/:
+    get:
+      operationId: project_push_group_results_retrieve
+      description: Return the results of all the test groups for this push.
+      parameters:
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/project/{project}/push/health/:
+    get:
+      operationId: project_push_health_retrieve
+      description: Return a calculated assessment of the health of this push.
+      parameters:
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/project/{project}/push/health_summary/:
+    get:
+      operationId: project_push_health_summary_retrieve
+      description: Return a calculated summary of the health of this push.
+      parameters:
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/project/{project}/push/health_usage/:
+    get:
+      operationId: project_push_health_usage_retrieve
+      description: View for ``push`` records
+      parameters:
+      - in: path
+        name: project
+        schema:
+          type: string
+          pattern: ^[\w-]{0,50}$
+        required: true
+      tags:
+      - project
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/repository/:
+    get:
+      operationId: repository_list
+      description: ViewSet for the refdata Repository model
+      tags:
+      - repository
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Repository'
+          description: ''
+  /api/repository/{id}/:
+    get:
+      operationId: repository_retrieve
+      description: ViewSet for the refdata Repository model
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this repository.
+        required: true
+      tags:
+      - repository
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Repository'
+          description: ''
+  /api/taskclustermetadata/:
+    get:
+      operationId: taskclustermetadata_list
+      description: ViewSet for the refdata TaskclusterMetadata model
+      tags:
+      - taskclustermetadata
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskclusterMetadata'
+          description: ''
+  /api/taskclustermetadata/{id}/:
+    get:
+      operationId: taskclustermetadata_retrieve
+      description: ViewSet for the refdata TaskclusterMetadata model
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - taskclustermetadata
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskclusterMetadata'
+          description: ''
+  /api/user/:
+    get:
+      operationId: user_list
+      description: |-
+        Info about a logged-in user.
+        Used by Treeherder's UI to inspect user properties
+      tags:
+      - user
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+          description: ''
+  /api/user/{id}/:
+    get:
+      operationId: user_retrieve
+      description: |-
+        Info about a logged-in user.
+        Used by Treeherder's UI to inspect user properties
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user.
+        required: true
+      tags:
+      - user
+      security:
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+components:
+  schemas:
+    AutoclassifyStatusEnum:
+      enum:
+      - 0
+      - 1
+      - 2
+      - 3
+      - 255
+      type: integer
+      description: |-
+        * `0` - pending
+        * `1` - crossreferenced
+        * `2` - autoclassified
+        * `3` - skipped
+        * `255` - failed
+    BackfillRecord:
+      type: object
+      properties:
+        context: {}
+        status:
+          type: integer
+        total_actions_triggered:
+          type: integer
+        total_backfills_failed:
+          type: integer
+        total_backfills_successful:
+          type: integer
+        total_backfills_in_progress:
+          type: integer
+      required:
+      - context
+      - status
+      - total_actions_triggered
+      - total_backfills_failed
+      - total_backfills_in_progress
+      - total_backfills_successful
+    FailureClassification:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+      required:
+      - id
+      - name
+    FailureCount:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        test_runs:
+          type: integer
+        failure_count:
+          type: integer
+      required:
+      - date
+      - failure_count
+      - test_runs
+    Failures:
+      type: object
+      properties:
+        bug_id:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        bug_count:
+          type: integer
+      required:
+      - bug_count
+      - bug_id
+    FailuresByBug:
+      type: object
+      properties:
+        push_time:
+          type: string
+        platform:
+          type: string
+        revision:
+          type: string
+        test_suite:
+          type: string
+        tree:
+          type: string
+        build_type:
+          type: string
+        job_id:
+          type: integer
+          readOnly: true
+        bug_id:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        machine_name:
+          type: string
+        lines:
+          type: array
+          items:
+            type: string
+      required:
+      - bug_id
+      - build_type
+      - job_id
+      - lines
+      - machine_name
+      - platform
+      - push_time
+      - revision
+      - test_suite
+      - tree
+    FilesBugzillaMap:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        product:
+          type: string
+          maxLength: 60
+        component:
+          type: string
+          maxLength: 60
+      required:
+      - component
+      - id
+      - product
+    GroupName:
+      type: object
+      properties:
+        group_name:
+          type: string
+        job_type_name:
+          type: string
+        group_status:
+          type: string
+        failure_classification:
+          type: string
+        job_count:
+          type: integer
+      required:
+      - failure_classification
+      - group_name
+      - group_status
+      - job_count
+      - job_type_name
+    InfraCompare:
+      type: object
+      properties:
+        id:
+          type: integer
+        duration:
+          type: integer
+        job_type__name:
+          type: string
+        result:
+          type: string
+      required:
+      - duration
+      - id
+      - job_type__name
+      - result
+    InvestigatedTestsSerializers:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        test:
+          type: string
+          maxLength: 350
+        jobName:
+          type: string
+        jobSymbol:
+          type: string
+      required:
+      - id
+      - jobName
+      - jobSymbol
+      - test
+    IssueTracker:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        text:
+          type: string
+          readOnly: true
+        issueTrackerUrl:
+          type: string
+          format: uri
+          readOnly: true
+      required:
+      - id
+      - issueTrackerUrl
+      - text
+    Job:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        guid:
+          type: string
+          maxLength: 50
+        project_specific_id:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          nullable: true
+        autoclassify_status:
+          allOf:
+          - $ref: '#/components/schemas/AutoclassifyStatusEnum'
+          minimum: -2147483648
+          maximum: 2147483647
+        coalesced_to_guid:
+          type: string
+          nullable: true
+          maxLength: 50
+        option_collection_hash:
+          type: string
+          maxLength: 64
+        who:
+          type: string
+          maxLength: 50
+        reason:
+          type: string
+          maxLength: 125
+        result:
+          type: string
+          maxLength: 25
+        state:
+          type: string
+          maxLength: 25
+        submit_time:
+          type: string
+          format: date-time
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        last_modified:
+          type: string
+          format: date-time
+          readOnly: true
+        running_eta:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          nullable: true
+        tier:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+        repository:
+          type: integer
+        signature:
+          type: integer
+        build_platform:
+          type: integer
+        machine_platform:
+          type: integer
+        machine:
+          type: integer
+        job_type:
+          type: integer
+        job_group:
+          type: integer
+        product:
+          type: integer
+        failure_classification:
+          type: integer
+        push:
+          type: integer
+      required:
+      - build_platform
+      - end_time
+      - failure_classification
+      - guid
+      - id
+      - job_group
+      - job_type
+      - last_modified
+      - machine
+      - machine_platform
+      - option_collection_hash
+      - product
+      - push
+      - reason
+      - repository
+      - result
+      - signature
+      - start_time
+      - state
+      - submit_time
+      - tier
+      - who
+    PaginatedJobList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Job'
+    PaginatedPerformanceAlertList:
+      type: object
+      properties:
+        next:
+          type: string
+          nullable: true
+        previous:
+          type: string
+          nullable: true
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PerformanceAlert'
+    PaginatedPerformanceAlertSummaryList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PerformanceAlertSummary'
+    PatchedInvestigatedTestsSerializers:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        test:
+          type: string
+          maxLength: 350
+        jobName:
+          type: string
+        jobSymbol:
+          type: string
+    PatchedPerformanceAlert:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/PerformanceAlertStatusEnum'
+          minimum: -2147483648
+          maximum: 2147483647
+        series_signature:
+          allOf:
+          - $ref: '#/components/schemas/PerformanceSignature'
+          readOnly: true
+        taskcluster_metadata:
+          type: string
+          readOnly: true
+        prev_taskcluster_metadata:
+          type: string
+          readOnly: true
+        profile_url:
+          type: string
+          readOnly: true
+        prev_profile_url:
+          type: string
+          readOnly: true
+        is_regression:
+          type: boolean
+        prev_value:
+          type: number
+          format: double
+          maximum: 1000000000000000000
+          minimum: -1000000000000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          readOnly: true
+          nullable: true
+        new_value:
+          type: number
+          format: double
+          maximum: 1000000000000000000
+          minimum: -1000000000000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          readOnly: true
+          nullable: true
+        t_value:
+          type: number
+          format: double
+          maximum: 1000000000000000000
+          minimum: -1000000000000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          readOnly: true
+          nullable: true
+        amount_abs:
+          type: number
+          format: double
+          maximum: 1000000000000000000
+          minimum: -1000000000000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          readOnly: true
+          nullable: true
+        amount_pct:
+          type: number
+          format: double
+          maximum: 1000000000000000000
+          minimum: -1000000000000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          readOnly: true
+          nullable: true
+        summary_id:
+          type: integer
+        related_summary_id:
+          type: integer
+          nullable: true
+        manually_created:
+          type: boolean
+        classifier:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          nullable: true
+        starred:
+          type: boolean
+        classifier_email:
+          type: string
+          readOnly: true
+        backfill_record:
+          allOf:
+          - $ref: '#/components/schemas/BackfillRecord'
+          readOnly: true
+          nullable: true
+        noise_profile:
+          type: string
+          readOnly: true
+    PatchedPerformanceAlertSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        push_id:
+          type: integer
+          readOnly: true
+        prev_push_id:
+          type: integer
+          readOnly: true
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+        first_triaged:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+        triage_due_date:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+        repository:
+          type: string
+          readOnly: true
+        framework:
+          type: integer
+          readOnly: true
+        alerts:
+          type: array
+          items:
+            $ref: '#/components/schemas/PerformanceAlert'
+          readOnly: true
+        related_alerts:
+          type: array
+          items:
+            $ref: '#/components/schemas/PerformanceAlert'
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/PerformanceAlertSummaryStatusEnum'
+          minimum: -2147483648
+          maximum: 2147483647
+        bug_number:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          nullable: true
+        bug_due_date:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+        bug_updated:
+          type: string
+          format: date-time
+          nullable: true
+        issue_tracker:
+          type: integer
+        notes:
+          type: string
+          nullable: true
+        revision:
+          type: string
+          readOnly: true
+        push_timestamp:
+          type: string
+          readOnly: true
+        prev_push_revision:
+          type: string
+          readOnly: true
+        assignee_username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          nullable: true
+        assignee_email:
+          type: string
+          readOnly: true
+        performance_tags:
+          type: array
+          items:
+            type: string
+    PerfCompareResults:
+      type: object
+      properties:
+        base_rev:
+          type: string
+        new_rev:
+          type: string
+        base_app:
+          type: string
+          default: ''
+          maxLength: 10
+        new_app:
+          type: string
+          default: ''
+          maxLength: 10
+        framework_id:
+          type: integer
+          readOnly: true
+        platform:
+          type: string
+        suite:
+          type: string
+          maxLength: 80
+        is_empty:
+          type: boolean
+        header_name:
+          type: string
+        base_repository_name:
+          type: string
+        new_repository_name:
+          type: string
+        is_complete:
+          type: boolean
+        base_measurement_unit:
+          type: string
+          default: ''
+        new_measurement_unit:
+          type: string
+          default: ''
+        base_retriggerable_job_ids:
+          type: array
+          items:
+            type: integer
+          default: []
+        new_retriggerable_job_ids:
+          type: array
+          items:
+            type: integer
+          default: []
+        base_runs:
+          type: array
+          items:
+            type: number
+            format: double
+          default: []
+        new_runs:
+          type: array
+          items:
+            type: number
+            format: double
+          default: []
+        base_avg_value:
+          type: number
+          format: double
+        new_avg_value:
+          type: number
+          format: double
+        base_median_value:
+          type: number
+          format: double
+        new_median_value:
+          type: number
+          format: double
+        test:
+          type: string
+          maxLength: 80
+        option_name:
+          type: string
+        extra_options:
+          type: string
+          maxLength: 422
+        base_stddev:
+          type: number
+          format: double
+        new_stddev:
+          type: number
+          format: double
+        base_stddev_pct:
+          type: number
+          format: double
+        new_stddev_pct:
+          type: number
+          format: double
+        confidence:
+          type: number
+          format: double
+        confidence_text:
+          type: string
+        graphs_link:
+          type: string
+        delta_value:
+          type: number
+          format: double
+        delta_percentage:
+          type: number
+          format: double
+        magnitude:
+          type: number
+          format: double
+        new_is_better:
+          type: boolean
+          default: false
+        lower_is_better:
+          type: boolean
+          default: false
+        is_confident:
+          type: boolean
+          default: false
+        more_runs_are_needed:
+          type: boolean
+          default: false
+        noise_metric:
+          type: boolean
+          default: false
+        is_improvement:
+          type: boolean
+        is_regression:
+          type: boolean
+        is_meaningful:
+          type: boolean
+      required:
+      - base_avg_value
+      - base_median_value
+      - base_repository_name
+      - base_rev
+      - base_stddev
+      - base_stddev_pct
+      - confidence
+      - confidence_text
+      - delta_percentage
+      - delta_value
+      - framework_id
+      - graphs_link
+      - header_name
+      - is_complete
+      - is_empty
+      - magnitude
+      - new_avg_value
+      - new_median_value
+      - new_repository_name
+      - new_rev
+      - new_stddev
+      - new_stddev_pct
+      - option_name
+      - platform
+      - suite
+    PerformanceAlert:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/PerformanceAlertStatusEnum'
+          minimum: -2147483648
+          maximum: 2147483647
+        series_signature:
+          allOf:
+          - $ref: '#/components/schemas/PerformanceSignature'
+          readOnly: true
+        taskcluster_metadata:
+          type: string
+          readOnly: true
+        prev_taskcluster_metadata:
+          type: string
+          readOnly: true
+        profile_url:
+          type: string
+          readOnly: true
+        prev_profile_url:
+          type: string
+          readOnly: true
+        is_regression:
+          type: boolean
+        prev_value:
+          type: number
+          format: double
+          maximum: 1000000000000000000
+          minimum: -1000000000000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          readOnly: true
+          nullable: true
+        new_value:
+          type: number
+          format: double
+          maximum: 1000000000000000000
+          minimum: -1000000000000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          readOnly: true
+          nullable: true
+        t_value:
+          type: number
+          format: double
+          maximum: 1000000000000000000
+          minimum: -1000000000000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          readOnly: true
+          nullable: true
+        amount_abs:
+          type: number
+          format: double
+          maximum: 1000000000000000000
+          minimum: -1000000000000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          readOnly: true
+          nullable: true
+        amount_pct:
+          type: number
+          format: double
+          maximum: 1000000000000000000
+          minimum: -1000000000000000000
+          exclusiveMaximum: true
+          exclusiveMinimum: true
+          readOnly: true
+          nullable: true
+        summary_id:
+          type: integer
+        related_summary_id:
+          type: integer
+          nullable: true
+        manually_created:
+          type: boolean
+        classifier:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          nullable: true
+        starred:
+          type: boolean
+        classifier_email:
+          type: string
+          readOnly: true
+        backfill_record:
+          allOf:
+          - $ref: '#/components/schemas/BackfillRecord'
+          readOnly: true
+          nullable: true
+        noise_profile:
+          type: string
+          readOnly: true
+      required:
+      - amount_abs
+      - amount_pct
+      - backfill_record
+      - classifier_email
+      - id
+      - new_value
+      - noise_profile
+      - prev_profile_url
+      - prev_taskcluster_metadata
+      - prev_value
+      - profile_url
+      - series_signature
+      - t_value
+      - taskcluster_metadata
+    PerformanceAlertStatusEnum:
+      enum:
+      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+      type: integer
+      description: |-
+        * `0` - Untriaged
+        * `1` - Downstream
+        * `2` - Reassigned
+        * `3` - Invalid
+        * `4` - Acknowledged
+    PerformanceAlertSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        push_id:
+          type: integer
+          readOnly: true
+        prev_push_id:
+          type: integer
+          readOnly: true
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+        first_triaged:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+        triage_due_date:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+        repository:
+          type: string
+          readOnly: true
+        framework:
+          type: integer
+          readOnly: true
+        alerts:
+          type: array
+          items:
+            $ref: '#/components/schemas/PerformanceAlert'
+          readOnly: true
+        related_alerts:
+          type: array
+          items:
+            $ref: '#/components/schemas/PerformanceAlert'
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/PerformanceAlertSummaryStatusEnum'
+          minimum: -2147483648
+          maximum: 2147483647
+        bug_number:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          nullable: true
+        bug_due_date:
+          type: string
+          format: date-time
+          nullable: true
+          readOnly: true
+        bug_updated:
+          type: string
+          format: date-time
+          nullable: true
+        issue_tracker:
+          type: integer
+        notes:
+          type: string
+          nullable: true
+        revision:
+          type: string
+          readOnly: true
+        push_timestamp:
+          type: string
+          readOnly: true
+        prev_push_revision:
+          type: string
+          readOnly: true
+        assignee_username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          nullable: true
+        assignee_email:
+          type: string
+          readOnly: true
+        performance_tags:
+          type: array
+          items:
+            type: string
+      required:
+      - alerts
+      - assignee_email
+      - bug_due_date
+      - created
+      - first_triaged
+      - framework
+      - id
+      - prev_push_id
+      - prev_push_revision
+      - push_id
+      - push_timestamp
+      - related_alerts
+      - repository
+      - revision
+      - triage_due_date
+    PerformanceAlertSummaryStatusEnum:
+      enum:
+      - 0
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      - 6
+      - 7
+      - 8
+      type: integer
+      description: |-
+        * `0` - Untriaged
+        * `1` - Downstream
+        * `2` - Reassigned
+        * `3` - Invalid
+        * `4` - Improvement
+        * `5` - Investigating
+        * `6` - Won't fix
+        * `7` - Fixed
+        * `8` - Backed out
+    PerformanceAlertSummaryTasks:
+      type: object
+      properties:
+        id:
+          type: integer
+        tasks:
+          type: array
+          items:
+            type: string
+          default: []
+      required:
+      - id
+    PerformanceBugTemplate:
+      type: object
+      properties:
+        framework:
+          type: integer
+          readOnly: true
+        keywords:
+          type: string
+          maxLength: 255
+        status_whiteboard:
+          type: string
+          maxLength: 255
+        default_component:
+          type: string
+          maxLength: 255
+        default_product:
+          type: string
+          maxLength: 255
+        cc_list:
+          type: string
+          maxLength: 255
+        text:
+          type: string
+          maxLength: 4096
+      required:
+      - cc_list
+      - default_component
+      - default_product
+      - framework
+      - keywords
+      - status_whiteboard
+      - text
+    PerformanceDatum:
+      type: object
+      properties:
+        job_id:
+          type: integer
+          nullable: true
+          readOnly: true
+        id:
+          type: integer
+          readOnly: true
+        value:
+          type: number
+          format: double
+        push_timestamp:
+          type: string
+          format: date-time
+        push_id:
+          type: integer
+          readOnly: true
+        revision:
+          type: string
+      required:
+      - id
+      - job_id
+      - push_id
+      - push_timestamp
+      - revision
+      - value
+    PerformanceFramework:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+          pattern: ^[-a-zA-Z0-9_]+$
+      required:
+      - id
+      - name
+    PerformanceSignature:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        framework_id:
+          type: integer
+          readOnly: true
+        signature_hash:
+          type: string
+          maxLength: 40
+          minLength: 40
+        machine_platform:
+          type: string
+          readOnly: true
+        suite:
+          type: string
+          maxLength: 80
+        test:
+          type: string
+          maxLength: 80
+        lower_is_better:
+          type: boolean
+        has_subtests:
+          type: boolean
+        option_collection_hash:
+          type: string
+          readOnly: true
+        tags:
+          type: string
+          readOnly: true
+        extra_options:
+          type: string
+          readOnly: true
+        measurement_unit:
+          type: string
+          readOnly: true
+        suite_public_name:
+          type: string
+          readOnly: true
+        test_public_name:
+          type: string
+          readOnly: true
+      required:
+      - extra_options
+      - framework_id
+      - has_subtests
+      - id
+      - machine_platform
+      - measurement_unit
+      - option_collection_hash
+      - signature_hash
+      - suite
+      - suite_public_name
+      - tags
+      - test_public_name
+    PerformanceSummary:
+      type: object
+      properties:
+        signature_id:
+          type: integer
+        framework_id:
+          type: integer
+          readOnly: true
+        signature_hash:
+          type: string
+          maxLength: 40
+          minLength: 40
+        platform:
+          type: string
+        test:
+          type: string
+          maxLength: 80
+        suite:
+          type: string
+        lower_is_better:
+          type: boolean
+        has_subtests:
+          type: boolean
+        tags:
+          type: string
+          maxLength: 360
+        values:
+          type: array
+          items:
+            type: number
+            format: double
+          default: []
+        name:
+          type: string
+          readOnly: true
+        parent_signature:
+          type: integer
+        job_ids:
+          type: array
+          items:
+            type: integer
+          default: []
+        repository_name:
+          type: string
+        repository_id:
+          type: integer
+          readOnly: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PerformanceDatum'
+          readOnly: true
+          default: []
+        measurement_unit:
+          type: string
+          nullable: true
+          maxLength: 50
+        application:
+          type: string
+          description: Application that runs the signature's tests. Generally used
+            to record browser's name, but not necessarily.
+          maxLength: 10
+      required:
+      - data
+      - framework_id
+      - has_subtests
+      - name
+      - parent_signature
+      - platform
+      - repository_id
+      - repository_name
+      - signature_hash
+      - signature_id
+      - suite
+    PerformanceTag:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+      required:
+      - id
+      - name
+    Repository:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        repository_group:
+          $ref: '#/components/schemas/RepositoryGroup'
+        name:
+          type: string
+          maxLength: 50
+        dvcs_type:
+          type: string
+          maxLength: 25
+        url:
+          type: string
+          maxLength: 255
+        branch:
+          type: string
+          nullable: true
+          maxLength: 255
+        codebase:
+          type: string
+          maxLength: 50
+        description:
+          type: string
+        active_status:
+          type: string
+          maxLength: 7
+        life_cycle_order:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+          nullable: true
+        performance_alerts_enabled:
+          type: boolean
+        expire_performance_data:
+          type: boolean
+        is_try_repo:
+          type: boolean
+        tc_root_url:
+          type: string
+          maxLength: 255
+      required:
+      - dvcs_type
+      - id
+      - name
+      - repository_group
+      - tc_root_url
+      - url
+    RepositoryGroup:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+      required:
+      - name
+    TaskclusterMetadata:
+      type: object
+      properties:
+        job:
+          type: integer
+        task_id:
+          type: string
+          maxLength: 22
+          minLength: 22
+        retry_id:
+          type: integer
+          maximum: 4294967295
+          minimum: 0
+          format: int64
+      required:
+      - job
+      - retry_id
+      - task_id
+    User:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        is_superuser:
+          type: boolean
+          title: Superuser status
+          description: Designates that this user has all permissions without explicitly
+            assigning them.
+        is_staff:
+          type: boolean
+          title: Staff status
+          description: Designates whether the user can log into this admin site.
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+      required:
+      - username
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

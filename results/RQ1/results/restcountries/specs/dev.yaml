@@ -1,0 +1,365 @@
+---
+openapi: 3.0.3
+info:
+  title: REST Countries
+  description: Get information about countries via a RESTful API
+  version: 1.0.0
+servers:
+- url: https://restcountries.eu/rest
+paths:
+  "/v2/all":
+    get:
+      operationId: getAll
+      parameters:
+      - name: fields
+        in: query
+        description: filter the output of your request to include only the specified
+          fields
+        schema:
+          type: string
+        example: name;capital;currencies
+      responses:
+        '200':
+          description: Successful operation
+  "/v2/name/{name}":
+    get:
+      description: Search by country name. It can be the native name or partial name
+      operationId: getByName
+      parameters:
+      - name: name
+        in: path
+        description: name
+        required: true
+        schema:
+          type: string
+        examples:
+          eesti:
+            value: eesti
+          united:
+            value: united
+      - name: fullText
+        in: query
+        description: Search by country full name
+        schema:
+          type: boolean
+      - name: fields
+        in: query
+        description: filter the output of your request to include only the specified
+          fields
+        schema:
+          type: string
+        example: name;capital;currencies
+      responses:
+        '200':
+          description: successful operation
+  "/v2/alpha/{code}":
+    get:
+      description: Search by ISO 3166-1 2-letter or 3-letter country code
+      operationId: getByCode
+      parameters:
+      - name: code
+        in: path
+        description: ISO 3166-1 2-letter or 3-letter country code
+        required: true
+        schema:
+          type: string
+        examples:
+          co:
+            value: co
+          col:
+            value: col
+      - name: fields
+        in: query
+        description: filter the output of your request to include only the specified
+          fields
+        schema:
+          type: string
+        example: name;capital;currencies
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              examples:
+                col:
+                  value: |-
+                    [
+                      [
+                        {
+                          "name": "Colombia",
+                          "topLevelDomain": [
+                            ".co"
+                          ],
+                          "alpha2Code": "CO",
+                          "alpha3Code": "COL",
+                          "callingCodes": [
+                            "57"
+                          ],
+                          "capital": "Bogotá",
+                          "altSpellings": [
+                            "CO",
+                            "Republic of Colombia",
+                            "República de Colombia"
+                          ],
+                          "region": "Americas",
+                          "subregion": "South America",
+                          "population": 48759958,
+                          "latlng": [
+                            4,
+                            -72
+                          ],
+                          "demonym": "Colombian",
+                          "area": 1141748,
+                          "gini": 55.9,
+                          "timezones": [
+                            "UTC-05:00"
+                          ],
+                          "borders": [
+                            "BRA",
+                            "ECU",
+                            "PAN",
+                            "PER",
+                            "VEN"
+                          ],
+                          "nativeName": "Colombia",
+                          "numericCode": "170",
+                          "currencies": [
+                            {
+                              "code": "COP",
+                              "name": "Colombian peso",
+                              "symbol": "$"
+                            }
+                          ],
+                          "languages": [
+                            {
+                              "iso639_1": "es",
+                              "iso639_2": "spa",
+                              "name": "Spanish",
+                              "nativeName": "Español"
+                            }
+                          ],
+                          "translations": {
+                            "de": "Kolumbien",
+                            "es": "Colombia",
+                            "fr": "Colombie",
+                            "ja": "コロンビア",
+                            "it": "Colombia",
+                            "br": "Colômbia",
+                            "pt": "Colômbia"
+                          },
+                          "flag": "https://restcountries.eu/data/col.svg",
+                          "regionalBlocs": [
+                            {
+                              "acronym": "PA",
+                              "name": "Pacific Alliance",
+                              "otherAcronyms": [],
+                              "otherNames": [
+                                "Alianza del Pacífico"
+                              ]
+                            },
+                            {
+                              "acronym": "USAN",
+                              "name": "Union of South American Nations",
+                              "otherAcronyms": [
+                                "UNASUR",
+                                "UNASUL",
+                                "UZAN"
+                              ],
+                              "otherNames": [
+                                "Unión de Naciones Suramericanas",
+                                "União de Nações Sul-Americanas",
+                                "Unie van Zuid-Amerikaanse Naties",
+                                "South American Union"
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    ]
+  "/v2/alpha":
+    get:
+      description: Search by list of ISO 3166-1 2-letter or 3-letter country codes
+      operationId: getByListOfCodes
+      parameters:
+      - name: codes
+        in: query
+        description: list of ISO 3166-1 2-letter or 3-letter country codes
+        schema:
+          type: string
+        example: col;no;ee
+      - name: fields
+        in: query
+        description: filter the output of your request to include only the specified
+          fields
+        schema:
+          type: string
+        example: name;capital;currencies
+      responses:
+        '200':
+          description: successful operation
+  "/v2/currency/{currency}":
+    get:
+      description: Search by ISO 4217 currency code
+      operationId: getByCurrency
+      parameters:
+      - name: currency
+        in: path
+        description: ISO 4217 currency code
+        required: true
+        schema:
+          type: string
+        example: cop
+      - name: fields
+        in: query
+        description: filter the output of your request to include only the specified
+          fields
+        schema:
+          type: string
+        example: name;capital;currencies
+      responses:
+        '200':
+          description: successful operation
+  "/v2/lang/{et}":
+    get:
+      description: Search by ISO 639-1 language code
+      operationId: searchByLanguage
+      parameters:
+      - name: et
+        in: path
+        description: ISO 639-1 language code
+        required: true
+        schema:
+          type: string
+        example: es
+      - name: fields
+        in: query
+        description: filter the output of your request to include only the specified
+          fields
+        schema:
+          type: string
+        example: name;capital;currencies
+      responses:
+        '200':
+          description: successful operation
+  "/v2/capital/{capital}":
+    get:
+      description: Search by capital city
+      operationId: searchByCapitalCity
+      parameters:
+      - name: capital
+        in: path
+        description: capital city
+        required: true
+        schema:
+          type: string
+        example: tallinn
+      - name: fields
+        in: query
+        description: filter the output of your request to include only the specified
+          fields
+        schema:
+          type: string
+        example: name;capital;currencies
+      responses:
+        '200':
+          description: successful operation
+  "/v2/callingcode/{callingcode}":
+    get:
+      description: Search by calling code
+      operationId: searchByCallingCode
+      parameters:
+      - name: callingcode
+        in: path
+        description: calling code
+        required: true
+        schema:
+          type: string
+        example: 372
+      - name: fields
+        in: query
+        description: filter the output of your request to include only the specified
+          fields
+        schema:
+          type: string
+        example: name;capital;currencies
+      responses:
+        '200':
+          description: successful operation
+  "/v2/region/{region}":
+    get:
+      description: 'Search by region: Africa, Americas, Asia, Europe, Oceania'
+      operationId: searchByRegion
+      parameters:
+      - name: region
+        in: path
+        description: region
+        required: true
+        schema:
+          type: string
+          enum:
+          - Africa
+          - Americas
+          - Asia
+          - Europe
+          - Oceania
+        example: europe
+      - name: fields
+        in: query
+        description: filter the output of your request to include only the specified
+          fields
+        schema:
+          type: string
+        example: name;capital;currencies
+      responses:
+        '200':
+          description: successful operation
+  "/v2/regionalbloc/{regionalbloc}":
+    get:
+      description: |-
+        Search by regional bloc:
+        * EU (European Union)
+        * EFTA (European Free Trade Association)
+        * CARICOM (Caribbean Community)
+        * PA (Pacific Alliance)
+        * AU (African Union)
+        * USAN (Union of South American Nations)
+        * EEU (Eurasian Economic Union)
+        * AL (Arab League)
+        * ASEAN (Association of Southeast Asian Nations)
+        * CAIS (Central American Integration System)
+        * CEFTA (Central European Free Trade Agreement)
+        * NAFTA (North American Free Trade Agreement)
+        * SAARC (South Asian Association for Regional Cooperation)
+      operationId: searchByRegionalBloc
+      parameters:
+      - name: regionalbloc
+        in: path
+        description: calling code
+        required: true
+        schema:
+          type: string
+          enum:
+          - EU
+          - EFTA
+          - CARICOM
+          - PA
+          - AU
+          - USAN
+          - EEU
+          - AL
+          - ASEAN
+          - CAIS
+          - CEFTA
+          - NAFTA
+          - SAARC
+        example: eu
+      - name: fields
+        in: query
+        description: filter the output of your request to include only the specified
+          fields
+        schema:
+          type: string
+        example: name;capital;currencies
+      responses:
+        '200':
+          description: successful operation

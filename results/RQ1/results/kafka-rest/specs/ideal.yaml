@@ -1,0 +1,4320 @@
+openapi: 3.0.0
+info:
+  title: Kafka ideal
+  version: '1.0'
+
+paths:
+  /:
+    get:
+      summary: "Get server liveness."
+      description: "A simple endpoint that can be used to check for liveness of the REST proxy. This endpoint always returns an empty JSON object."
+      operationId: "getRoot"
+      tags:
+        - "v2 Root"
+      responses:
+        '200':
+          description: "OK. The server is running."
+          content:
+            application/vnd.kafka.v2+json:
+              schema:
+                type: object
+                description: "An empty JSON object."
+                additionalProperties:
+                  type: string
+              example: {}
+    post:
+      summary: "Test posting data to the server."
+      description: "A simple endpoint that accepts a map of string key-value pairs and returns an empty JSON object. This can be used for basic connectivity and authentication testing."
+      operationId: "postRoot"
+      tags:
+        - "v2 Root"
+      requestBody:
+        description: "A map of string key-value pairs."
+        required: true
+        content:
+          application/vnd.kafka.v2+json:
+            schema:
+              type: object
+              additionalProperties:
+                type: string
+              example:
+                config_key: "config_value"
+      responses:
+        '200':
+          description: "OK. The server accepted the request."
+          content:
+            application/vnd.kafka.v2+json:
+              schema:
+                type: object
+                description: "An empty JSON object."
+                additionalProperties:
+                  type: string
+              example: {}
+
+  /brokers:
+    get:
+      summary: "List the brokers in the Kafka cluster."
+      operationId: "listBrokersV2"
+      tags:
+        - "v2 Brokers"
+      responses:
+        '200':
+          description: "OK. The request was successful."
+          content:
+            application/vnd.kafka.v2+json:
+              schema:
+                $ref: "#/components/schemas/BrokerList"
+              example:
+                brokers: [1, 2, 3]
+        '500':
+          description: "Internal Server Error. An unexpected error occurred on the server."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse" # Assuming a standard error schema
+
+  /consumers/{group}:
+    post:
+      summary: "Create a consumer instance in a consumer group."
+      operationId: "createGroup"
+      tags:
+        - "v2 Consumers"
+      parameters:
+        - in: path
+          name: group
+          required: true
+          schema:
+            type: string
+          description: "The consumer group name."
+      requestBody:
+        description: "The consumer instance configuration."
+        # The code handles a null request body by substituting a default prototype,
+        # so the body itself is not strictly required.
+        required: false
+        content:
+          # The @Consumes annotation lists multiple, but this is the primary one.
+          application/vnd.kafka.v2+json:
+            schema:
+              $ref: "#/components/schemas/CreateConsumerInstanceRequest"
+      responses:
+        '200':
+          description: "Consumer instance created successfully."
+          content:
+            # The @Produces annotation lists multiple, but this is the primary one.
+            application/vnd.kafka.v2+json:
+              schema:
+                $ref: "#/components/schemas/CreateConsumerInstanceResponse"
+        '422':
+          description: "Unprocessable Entity. The request body contains invalid values, for example an invalid 'format' or out-of-range 'fetch.min.bytes'."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse" # Assuming a standard error schema
+        '500':
+          description: "Internal Server Error."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse" # Assuming a standard error schema
+
+  /consumers/{group}/instances/{instance}:
+    delete:
+      summary: "Delete a consumer instance."
+      operationId: "deleteGroup"
+      tags:
+        - "v2 Consumers"
+      parameters:
+        - in: path
+          name: group
+          required: true
+          schema:
+            type: string
+          description: "The consumer group name."
+        - in: path
+          name: instance
+          required: true
+          schema:
+            type: string
+          description: "The consumer instance ID."
+      responses:
+        '204':
+          description: "No Content. The consumer instance was deleted successfully."
+        '404':
+          description: "Not Found. The specified consumer group or instance does not exist."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse" # Assuming a standard error schema
+        '500':
+          description: "Internal Server Error."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse" # Assuming a standard error schema
+
+  /consumers/{group}/instances/{instance}/subscription:
+    get:
+      summary: "Get the current subscription for a consumer instance."
+      operationId: "subscription"
+      tags:
+        - "v2 Consumers"
+      parameters:
+        - in: path
+          name: group
+          required: true
+          schema:
+            type: string
+          description: "The consumer group name."
+        - in: path
+          name: instance
+          required: true
+          schema:
+            type: string
+          description: "The consumer instance ID."
+      responses:
+        '200':
+          description: "OK. The list of subscribed topics is in the response."
+          content:
+            application/vnd.kafka.v2+json:
+              schema:
+                $ref: "#/components/schemas/ConsumerSubscriptionResponse"
+        '404':
+          description: "Not Found. The specified consumer group or instance does not exist."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      summary: "Subscribe a consumer instance to one or more topics."
+      operationId: "subscribe"
+      tags:
+        - "v2 Consumers"
+      parameters:
+        - in: path
+          name: group
+          required: true
+          schema:
+            type: string
+          description: "The consumer group name."
+        - in: path
+          name: instance
+          required: true
+          schema:
+            type: string
+          description: "The consumer instance ID."
+      requestBody:
+        description: "The topics or topic pattern to subscribe to. A consumer may be subscribed to either a list of topics or a topic pattern, but not both at the same time."
+        required: true
+        content:
+          application/vnd.kafka.v2+json:
+            schema:
+              $ref: "#/components/schemas/ConsumerSubscriptionRequest"
+      responses:
+        '204':
+          description: "No Content. The subscription was successful."
+        '404':
+          description: "Not Found. The specified consumer group or instance does not exist."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '409':
+          description: "Conflict. The consumer is already subscribed to a topic pattern and is trying to subscribe to a list of topics, or vice versa. This can be triggered by an IllegalStateException on the server."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      summary: "Unsubscribe a consumer instance from all topics."
+      operationId: "unsubscribe"
+      tags:
+        - "v2 Consumers"
+      parameters:
+        - in: path
+          name: group
+          required: true
+          schema:
+            type: string
+          description: "The consumer group name."
+        - in: path
+          name: instance
+          required: true
+          schema:
+            type: string
+          description: "The consumer instance ID."
+      responses:
+        '204':
+          description: "No Content. The unsubscribe operation was successful."
+        '404':
+          description: "Not Found. The specified consumer group or instance does not exist."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /consumers/{group}/instances/{instance}/assignments:
+    get:
+      summary: "Get the current partition assignments for a consumer instance."
+      operationId: "assignment"
+      tags:
+        - "v2 Consumers"
+      parameters:
+        - in: path
+          name: group
+          required: true
+          schema:
+            type: string
+          description: "The consumer group name."
+        - in: path
+          name: instance
+          required: true
+          schema:
+            type: string
+          description: "The consumer instance ID."
+      responses:
+        '200':
+          description: "OK. The list of assigned partitions is in the response."
+          content:
+            application/vnd.kafka.v2+json:
+              schema:
+                $ref: "#/components/schemas/ConsumerAssignmentResponse"
+        '404':
+          description: "Not Found. The specified consumer group or instance does not exist."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      summary: "Manually assign a list of partitions to a consumer instance."
+      operationId: "assign"
+      tags:
+        - "v2 Consumers"
+      parameters:
+        - in: path
+          name: group
+          required: true
+          schema:
+            type: string
+          description: "The consumer group name."
+        - in: path
+          name: instance
+          required: true
+          schema:
+            type: string
+          description: "The consumer instance ID."
+      requestBody:
+        description: "The list of topic partitions to assign to the consumer."
+        required: true
+        content:
+          application/vnd.kafka.v2+json:
+            schema:
+              $ref: "#/components/schemas/ConsumerAssignmentRequest"
+      responses:
+        '204':
+          description: "No Content. The assignment was successful."
+        '404':
+          description: "Not Found. The specified consumer group or instance does not exist."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '409':
+          description: "Conflict. The consumer is subscribed to a topic pattern and cannot be manually assigned partitions. This can be triggered by an IllegalStateException on the server."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '422':
+          description: "Unprocessable Entity. The request body is invalid, for example, a topic is an empty string or a partition is a negative number."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /consumers/{group}/instances/{instance}/offsets:
+    get:
+      summary: "Get the last committed offsets for a set of partitions."
+      operationId: "committedOffsets"
+      tags:
+        - "v2 Consumers"
+      parameters:
+        - in: path
+          name: group
+          required: true
+          schema:
+            type: string
+          description: "The consumer group name."
+        - in: path
+          name: instance
+          required: true
+          schema:
+            type: string
+          description: "The consumer instance ID."
+      # This GET request is non-standard as it accepts a request body.
+      # This is inferred from the @Valid annotation on an un-annotated POJO parameter.
+      requestBody:
+        description: "A list of partitions to fetch committed offsets for."
+        required: true
+        content:
+          application/vnd.kafka.v2+json:
+            schema:
+              $ref: "#/components/schemas/ConsumerCommittedRequest"
+      responses:
+        '200':
+          description: "OK. The list of committed offsets is in the response."
+          content:
+            application/vnd.kafka.v2+json:
+              schema:
+                $ref: "#/components/schemas/ConsumerCommittedResponse"
+        '404':
+          description: "Not Found. The specified consumer group or instance does not exist, or the request body was empty."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    post:
+      summary: "Commit a list of offsets for a consumer instance."
+      operationId: "commitOffsets"
+      tags:
+        - "v2 Consumers"
+      parameters:
+        - in: path
+          name: group
+          required: true
+          schema:
+            type: string
+          description: "The consumer group name."
+        - in: path
+          name: instance
+          required: true
+          schema:
+            type: string
+          description: "The consumer instance ID."
+        - in: query
+          name: async
+          schema:
+            type: string
+            # The code uses a String, but it's functionally a boolean.
+            # A more robust spec might use `type: boolean`, but `string` reflects the code literally.
+            default: "false"
+          description: "Whether to commit offsets asynchronously."
+      requestBody:
+        description: "The list of offsets to commit."
+        required: true
+        content:
+          application/vnd.kafka.v2+json:
+            schema:
+              $ref: "#/components/schemas/ConsumerOffsetCommitRequest"
+      responses:
+        '200':
+          description: "OK. The offsets were committed successfully. The response contains the committed offset details."
+          content:
+            # The @JsonValue annotation on the response DTO means the response is not a JSON object,
+            # but a raw JSON array of the 'offsets' property.
+            application/vnd.kafka.v2+json:
+              schema:
+                $ref: "#/components/schemas/CommitOffsetsResponse"
+        '404':
+          description: "Not Found. The specified consumer group or instance does not exist."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '422':
+          description: "Unprocessable Entity. The request body is invalid (e.g., missing required fields, negative offsets)."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /consumers/{group}/instances/{instance}/positions:
+    post:
+      summary: "Seek to specific offsets or offsets by timestamp for a set of partitions."
+      operationId: "seekToOffset"
+      tags:
+        - "v2 Consumers"
+      parameters:
+        - in: path
+          name: group
+          required: true
+          schema:
+            type: string
+          description: "The consumer group name."
+        - in: path
+          name: instance
+          required: true
+          schema:
+            type: string
+          description: "The consumer instance ID."
+      requestBody:
+        description: "The partitions and their target offsets or timestamps to seek to."
+        required: true
+        content:
+          application/vnd.kafka.v2+json:
+            schema:
+              $ref: "#/components/schemas/ConsumerSeekRequest"
+      responses:
+        '204':
+          description: "No Content. The seek operation was successful."
+        '404':
+          description: "Not Found. The specified consumer group or instance does not exist."
+        '409':
+          description: "Conflict. The consumer is subscribed to a topic pattern and cannot perform a manual seek. This can be triggered by an IllegalStateException on the server."
+        '422':
+          description: "Unprocessable Entity. The request body is invalid."
+
+  /consumers/{group}/instances/{instance}/positions/beginning:
+    post:
+      summary: "Seek to the earliest available offset for a set of partitions."
+      operationId: "seekToBeginning"
+      tags:
+        - "v2 Consumers"
+      parameters:
+        - in: path
+          name: group
+          required: true
+          schema:
+            type: string
+          description: "The consumer group name."
+        - in: path
+          name: instance
+          required: true
+          schema:
+            type: string
+          description: "The consumer instance ID."
+      requestBody:
+        description: "The list of partitions to seek to the beginning of."
+        required: true
+        content:
+          application/vnd.kafka.v2+json:
+            schema:
+              $ref: "#/components/schemas/ConsumerSeekToRequest"
+      responses:
+        '204':
+          description: "No Content. The seek operation was successful."
+        '404':
+          description: "Not Found. The specified consumer group or instance does not exist."
+        '409':
+          description: "Conflict. The consumer is subscribed to a topic pattern and cannot perform a manual seek. This can be triggered by an IllegalStateException on the server."
+        '422':
+          description: "Unprocessable Entity. The request body is invalid."
+
+  /consumers/{group}/instances/{instance}/positions/end:
+    post:
+      summary: "Seek to the latest available offset for a set of partitions."
+      operationId: "seekToEnd"
+      tags:
+        - "v2 Consumers"
+      parameters:
+        - in: path
+          name: group
+          required: true
+          schema:
+            type: string
+          description: "The consumer group name."
+        - in: path
+          name: instance
+          required: true
+          schema:
+            type: string
+          description: "The consumer instance ID."
+      requestBody:
+        description: "The list of partitions to seek to the end of."
+        required: true
+        content:
+          application/vnd.kafka.v2+json:
+            schema:
+              $ref: "#/components/schemas/ConsumerSeekToRequest"
+      responses:
+        '204':
+          description: "No Content. The seek operation was successful."
+        '404':
+          description: "Not Found. The specified consumer group or instance does not exist."
+        '409':
+          description: "Conflict. The consumer is subscribed to a topic pattern and cannot perform a manual seek. This can be triggered by an IllegalStateException on the server."
+        '422':
+          description: "Unprocessable Entity. The request body is invalid."
+
+  /consumers/{group}/instances/{instance}/records:
+    get:
+      summary: "Fetch records for a consumer instance."
+      description: |
+        Fetches a list of records from the consumer instance. The format of the data in the response is determined
+        by the `Accept` header. The supported formats are binary, json, avro, jsonschema, and protobuf.
+        Each format corresponds to a different content type and response schema.
+      operationId: "fetchRecords"
+      tags:
+        - "v2 Consumers"
+      parameters:
+        - in: path
+          name: group
+          required: true
+          schema:
+            type: string
+          description: "The consumer group name."
+        - in: path
+          name: instance
+          required: true
+          schema:
+            type: string
+          description: "The consumer instance ID."
+        - in: query
+          name: timeout
+          schema:
+            type: integer
+            format: int64
+            default: -1
+          description: "The maximum number of milliseconds to wait for records if the consumer buffer is empty. A value of -1 indicates no timeout."
+        - in: query
+          name: max_bytes
+          schema:
+            type: integer
+            format: int64
+            default: -1
+          description: "The maximum number of bytes of unencoded data to fetch. A value of -1 indicates no limit."
+      responses:
+        '200':
+          description: "OK. A list of consumer records. The list may be empty if no records were available before the timeout."
+          content:
+            application/vnd.kafka.binary.v2+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BinaryConsumerRecord"
+            application/vnd.kafka.json.v2+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/JsonConsumerRecord"
+            application/vnd.kafka.avro.v2+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SchemaConsumerRecord"
+            application/vnd.kafka.jsonschema.v2+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SchemaConsumerRecord"
+            application/vnd.kafka.protobuf.v2+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SchemaConsumerRecord"
+        '404':
+          description: "Not Found. The specified consumer group or instance does not exist."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        '500':
+          description: "Internal Server Error."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /topics:
+    get:
+      summary: "List all available topics."
+      operationId: "listTopicsV2"
+      tags:
+        - "v2 Topics"
+      responses:
+        '200':
+          description: "OK. The request was successful."
+          content:
+            application/vnd.kafka.v2+json:
+              schema:
+                type: array
+                items:
+                  type: string
+                description: "A list of topic names."
+              example:
+                - "topic-1"
+                - "topic-2"
+        '500':
+          description: "Internal Server Error."
+
+  /topics/{topic_name}:
+    get:
+      summary: "Get information about a specific topic."
+      operationId: "getTopicV2"
+      tags:
+        - "v2 Topics"
+      parameters:
+        - in: path
+          name: topic_name
+          required: true
+          schema:
+            type: string
+          description: "The name of the topic to get information about."
+      responses:
+        '200':
+          description: "OK. The request was successful."
+          content:
+            application/vnd.kafka.v2+json:
+              schema:
+                $ref: "#/components/schemas/GetTopicResponse"
+        '404':
+          description: "Not Found. The specified topic does not exist."
+        '500':
+          description: "Internal Server Error."
+    post:
+      summary: "Produce Records to Topic (v2)"
+      description: |
+        Produces a batch of records to the specified topic. The format of the records in the request body is determined
+        by the `Content-Type` header. The supported formats are binary, json, avro, jsonschema, and protobuf.
+      operationId: "produceToTopicV2"
+      tags:
+        - "v2 Topics"
+      parameters:
+        - in: path
+          name: topic_name
+          required: true
+          schema:
+            type: string
+          description: "The name of the topic to produce records to."
+      requestBody:
+        description: "A request to produce records, with the format specified by the Content-Type header."
+        required: true
+        content:
+          application/vnd.kafka.binary.v2+json:
+            schema:
+              $ref: "#/components/schemas/v2BinaryTopicProduceRequest"
+          application/vnd.kafka.json.v2+json:
+            schema:
+              $ref: "#/components/schemas/v2JsonTopicProduceRequest"
+          application/vnd.kafka.avro.v2+json:
+            schema:
+              $ref: "#/components/schemas/v2SchemaTopicProduceRequest"
+          application/vnd.kafka.jsonschema.v2+json:
+            schema:
+              $ref: "#/components/schemas/v2SchemaTopicProduceRequest"
+          application/vnd.kafka.protobuf.v2+json:
+            schema:
+              $ref: "#/components/schemas/v2SchemaTopicProduceRequest"
+      responses:
+        '200':
+          description: "OK. The records were produced successfully. The response contains delivery reports for each record."
+          content:
+            application/vnd.kafka.v2+json:
+              schema:
+                $ref: "#/components/schemas/v2ProduceResponse"
+        '404':
+          description: "Not Found. The specified topic does not exist."
+        '422':
+          description: "Unprocessable Entity. The request body is malformed or contains invalid data."
+        '401':
+          description: "Unauthorized. The request failed due to an authentication error."
+        '403':
+          description: "Forbidden. The request failed due to an authorization error."
+
+  /topics/{topic_name}/partitions:
+    get:
+      summary: "List the partitions for a topic."
+      operationId: "listPartitionsV2"
+      tags:
+        - "v2 Partitions"
+      parameters:
+        - in: path
+          name: topic_name
+          required: true
+          schema:
+            type: string
+          description: "The name of the topic."
+      responses:
+        '200':
+          description: "OK. The request was successful."
+          content:
+            application/vnd.kafka.v2+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GetPartitionResponse"
+        '404':
+          description: "Not Found. The specified topic does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /topics/{topic_name}/partitions/{partition_id}:
+    get:
+      summary: "Get information about a specific partition."
+      operationId: "getPartitionV2"
+      tags:
+        - "v2 Partitions"
+      parameters:
+        - in: path
+          name: topic_name
+          required: true
+          schema:
+            type: string
+          description: "The name of the topic."
+        - in: path
+          name: partition_id
+          required: true
+          schema:
+            type: integer
+            format: int32
+          description: "The ID of the partition."
+      responses:
+        '200':
+          description: "OK. The request was successful."
+          content:
+            application/vnd.kafka.v2+json:
+              schema:
+                $ref: "#/components/schemas/GetPartitionResponse"
+        '404':
+          description: "Not Found. The specified topic or partition does not exist."
+        '500':
+          description: "Internal Server Error."
+    post:
+      summary: "Produce Records to a Partition (v2)"
+      description: |
+        Produces a batch of records to a specific partition within a topic. 
+        
+        The format of the records in the request body is determined by the `Content-Type` header. The supported formats are binary, json, avro, jsonschema, and protobuf. Each format has a different request body schema.
+      operationId: "produceToPartitionV2"
+      tags:
+        - "v2 Partitions"
+      parameters:
+        - in: path
+          name: topic_name
+          required: true
+          schema:
+            type: string
+          description: "The name of the topic."
+        - in: path
+          name: partition_id
+          required: true
+          schema:
+            type: integer
+            format: int32
+          description: "The ID of the partition to produce records to."
+      requestBody:
+        description: "A request to produce records, with the format specified by the Content-Type header."
+        required: true
+        content:
+          application/vnd.kafka.binary.v2+json:
+            schema:
+              $ref: "#/components/schemas/v2BinaryPartitionProduceRequest"
+          application/vnd.kafka.json.v2+json:
+            schema:
+              $ref: "#/components/schemas/v2JsonPartitionProduceRequest"
+          application/vnd.kafka.avro.v2+json:
+            schema:
+              $ref: "#/components/schemas/v2SchemaPartitionProduceRequest"
+          application/vnd.kafka.jsonschema.v2+json:
+            schema:
+              $ref: "#/components/schemas/v2SchemaPartitionProduceRequest"
+          application/vnd.kafka.protobuf.v2+json:
+            schema:
+              $ref: "#/components/schemas/v2SchemaPartitionProduceRequest"
+      responses:
+        '200':
+          description: "OK. The records were produced successfully. The response contains a delivery report for each record."
+          content:
+            application/vnd.kafka.v2+json:
+              schema:
+                $ref: "#/components/schemas/v2ProduceResponse"
+        '404':
+          description: "Not Found. The specified topic or partition does not exist."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '422':
+          description: "Unprocessable Entity. The request body is malformed, contains invalid data (e.g., bad base64 encoding), or includes an invalid schema."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '401':
+          description: "Unauthorized. The request failed due to an authentication error."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '403':
+          description: "Forbidden. The request failed due to an authorization error."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /topics/{topic_name}/partitions/{partition_id}/offsets:
+    get:
+      summary: "Get the earliest and latest offsets for a partition."
+      operationId: "getOffsetsV2"
+      tags:
+        - "v2 Partitions"
+      parameters:
+        - in: path
+          name: topic_name
+          required: true
+          schema:
+            type: string
+          description: "The name of the topic."
+        - in: path
+          name: partition_id
+          required: true
+          schema:
+            type: integer
+            format: int32
+          description: "The ID of the partition."
+      responses:
+        '200':
+          description: "OK. The request was successful."
+          content:
+            application/vnd.kafka.v2+json:
+              schema:
+                $ref: "#/components/schemas/TopicPartitionOffsetResponse"
+        '404':
+          description: "Not Found. The specified topic or partition does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters:
+    get:
+      summary: "List Kafka clusters."
+      operationId: "listClustersV3"
+      tags:
+        - "v3 Clusters"
+      responses:
+        '200':
+          description: "OK. The request was successful."
+          content:
+            application/json:
+              schema:
+                # The ListClustersResponse DTO uses @JsonValue, so the response body
+                # is the ClusterDataList object directly.
+                $ref: "#/components/schemas/ClusterDataList"
+        '500':
+          description: "Internal Server Error."
+        '400':
+          description: "Bad Request. The request was malformed."
+        '401':
+          description: "Unauthorized. The request was not authenticated."
+        '429':
+          description: "Too Many Requests. The user has sent too many requests in a given amount of time."
+  
+
+  /v3/clusters/{cluster_id}:
+    get:
+      summary: "Get a specific Kafka cluster."
+      operationId: "getClusterV3"
+      tags:
+        - "v3 Clusters"
+      parameters:
+        - in: path
+          name: cluster_id
+          required: true
+          schema:
+            type: string
+          description: "The ID of the Kafka cluster to retrieve."
+      responses:
+        '200':
+          description: "OK. The request was successful."
+          content:
+            application/json:
+              schema:
+                # The GetClusterResponse DTO uses @JsonValue, so the response body
+                # is the ClusterData object directly.
+                $ref: "#/components/schemas/ClusterData"
+        '400':
+          description: "Bad Request. The request was malformed."
+        '401':
+          description: "Unauthorized. The request was not authenticated."
+        '404':
+          description: "Not Found. The specified cluster does not exist."
+        '429':
+          description: "Too Many Requests. The user has sent too many requests in a given amount of time."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/acls:
+    get:
+      summary: "Search for ACLs."
+      operationId: "searchAcls"
+      tags:
+        - "v3 ACLs"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+        - in: query
+          name: resource_type
+          schema:
+            $ref: "#/components/schemas/AclResourceType"
+            default: "ANY"
+          description: "The resource type to search for."
+        - in: query
+          name: resource_name
+          schema:
+            type: string
+          description: "The resource name to search for."
+        - in: query
+          name: pattern_type
+          schema:
+            $ref: "#/components/schemas/AclPatternType"
+            default: "ANY"
+          description: "The pattern type to search for."
+        - in: query
+          name: principal
+          schema:
+            type: string
+          description: "The principal to search for."
+        - in: query
+          name: host
+          schema:
+            type: string
+          description: "The host to search for."
+        - in: query
+          name: operation
+          schema:
+            $ref: "#/components/schemas/AclOperation"
+            default: "ANY"
+          description: "The operation to search for."
+        - in: query
+          name: permission
+          schema:
+            $ref: "#/components/schemas/AclPermission"
+            default: "ANY"
+          description: "The permission to search for."
+      responses:
+        '200':
+          description: "OK. The list of matching ACLs."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AclDataList"
+        '400':
+          description: "Bad Request. The request contained invalid parameters."
+        '404':
+          description: "Not Found. The specified cluster does not exist."
+        '500':
+          description: "Internal Server Error."
+
+    post:
+      summary: "Create an ACL."
+      operationId: "createAcl"
+      tags:
+        - "v3 ACLs"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAclRequest"
+      responses:
+        '201':
+          description: "Created. The ACL was created successfully. No response body is returned."
+          headers:
+            Location:
+              description: "The URL where the created ACL can be retrieved."
+              schema:
+                type: string
+                format: uri
+        '400':
+          description: "Bad Request. The request body is invalid."
+        '404':
+          description: "Not Found. The specified cluster does not exist."
+        '500':
+          description: "Internal Server Error."
+          
+    delete:
+      summary: "Delete ACLs by filter."
+      operationId: "deleteAcls"
+      tags:
+        - "v3 ACLs"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+        - in: query
+          name: resource_type
+          schema:
+            $ref: "#/components/schemas/AclResourceType"
+            default: "UNKNOWN"
+          description: "The resource type to delete."
+        - in: query
+          name: resource_name
+          schema:
+            type: string
+          description: "The resource name to delete."
+        - in: query
+          name: pattern_type
+          schema:
+            $ref: "#/components/schemas/AclPatternType"
+            default: "UNKNOWN"
+          description: "The pattern type to delete."
+        - in: query
+          name: principal
+          schema:
+            type: string
+          description: "The principal to delete."
+        - in: query
+          name: host
+          schema:
+            type: string
+          description: "The host to delete."
+        - in: query
+          name: operation
+          schema:
+            $ref: "#/components/schemas/AclOperation"
+            default: "UNKNOWN"
+          description: "The operation to delete."
+        - in: query
+          name: permission
+          schema:
+            $ref: "#/components/schemas/AclPermission"
+            default: "UNKNOWN"
+          description: "The permission to delete."
+      responses:
+        '200':
+          description: "OK. The response contains a list of the ACLs that were deleted."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteAclsResponse"
+        '400':
+          description: "Bad Request. The request contained invalid parameters."
+        '404':
+          description: "Not Found. The specified cluster does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/{config_type}-configs:
+    get:
+      summary: "List Cluster-wide Default Configurations"
+      description: "Retrieves a list of all cluster-wide default configurations for a given configuration type (e.g., broker)."
+      operationId: "listClusterConfigsV3"
+      tags:
+        - "v3 Cluster Configs"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+        - in: path
+          name: config_type
+          required: true
+          schema:
+            $ref: "#/components/schemas/ClusterConfigType"
+          description: "The type of configuration."
+      responses:
+        '200':
+          description: "OK. The configurations were retrieved successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClusterConfigDataList"
+        '404':
+          description: "Not Found. The specified cluster does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/{config_type}-configs/{name}:
+    get:
+      summary: "Get a specific cluster-wide default configuration."
+      operationId: "getClusterConfigV3"
+      tags:
+        - "v3 Cluster Configs"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema: { type: string }
+          description: "The Kafka cluster ID."
+        - in: path
+          name: config_type
+          required: true
+          schema:
+            $ref: "#/components/schemas/ClusterConfigType"
+          description: "The type of configuration."
+        - in: path
+          name: name
+          required: true
+          schema: { type: string }
+          description: "The configuration parameter name."
+      responses:
+        '200':
+          description: "OK. The configuration was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClusterConfigData"
+        '404':
+          description: "Not Found. The specified cluster or configuration does not exist."
+        '500':
+          description: "Internal Server Error."
+    put:
+      summary: "Update a specific cluster-wide default configuration."
+      operationId: "updateClusterConfigV3"
+      tags:
+        - "v3 Cluster Configs"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema: { type: string }
+          description: "The Kafka cluster ID."
+        - in: path
+          name: config_type
+          required: true
+          schema:
+            $ref: "#/components/schemas/ClusterConfigType"
+          description: "The type of configuration."
+        - in: path
+          name: name
+          required: true
+          schema: { type: string }
+          description: "The configuration parameter name."
+      requestBody:
+        description: "The new value for the configuration."
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateClusterConfigRequest"
+      responses:
+        '204':
+          description: "No Content. The configuration was updated successfully."
+        '404':
+          description: "Not Found. The specified cluster does not exist."
+        '500':
+          description: "Internal Server Error."
+    delete:
+      summary: "Reset a specific cluster-wide default configuration to its default value."
+      operationId: "resetClusterConfigV3"
+      tags:
+        - "v3 Cluster Configs"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema: { type: string }
+          description: "The Kafka cluster ID."
+        - in: path
+          name: config_type
+          required: true
+          schema:
+            $ref: "#/components/schemas/ClusterConfigType"
+          description: "The type of configuration."
+        - in: path
+          name: name
+          required: true
+          schema: { type: string }
+          description: "The configuration parameter name."
+      responses:
+        '204':
+          description: "No Content. The configuration was reset successfully."
+        '404':
+          description: "Not Found. The specified cluster does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/{config_type}-configs:alter:
+    post:
+      summary: "Alter cluster-wide default configurations in batch."
+      operationId: "alterClusterConfigBatchV3"
+      tags:
+        - "v3 Cluster Configs"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema: { type: string }
+          description: "The Kafka cluster ID."
+        - in: path
+          name: config_type
+          required: true
+          schema:
+            $ref: "#/components/schemas/ClusterConfigType"
+          description: "The type of configuration."
+      requestBody:
+        description: "A list of alterations to apply to the cluster's default configurations."
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AlterClusterConfigBatchRequest"
+      responses:
+        '204':
+          description: "No Content. The configurations were altered successfully."
+        '400':
+          description: "Bad Request. The request body is invalid."
+        '404':
+          description: "Not Found. The specified cluster does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/brokers:
+    get:
+      summary: "List brokers."
+      operationId: "listBrokersV3"
+      tags:
+        - "v3 Brokers"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+      responses:
+        '200':
+          description: "OK. The list of brokers was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                # The ListBrokersResponse DTO uses @JsonValue, so the response body
+                # is the BrokerDataList object directly.
+                $ref: "#/components/schemas/BrokerDataList"
+        '400':
+          description: "Bad Request. The request was malformed."
+        '401':
+          description: "Unauthorized. The request was not authenticated."
+        '404':
+          description: "Not Found. The specified cluster does not exist."
+        '429':
+          description: "Too Many Requests."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/brokers/{brokerId}:
+    get:
+      summary: "Get a specific broker."
+      operationId: "getBrokerV3"
+      tags:
+        - "v3 Brokers"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+        - in: path
+          name: brokerId
+          required: true
+          schema:
+            type: integer
+            format: int32
+          description: "The broker ID."
+      responses:
+        '200':
+          description: "OK. The broker was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                # The GetBrokerResponse DTO uses @JsonValue, so the response body
+                # is the BrokerData object directly.
+                $ref: "#/components/schemas/BrokerData"
+        '400':
+          description: "Bad Request. The request was malformed."
+        '401':
+          description: "Unauthorized. The request was not authenticated."
+        '404':
+          description: "Not Found. The specified cluster or broker does not exist."
+        '429':
+          description: "Too Many Requests."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/brokers/-/configs:
+    get:
+      summary: "List all dynamic broker configs for all brokers in a cluster."
+      operationId: "listAllBrokersConfigsV3"
+      tags:
+        - "v3 Broker Configs"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+      responses:
+        '200':
+          description: "OK. The list of all dynamic broker configurations was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                # The response is ListBrokerConfigsResponse, which uses @JsonValue on BrokerConfigDataList
+                $ref: "#/components/schemas/BrokerConfigDataList"
+        '404':
+          description: "Not Found. The specified cluster does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/brokers/{brokerId}/configs:
+    get:
+      summary: "List broker configs."
+      operationId: "listBrokerConfigsV3"
+      tags:
+        - "v3 Broker Configs"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+        - in: path
+          name: brokerId
+          required: true
+          schema:
+            type: integer
+            format: int32
+          description: "The broker ID."
+      responses:
+        '200':
+          description: "OK. The list of broker configurations was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerConfigDataList"
+        '400':
+          description: "Bad Request."
+        '401':
+          description: "Unauthorized."
+        '404':
+          description: "Not Found. The specified cluster or broker does not exist."
+        '429':
+          description: "Too Many Requests."
+        '500':
+          description: "Internal Server Error."
+  
+  /v3/clusters/{clusterId}/brokers/{brokerId}/configs/{name}:
+    get:
+      summary: "Get a specific broker config."
+      operationId: "getBrokerConfigV3"
+      tags:
+        - "v3 Broker Configs"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+        - in: path
+          name: brokerId
+          required: true
+          schema:
+            type: integer
+            format: int32
+          description: "The broker ID."
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+          description: "The configuration parameter name."
+      responses:
+        '200':
+          description: "OK. The broker configuration was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BrokerConfigData"
+        '400':
+          description: "Bad Request."
+        '401':
+          description: "Unauthorized."
+        '404':
+          description: "Not Found. The specified cluster, broker, or configuration does not exist."
+        '429':
+          description: "Too Many Requests."
+        '500':
+          description: "Internal Server Error."
+    put:
+      summary: "Update a specific broker config."
+      operationId: "updateBrokerConfigV3"
+      tags:
+        - "v3 Broker Configs"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+        - in: path
+          name: brokerId
+          required: true
+          schema:
+            type: integer
+            format: int32
+          description: "The broker ID."
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+          description: "The configuration parameter name."
+      requestBody:
+        description: "The new value for the configuration parameter. A null value will reset the configuration to its default."
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBrokerConfigRequest"
+      responses:
+        '204':
+          description: "No Content. The configuration was updated successfully."
+        '400':
+          description: "Bad Request."
+        '401':
+          description: "Unauthorized."
+        '404':
+          description: "Not Found. The specified cluster, broker, or configuration does not exist."
+        '429':
+          description: "Too Many Requests."
+        '500':
+          description: "Internal Server Error."
+    delete:
+      summary: "Reset a specific broker config to its default value."
+      operationId: "resetBrokerConfigV3"
+      tags:
+        - "v3 Broker Configs"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+        - in: path
+          name: brokerId
+          required: true
+          schema:
+            type: integer
+            format: int32
+          description: "The broker ID."
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+          description: "The configuration parameter name."
+      responses:
+        '204':
+          description: "No Content. The configuration was reset successfully."
+        '400':
+          description: "Bad Request."
+        '401':
+          description: "Unauthorized."
+        '404':
+          description: "Not Found. The specified cluster, broker, or configuration does not exist."
+        '429':
+          description: "Too Many Requests."
+        '500':
+          description: "Internal Server Error." 
+
+  /v3/clusters/{clusterId}/brokers/{brokerId}/configs:alter:
+    post:
+      summary: "Batch alter configs for a specific broker."
+      operationId: "alterBrokerConfigs"
+      tags:
+        - "v3 Broker Configs"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+        - in: path
+          name: brokerId
+          required: true
+          schema:
+            type: integer
+            format: int32
+          description: "The broker ID."
+      requestBody:
+        description: "A list of alterations to apply to the broker's configuration parameters."
+        required: true
+        content:
+          application/json:
+            schema:
+              # The AlterBrokerConfigBatchRequest DTO uses @JsonValue, so the request body
+              # is the AlterConfigBatchRequestData object directly.
+              $ref: "#/components/schemas/AlterConfigBatchRequestData"
+      responses:
+        '204':
+          description: "No Content. The configurations were altered successfully."
+        '400':
+          description: "Bad Request. The request was malformed or contained invalid parameters."
+        '404':
+          description: "Not Found. The specified cluster or broker does not exist."
+        '500':
+          description: "Internal Server Error."         
+
+  /v3/clusters/{clusterId}/consumer-groups:
+    get:
+      summary: "List consumer groups."
+      operationId: "listConsumerGroupsV3"
+      tags:
+        - "v3 Consumer Groups"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+      responses:
+        '200':
+          description: "OK. The list of consumer groups was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsumerGroupDataList"
+        '404':
+          description: "Not Found. The specified cluster does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/consumer-groups/{consumerGroupId}:
+    get:
+      summary: "Get a specific consumer group."
+      operationId: "getConsumerGroupV3"
+      tags:
+        - "v3 Consumer Groups"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+        - in: path
+          name: consumerGroupId
+          required: true
+          schema:
+            type: string
+          description: "The consumer group ID."
+      responses:
+        '200':
+          description: "OK. The consumer group was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsumerGroupData"
+        '404':
+          description: "Not Found. The specified cluster or consumer group does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/consumer-groups/{consumerGroupId}/consumers:
+    get:
+      summary: "List consumers in a consumer group."
+      operationId: "listConsumersV3"
+      tags:
+        - "v3 Consumers"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+        - in: path
+          name: consumerGroupId
+          required: true
+          schema:
+            type: string
+          description: "The consumer group ID."
+      responses:
+        '200':
+          description: "OK. The list of consumers was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsumerDataList"
+        '404':
+          description: "Not Found. The specified cluster or consumer group does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/consumer-groups/{consumerGroupId}/consumers/{consumerId}:
+    get:
+      summary: "Get a specific consumer in a consumer group."
+      operationId: "getConsumerV3"
+      tags:
+        - "v3 Consumers"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+        - in: path
+          name: consumerGroupId
+          required: true
+          schema:
+            type: string
+          description: "The consumer group ID."
+        - in: path
+          name: consumerId
+          required: true
+          schema:
+            type: string
+          description: "The consumer ID."
+      responses:
+        '200':
+          description: "OK. The consumer was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsumerData"
+        '404':
+          description: "Not Found. The specified cluster, consumer group, or consumer does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/consumer-groups/{consumerGroupId}/lag-summary:
+    get:
+      summary: "Get consumer group lag summary."
+      operationId: "getConsumerGroupLagSummaryV3"
+      tags:
+        - "v3 Consumer Groups"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+        - in: path
+          name: consumerGroupId
+          required: true
+          schema:
+            type: string
+          description: "The consumer group ID."
+      responses:
+        '200':
+          description: "OK. The consumer group lag summary was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                # GetConsumerGroupLagSummaryResponse uses @JsonValue, so the body is
+                # the ConsumerGroupLagSummaryData object directly.
+                $ref: "#/components/schemas/ConsumerGroupLagSummaryData"
+        '404':
+          description: "Not Found. The specified cluster or consumer group does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/consumer-groups/{consumerGroupId}/consumers/{consumerId}/assignments:
+    get:
+      summary: "List consumer assignments."
+      operationId: "listConsumerAssignmentsV3"
+      tags:
+        - "v3 Consumers"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema: { type: string }
+          description: "The Kafka cluster ID."
+        - in: path
+          name: consumerGroupId
+          required: true
+          schema: { type: string }
+          description: "The consumer group ID."
+        - in: path
+          name: consumerId
+          required: true
+          schema: { type: string }
+          description: "The consumer ID."
+      responses:
+        '200':
+          description: "OK. The list of consumer assignments was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                # The ListConsumerAssignmentsResponse DTO uses @JsonValue, so the response body
+                # is the ConsumerAssignmentDataList object directly.
+                $ref: "#/components/schemas/ConsumerAssignmentDataList"
+        '404':
+          description: "Not Found. The specified cluster, consumer group, or consumer does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/consumer-groups/{consumerGroupId}/consumers/{consumerId}/assignments/{topicName}/partitions/{partitionId}:
+    get:
+      summary: "Get a specific consumer assignment."
+      operationId: "getConsumerAssignmentV3"
+      tags:
+        - "v3 Consumers"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema: { type: string }
+          description: "The Kafka cluster ID."
+        - in: path
+          name: consumerGroupId
+          required: true
+          schema: { type: string }
+          description: "The consumer group ID."
+        - in: path
+          name: consumerId
+          required: true
+          schema: { type: string }
+          description: "The consumer ID."
+        - in: path
+          name: topicName
+          required: true
+          schema: { type: string }
+          description: "The topic name."
+        - in: path
+          name: partitionId
+          required: true
+          schema: { type: integer, format: int32 }
+          description: "The partition ID."
+      responses:
+        '200':
+          description: "OK. The consumer assignment was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                # The GetConsumerAssignmentResponse DTO uses @JsonValue, so the response body
+                # is the ConsumerAssignmentData object directly.
+                $ref: "#/components/schemas/ConsumerAssignmentData"
+        '404':
+          description: "Not Found. The specified cluster, consumer group, consumer, or assignment does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/topics:
+    get:
+      summary: "List topics"
+      operationId: "listTopicsV3"
+      tags: ["v3 Topics"]
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema: { type: string }
+        - in: query
+          name: includeAuthorizedOperations
+          schema: { type: boolean, default: false }
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TopicDataList"
+    post:
+      summary: "Create a topic"
+      operationId: "createTopicV3"
+      tags: ["v3 Topics"]
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTopicRequest"
+      responses:
+        '201':
+          description: "Created"
+          headers:
+            Location:
+              schema: { type: string, format: uri }
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TopicData"
+
+  /v3/clusters/{clusterId}/topics/{topicName}:
+    get:
+      summary: "Get a topic"
+      operationId: "getTopicV3"
+      tags: ["v3 Topics"]
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: topicName
+          required: true
+          schema: { type: string }
+        - in: query
+          name: include_authorized_operations
+          schema: { type: boolean, default: false }
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TopicData"
+    delete:
+      summary: "Delete a topic"
+      operationId: "deleteTopicV3"
+      tags: ["v3 Topics"]
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: topicName
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: "No Content"
+
+  /v3/clusters/{clusterId}/topics/{topicName}/configs:
+    get:
+      summary: "List topic configs"
+      operationId: "listTopicConfigsV3"
+      tags: ["v3 Topic Configs"]
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: topicName
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TopicConfigDataList"
+
+  /v3/clusters/{clusterId}/topics/{topicName}/configs:alter:
+    post:
+      summary: "Batch alter topic configs"
+      operationId: "alterTopicConfigBatchV3"
+      tags: ["v3 Topic Configs"]
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: topicName
+          required: true
+          schema: { type: string }
+      requestBody:
+        description: "A list of alterations to apply to the topic's configurations."
+        required: true
+        content:
+          application/json:
+            schema:
+              # The AlterTopicConfigBatchRequest DTO uses @JsonValue, so the request body
+              # is the AlterConfigBatchRequestData object directly.
+              $ref: "#/components/schemas/AlterConfigBatchRequestData"
+      responses:
+        '204':
+          description: "No Content. The configurations were altered successfully."
+        '400':
+          description: "Bad Request."
+        '404':
+          description: "Not Found."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/topics/{topicName}/configs/{name}:
+    get:
+      summary: "Get a topic config"
+      operationId: "getTopicConfigV3"
+      tags: ["v3 Topic Configs"]
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: topicName
+          required: true
+          schema: { type: string }
+        - in: path
+          name: name
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TopicConfigData"
+    put:
+      summary: "Update a topic config"
+      operationId: "updateTopicConfigV3"
+      tags: ["v3 Topic Configs"]
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: topicName
+          required: true
+          schema: { type: string }
+        - in: path
+          name: name
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTopicConfigRequest"
+      responses:
+        '204':
+          description: "No Content"
+    delete:
+      summary: "Reset a topic config"
+      operationId: "resetTopicConfigV3"
+      tags: ["v3 Topic Configs"]
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: topicName
+          required: true
+          schema: { type: string }
+        - in: path
+          name: name
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: "No Content"
+
+  /v3/clusters/{clusterId}/topics/{topicName}/partitions:
+    get:
+      summary: "List partitions for a topic."
+      operationId: "listTopicPartitionsV3"
+      tags:
+        - "v3 Partitions"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+        - in: path
+          name: topicName
+          required: true
+          schema:
+            type: string
+          description: "The topic name."
+      responses:
+        '200':
+          description: "OK. The list of partitions was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                # The ListPartitionsResponse DTO uses @JsonValue, so the response body
+                # is the PartitionDataList object directly.
+                $ref: "#/components/schemas/PartitionDataList"
+        '404':
+          description: "Not Found. The specified cluster or topic does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/topics/{topicName}/partitions/{partitionId}:
+    get:
+      summary: "Get a specific partition."
+      operationId: "getTopicPartitionV3"
+      tags:
+        - "v3 Partitions"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+        - in: path
+          name: topicName
+          required: true
+          schema:
+            type: string
+          description: "The topic name."
+        - in: path
+          name: partitionId
+          required: true
+          schema:
+            type: integer
+            format: int32
+          description: "The partition ID."
+      responses:
+        '200':
+          description: "OK. The partition was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                # The GetPartitionResponse DTO uses @JsonValue, so the response body
+                # is the PartitionData object directly.
+                $ref: "#/components/schemas/PartitionData"
+        '404':
+          description: "Not Found. The specified cluster, topic, or partition does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/topics/-/partitions/-/reassignment:
+    get:
+      summary: "List all partition reassignments in a cluster."
+      operationId: "listAllReassignmentsV3"
+      tags:
+        - "v3 Partition Reassignments"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+      responses:
+        '200':
+          description: "OK. The list of all partition reassignments was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                # The ListAllReassignmentsResponse DTO uses @JsonValue, so the response body
+                # is the ReassignmentDataList object directly.
+                $ref: "#/components/schemas/ReassignmentDataList"
+        '404':
+          description: "Not Found. The specified cluster does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/topics/{topicName}/partitions/-/reassignment:
+    get:
+      summary: "List all partition reassignments for a topic."
+      operationId: "searchReassignmentsByTopicV3"
+      tags:
+        - "v3 Partition Reassignments"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+        - in: path
+          name: topicName
+          required: true
+          schema:
+            type: string
+          description: "The topic name."
+      responses:
+        '200':
+          description: "OK. The list of partition reassignments for the topic was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                # The SearchReassignmentsByTopicResponse DTO uses @JsonValue, so the response body
+                # is the ReassignmentDataList object directly.
+                $ref: "#/components/schemas/ReassignmentDataList"
+        '404':
+          description: "Not Found. The specified cluster or topic does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/topics/{topicName}/partitions/{partitionId}/reassignment:
+    get:
+      summary: "Get a specific partition reassignment."
+      operationId: "getReassignmentV3"
+      tags:
+        - "v3 Partition Reassignments"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+        - in: path
+          name: topicName
+          required: true
+          schema:
+            type: string
+          description: "The topic name."
+        - in: path
+          name: partitionId
+          required: true
+          schema:
+            type: integer
+            format: int32
+          description: "The partition ID."
+      responses:
+        '200':
+          description: "OK. The partition reassignment was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                # The GetReassignmentResponse DTO uses @JsonValue, so the response body
+                # is the ReassignmentData object directly.
+                $ref: "#/components/schemas/ReassignmentData"
+        '404':
+          description: "Not Found. The specified cluster, topic, or partition does not exist, or the partition is not being reassigned."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/topics/{topicName}/partitions/{partitionId}/replicas:
+    get:
+      summary: "List partition replicas."
+      operationId: "listTopicPartitionReplicasV3"
+      tags:
+        - "v3 Replicas"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: topicName
+          required: true
+          schema: { type: string }
+        - in: path
+          name: partitionId
+          required: true
+          schema: { type: integer, format: int32 }
+      responses:
+        '200':
+          description: "OK. The list of replicas for the partition was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplicaDataList"
+        '404':
+          description: "Not Found. The specified cluster, topic, or partition does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/topics/{topicName}/partitions/{partitionId}/replicas/{brokerId}:
+    get:
+      summary: "Get a specific partition replica."
+      operationId: "getTopicPartitionReplicaV3"
+      tags:
+        - "v3 Replicas"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: topicName
+          required: true
+          schema: { type: string }
+        - in: path
+          name: partitionId
+          required: true
+          schema: { type: integer, format: int32 }
+        - in: path
+          name: brokerId
+          required: true
+          schema: { type: integer, format: int32 }
+      responses:
+        '200':
+          description: "OK. The replica was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplicaData"
+        '404':
+          description: "Not Found. The specified cluster, topic, partition, or replica does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/topics/{topicName}/records:
+    post:
+      summary: "Produce record(s) to a topic."
+      operationId: "produceToTopicV3"
+      tags:
+        - "v3 Records"
+      description: |
+        Produce records to the given topic. This API can be used in streaming mode. 
+        For each record sent to the server, the server will asynchronously send back a delivery report.
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema: { type: string }
+        - in: path
+          name: topicName
+          required: true
+          schema: { type: string }
+      requestBody:
+        description: "The record(s) to produce. For streaming, multiple JSON objects are sent concatenated."
+        required: true
+        content:
+          application/json:
+            schema:
+              # In streaming mode, this would be a stream of objects. OpenAPI models this as an array.
+              type: array
+              items:
+                $ref: "#/components/schemas/ProduceRequest"
+      responses:
+        '200':
+          description: "OK. The response is a stream of delivery reports, one for each record produced."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProduceResponse"
+        '404':
+          description: "Not Found. The specified cluster or topic does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/topics/-/configs:
+    get:
+      summary: "List all configs for all topics in a cluster."
+      operationId: "listAllTopicsConfigsV3"
+      tags:
+        - "v3 Cluster Configs"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+      responses:
+        '200':
+          description: "OK. The list of all topic configurations was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                # The response is ListTopicConfigsResponse, which uses @JsonValue on TopicConfigDataList
+                $ref: "#/components/schemas/TopicConfigDataList"
+        '404':
+          description: "Not Found. The specified cluster does not exist."
+        '500':
+          description: "Internal Server Error."
+
+  /v3/clusters/{clusterId}/brokers/{brokerId}/partition-replicas:
+    get:
+      summary: "List Replicas by Broker ID"
+      description: "Retrieves a list of all partition replicas that are located on the specified broker."
+      operationId: "listBrokerReplicasV3"
+      tags:
+        - "v3 Replicas"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+        - in: path
+          name: brokerId
+          required: true
+          schema:
+            type: integer
+            format: int32
+          description: "The broker ID."
+      responses:
+        '200':
+          description: "OK. The list of partition replicas was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplicaDataList"
+              example:
+                kind: "KafkaReplicaList"
+                metadata:
+                  self: "http://localhost:8082/v3/clusters/cluster-1/brokers/1/partition-replicas"
+                data:
+                  - kind: "KafkaReplica"
+                    metadata:
+                      self: "http://localhost:8082/v3/clusters/cluster-1/topics/topic-1/partitions/0/replicas/1"
+                      resource_name: "crn:///kafka=cluster-1/topic=topic-1/partition=0/replica=1"
+                    cluster_id: "cluster-1"
+                    topic_name: "topic-1"
+                    partition_id: 0
+                    broker_id: 1
+                    is_leader: true
+                    is_in_sync: true
+                    broker:
+                      related: "http://localhost:8082/v3/clusters/cluster-1/brokers/1"
+                  - kind: "KafkaReplica"
+                    metadata:
+                      self: "http://localhost:8082/v3/clusters/cluster-1/topics/topic-2/partitions/1/replicas/1"
+                      resource_name: "crn:///kafka=cluster-1/topic=topic-2/partition=1/replica=1"
+                    cluster_id: "cluster-1"
+                    topic_name: "topic-2"
+                    partition_id: 1
+                    broker_id: 1
+                    is_leader: false
+                    is_in_sync: true
+                    broker:
+                      related: "http://localhost:8082/v3/clusters/cluster-1/brokers/1"
+        '404':
+          description: "Not Found. The specified cluster or broker does not exist."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '500':
+          description: "Internal Server Error. An unexpected error occurred on the server."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v3/clusters/{clusterId}/consumer-groups/{consumerGroupId}/lags:
+    get:
+      summary: "List Consumer Group Lags"
+      description: "Retrieves a list of consumer lags for all partitions assigned to consumers in the specified consumer group."
+      operationId: "listConsumerGroupLagsV3"
+      tags:
+        - "v3 Consumer Groups"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+        - in: path
+          name: consumerGroupId
+          required: true
+          schema:
+            type: string
+          description: "The consumer group ID."
+      responses:
+        '200':
+          description: "OK. The list of consumer lags was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsumerLagDataList"
+              example:
+                kind: "KafkaConsumerLagList"
+                metadata:
+                  self: "http://localhost:8082/v3/clusters/cluster-1/consumer-groups/consumer-group-1/lags"
+                data:
+                  - kind: "KafkaConsumerLag"
+                    metadata:
+                      self: "http://localhost:8082/v3/clusters/cluster-1/consumer-groups/consumer-group-1/lags/topic-1/partitions/0"
+                      resource_name: "crn:///kafka=cluster-1/consumer-group=consumer-group-1/lag=topic-1/partition=0"
+                    cluster_id: "cluster-1"
+                    consumer_group_id: "consumer-group-1"
+                    topic_name: "topic-1"
+                    partition_id: 0
+                    consumer_id: "consumer-1"
+                    instance_id: "instance-1"
+                    client_id: "client-1"
+                    current_offset: 50
+                    log_end_offset: 100
+                    lag: 50
+                  - kind: "KafkaConsumerLag"
+                    metadata:
+                      self: "http://localhost:8082/v3/clusters/cluster-1/consumer-groups/consumer-group-1/lags/topic-2/partitions/1"
+                      resource_name: "crn:///kafka=cluster-1/consumer-group=consumer-group-1/lag=topic-2/partition=1"
+                    cluster_id: "cluster-1"
+                    consumer_group_id: "consumer-group-1"
+                    topic_name: "topic-2"
+                    partition_id: 1
+                    consumer_id: "consumer-2"
+                    instance_id: "instance-2"
+                    client_id: "client-2"
+                    current_offset: 100
+                    log_end_offset: 100
+                    lag: 0
+        '404':
+          description: "Not Found. The specified cluster or consumer group does not exist, or the consumer group has no committed offsets."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '500':
+          description: "Internal Server Error. An unexpected error occurred on the server."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v3/clusters/{clusterId}/consumer-groups/{consumerGroupId}/lags/{topicName}/partitions/{partitionId}:
+    get:
+      summary: "Get Consumer Lag for Partition"
+      description: "Retrieves the consumer lag for a specific partition within a consumer group."
+      operationId: "getConsumerGroupLagV3"
+      tags:
+        - "v3 Consumer Groups"
+      parameters:
+        - in: path
+          name: clusterId
+          required: true
+          schema:
+            type: string
+          description: "The Kafka cluster ID."
+        - in: path
+          name: consumerGroupId
+          required: true
+          schema:
+            type: string
+          description: "The consumer group ID."
+        - in: path
+          name: topicName
+          required: true
+          schema:
+            type: string
+          description: "The topic name."
+        - in: path
+          name: partitionId
+          required: true
+          schema:
+            type: integer
+            format: int32
+          description: "The partition ID."
+      responses:
+        '200':
+          description: "OK. The consumer lag for the partition was retrieved successfully."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConsumerLagData"
+              example:
+                kind: "KafkaConsumerLag"
+                metadata:
+                  self: "http://localhost:8082/v3/clusters/cluster-1/consumer-groups/consumer-group-1/lags/topic-1/partitions/0"
+                  resource_name: "crn:///kafka=cluster-1/consumer-group=consumer-group-1/lag=topic-1/partition=0"
+                cluster_id: "cluster-1"
+                consumer_group_id: "consumer-group-1"
+                topic_name: "topic-1"
+                partition_id: 0
+                consumer_id: "consumer-1"
+                instance_id: "instance-1"
+                client_id: "client-1"
+                current_offset: 50
+                log_end_offset: 100
+                lag: 50
+        '404':
+          description: "Not Found. The specified cluster, consumer group, topic, or partition does not exist, or the consumer has no committed offset for this partition."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        '500':
+          description: "Internal Server Error. An unexpected error occurred on the server."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    v2GetTopicResponse:
+      type: object
+      required:
+        - name
+        - configs
+        - partitions
+      properties:
+        name:
+          type: string
+          description: "The topic name."
+        configs:
+          type: object
+          description: "A map of topic configuration settings."
+          additionalProperties:
+            type: string
+        partitions:
+          type: array
+          description: "A list of partitions for this topic."
+          items:
+            $ref: "#/components/schemas/v2GetPartitionResponse"
+
+    v2GetPartitionResponse:
+      type: object
+      required:
+        - partition
+        - leader
+        - replicas
+      properties:
+        partition:
+          type: integer
+          format: int32
+          description: "The partition ID."
+        leader:
+          type: integer
+          format: int32
+          description: "The ID of the broker that is the leader for this partition."
+        replicas:
+          type: array
+          description: "The set of replicas for this partition."
+          items:
+            $ref: "#/components/schemas/v2Replica"
+
+    v2Replica:
+      type: object
+      required:
+        - broker
+        - leader
+        - in_sync
+      properties:
+        broker:
+          type: integer
+          format: int32
+          description: "The ID of the broker hosting the replica."
+        leader:
+          type: boolean
+          description: "True if this replica is the leader for the partition."
+        in_sync:
+          type: boolean
+          description: "True if this replica is in sync with the leader."
+
+    v2BinaryTopicProduceRequest:
+      type: object
+      properties:
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/v2BinaryTopicProduceRecord"
+
+    v2BinaryTopicProduceRecord:
+      type: object
+      properties:
+        key:
+          type: string
+          format: byte
+          nullable: true
+        value:
+          type: string
+          format: byte
+          nullable: true
+        partition:
+          type: integer
+          format: int32
+          nullable: true
+
+    v2JsonTopicProduceRequest:
+      type: object
+      properties:
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/v2JsonTopicProduceRecord"
+
+    v2JsonTopicProduceRecord:
+      type: object
+      properties:
+        key:
+          nullable: true
+          description: "Can be any valid JSON value."
+          example: "user-id-123"
+        value:
+          nullable: true
+          description: "Can be any valid JSON value."
+          example: { "field1": "value1" }
+        partition:
+          type: integer
+          format: int32
+          nullable: true
+
+    v2SchemaTopicProduceRequest:
+      type: object
+      properties:
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/v2SchemaTopicProduceRecord"
+        key_schema:
+          type: string
+          nullable: true
+        key_schema_id:
+          type: integer
+          format: int32
+          nullable: true
+        value_schema:
+          type: string
+          nullable: true
+        value_schema_id:
+          type: integer
+          format: int32
+          nullable: true
+
+    v2SchemaTopicProduceRecord:
+      type: object
+      properties:
+        key:
+          nullable: true
+        value:
+          nullable: true
+        partition:
+          type: integer
+          format: int32
+          nullable: true
+          
+    v2ProduceResponse:
+      type: object
+      properties:
+        offsets:
+          type: array
+          items:
+            $ref: "#/components/schemas/v2PartitionOffset"
+        key_schema_id:
+          type: integer
+          format: int32
+          nullable: true
+        value_schema_id:
+          type: integer
+          format: int32
+          nullable: true
+
+    v2PartitionOffset:
+      type: object
+      properties:
+        partition:
+          type: integer
+          format: int32
+          nullable: true
+        offset:
+          type: integer
+          format: int64
+          nullable: true
+        error_code:
+          type: integer
+          format: int32
+          nullable: true
+        error:
+          type: string
+          nullable: true
+
+    BrokerList:
+      type: object
+      required:
+        - brokers
+      properties:
+        brokers:
+          type: array
+          description: "A list of the broker IDs in the cluster."
+          items:
+            type: integer
+            format: int32
+
+    CreateConsumerInstanceRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: "The name for the consumer instance. This must be unique among all consumer instances in the same group. If omitted, the server will generate a unique name."
+          nullable: true
+        format:
+          type: string
+          description: "The format of the data in the records."
+          # Derived from the EmbeddedFormat enum and the computeFormat method.
+          enum: [ "binary", "json", "avro", "jsonschema", "protobuf" ]
+          default: "binary"
+        auto.offset.reset:
+          type: string
+          description: "What to do when there is no initial offset in Kafka or if the current offset does not exist any more on the server. Common values are 'earliest' and 'latest'."
+          nullable: true
+        auto.commit.enable:
+          type: string
+          description: "If true, the consumer's offset will be periodically committed in the background."
+          nullable: true
+        fetch.min.bytes:
+          type: integer
+          description: "The minimum amount of data the server should return for a fetch request."
+          # Derived from KafkaRestConfig.PROXY_FETCH_MIN_BYTES_VALIDATOR
+          minimum: -1
+          maximum: 10000000
+          nullable: true
+        consumer.request.timeout.ms:
+          type: integer
+          description: "The maximum amount of time the server will block before answering a fetch request if there isn't sufficient data to immediately satisfy 'fetch.min.bytes'."
+          nullable: true
+
+    CreateConsumerInstanceResponse:
+      type: object
+      required:
+        - instance_id
+        - base_uri
+      properties:
+        instance_id:
+          type: string
+          description: "Unique ID for the consumer instance."
+        base_uri:
+          type: string
+          format: uri
+          description: "The base URI for the consumer instance, used for all subsequent requests."
+
+    ConsumerSubscriptionRequest:
+      # A Kafka consumer can subscribe to a list of topics OR a regex pattern, but not both.
+      # The `oneOf` keyword correctly models this mutual exclusivity.
+      oneOf:
+        - type: object
+          required: [ "topics" ]
+          properties:
+            topics:
+              type: array
+              items:
+                type: string
+              example: [ "topic1", "topic2" ]
+        - type: object
+          required: [ "topic_pattern" ]
+          properties:
+            topic_pattern:
+              type: string
+              example: "my-topic-.*"
+
+    ConsumerSubscriptionResponse:
+      type: object
+      properties:
+        topics:
+          type: array
+          items:
+            type: string
+          description: "List of topics the consumer is subscribed to."
+
+    TopicPartition:
+      type: object
+      required:
+        - topic
+        - partition
+      properties:
+        topic:
+          description: "Name of the topic."
+          type: string
+          # Derived from the @NotEmpty annotation.
+          minLength: 1
+        partition:
+          description: "Partition ID."
+          type: integer
+          format: int32
+          # Derived from the @PositiveOrZero annotation.
+          minimum: 0
+    
+    ConsumerAssignmentRequest:
+      type: object
+      properties:
+        partitions:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopicPartition"
+
+    ConsumerAssignmentResponse:
+      type: object
+      properties:
+        partitions:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopicPartition"
+
+    TopicPartitionOffsetMetadata:
+      type: object
+      required:
+        - topic
+        - partition
+        - offset
+      properties:
+        topic:
+          type: string
+          description: "Name of the topic."
+          minLength: 1
+        partition:
+          type: integer
+          format: int32
+          description: "Partition ID."
+          minimum: 0
+        offset:
+          type: integer
+          format: int64
+          description: "The offset to commit."
+          minimum: 0
+        metadata:
+          type: string
+          nullable: true
+          description: "Optional metadata to store with the offset."
+
+    ConsumerOffsetCommitRequest:
+      type: object
+      properties:
+        offsets:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopicPartitionOffsetMetadata"
+
+    # Note: Due to @JsonValue, the response is a direct array, not an object containing an array.
+    CommitOffsetsResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/CommitOffsetItem"
+
+    ConsumerLagDataList:
+      type: object
+      description: "A list of consumer lag resources."
+      allOf:
+        - $ref: "#/components/schemas/ResourceCollection"
+        - type: object
+          required:
+            - data
+          properties:
+            kind:
+              type: string
+              enum: ["KafkaConsumerLagList"]
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/ConsumerLagData"
+
+
+    CommitOffsetItem:
+      type: object
+      required:
+        - topic
+        - partition
+        - consumed
+        - committed
+      properties:
+        topic:
+          type: string
+          minLength: 1
+        partition:
+          type: integer
+          format: int32
+          minimum: 0
+        consumed:
+          type: integer
+          format: int64
+          minimum: 0
+        committed:
+          type: integer
+          format: int64
+          minimum: 0
+
+    ConsumerCommittedRequest:
+      type: object
+      properties:
+        partitions:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopicPartition"
+
+    ConsumerCommittedResponse:
+      type: object
+      properties:
+        offsets:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopicPartitionOffsetMetadata"
+
+    ConsumerLagData:
+      type: object
+      description: "Represents the lag of a consumer on a partition."
+      allOf:
+        - $ref: "#/components/schemas/Resource"
+        - type: object
+          required:
+            - cluster_id
+            - consumer_group_id
+            - topic_name
+            - partition_id
+            - consumer_id
+            - client_id
+            - current_offset
+            - log_end_offset
+            - lag
+          properties:
+            kind:
+              type: string
+              enum: ["KafkaConsumerLag"]
+            cluster_id:
+              type: string
+              description: "The Kafka cluster ID."
+            consumer_group_id:
+              type: string
+              description: "The consumer group ID."
+            topic_name:
+              type: string
+              description: "The topic name."
+            partition_id:
+              type: integer
+              format: int32
+              description: "The partition ID."
+            consumer_id:
+              type: string
+              description: "The ID of the consumer."
+            instance_id:
+              type: string
+              nullable: true
+              description: "The instance ID of the consumer."
+            client_id:
+              type: string
+              description: "The client ID of the consumer."
+            current_offset:
+              type: integer
+              format: int64
+              description: "The last offset committed by the consumer."
+            log_end_offset:
+              type: integer
+              format: int64
+              description: "The latest offset in the partition."
+            lag:
+              type: integer
+              format: int64
+              description: "The number of messages the consumer is behind the end of the log."
+
+    ConsumerSeekToRequest:
+      description: "A list of partitions to apply a seek operation to."
+      type: object
+      properties:
+        partitions:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopicPartition"
+
+    ConsumerSeekRequest:
+      description: "A list of partitions to seek to a specific offset or timestamp."
+      type: object
+      properties:
+        offsets:
+          type: array
+          items:
+            $ref: "#/components/schemas/PartitionOffset"
+        timestamps:
+          type: array
+          items:
+            $ref: "#/components/schemas/PartitionTimestamp"
+
+    PartitionOffset:
+      type: object
+      required:
+        - topic
+        - partition
+        - offset
+      properties:
+        topic:
+          type: string
+        partition:
+          type: integer
+          format: int32
+        offset:
+          type: integer
+          format: int64
+        metadata:
+          type: string
+          nullable: true
+
+    PartitionTimestamp:
+      type: object
+      required:
+        - topic
+        - partition
+        - timestamp
+      properties:
+        topic:
+          type: string
+        partition:
+          type: integer
+          format: int32
+        timestamp:
+          type: string
+          format: date-time
+        metadata:
+          type: string
+          nullable: true
+
+    BaseConsumerRecord:
+      type: object
+      required:
+        - topic
+        - partition
+        - offset
+      properties:
+        topic:
+          type: string
+          description: "The topic the record was consumed from."
+        partition:
+          type: integer
+          format: int32
+          description: "The partition the record was consumed from."
+          minimum: 0
+        offset:
+          type: integer
+          format: int64
+          description: "The offset of the record in the partition."
+          minimum: 0
+    
+    BinaryConsumerRecord:
+      description: "A record consumed from Kafka, with key and value as Base64 encoded binary data."
+      allOf:
+        - $ref: "#/components/schemas/BaseConsumerRecord"
+        - type: object
+          properties:
+            key:
+              type: string
+              format: byte
+              description: "The record's key, Base64 encoded."
+              nullable: true
+            value:
+              type: string
+              format: byte
+              description: "The record's value, Base64 encoded."
+              nullable: true
+
+    JsonConsumerRecord:
+      description: "A record consumed from Kafka, with key and value as any valid JSON."
+      allOf:
+        - $ref: "#/components/schemas/BaseConsumerRecord"
+        - type: object
+          properties:
+            key:
+              description: "The record's key. Can be any valid JSON value."
+              nullable: true
+              # An empty schema `{}` indicates the value can be of any type.
+              # In OpenAPI 3.1, this can also be represented as `true`.
+              schema: {}
+            value:
+              description: "The record's value. Can be any valid JSON value."
+              nullable: true
+              schema: {}
+
+    SchemaConsumerRecord:
+      description: "A record consumed from Kafka, with key and value as schema-encoded data (e.g., Avro, JSON Schema) represented as JSON."
+      allOf:
+        - $ref: "#/components/schemas/BaseConsumerRecord"
+        - type: object
+          properties:
+            key:
+              description: "The record's key, decoded from its schema. Can be any valid JSON value."
+              nullable: true
+              schema: {}
+            value:
+              description: "The record's value, decoded from its schema. Can be any valid JSON value."
+              nullable: true
+              schema: {}
+
+    Replica:
+      type: object
+      required:
+        - broker
+        - leader
+        - in_sync
+      properties:
+        broker:
+          type: integer
+          format: int32
+          description: "The ID of the broker hosting the replica."
+          minimum: 0
+        leader:
+          type: boolean
+          description: "True if this replica is the leader for the partition."
+        in_sync:
+          type: boolean
+          description: "True if this replica is in sync with the leader."
+
+    GetPartitionResponse:
+      type: object
+      required:
+        - partition
+        - leader
+        - replicas
+      properties:
+        partition:
+          type: integer
+          format: int32
+          description: "The partition ID."
+          minimum: 0
+        leader:
+          type: integer
+          format: int32
+          description: "The ID of the broker that is the leader for this partition."
+          minimum: 0
+        replicas:
+          type: array
+          description: "The set of replicas for this partition."
+          items:
+            $ref: "#/components/schemas/Replica"
+
+    GetTopicResponse:
+      type: object
+      required:
+        - name
+        - configs
+        - partitions
+      properties:
+        name:
+          type: string
+          description: "The topic name."
+          minLength: 1
+        configs:
+          type: object
+          description: "A map of topic configuration settings."
+          additionalProperties:
+            type: string
+        partitions:
+          type: array
+          description: "A list of partitions for this topic."
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/GetPartitionResponse"
+
+    TopicPartitionOffsetResponse:
+      type: object
+      properties:
+        beginning_offset:
+          type: integer
+          format: int64
+          description: "The earliest available offset in the partition."
+        end_offset:
+          type: integer
+          format: int64
+          description: "The latest available offset in the partition."
+
+    ErrorResponse: # Placeholder for error responses
+      type: object
+      required:
+        - error_code
+        - message
+      properties:
+        error_code:
+          type: integer
+        message:
+          type: string
+
+    Relationship:
+      type: object
+      required:
+        - related
+      properties:
+        related:
+          type: string
+          format: uri
+          description: "A URL that can be used to retrieve the related resource."
+    
+    Resource:
+      type: object
+      required:
+        - kind
+        - metadata
+      properties:
+        kind:
+          type: string
+          description: "The type of the resource."
+        metadata:
+          $ref: "#/components/schemas/ResourceMetadata"
+
+    ResourceMetadata:
+      type: object
+      required:
+        - self
+      properties:
+        self:
+          type: string
+          format: uri
+          description: "The absolute URL that can be used to retrieve this resource."
+        resource_name:
+          type: string
+          description: "The CRN of the resource."
+          nullable: true
+
+    ResourceCollection:
+      type: object
+      required:
+        - kind
+        - metadata
+      properties:
+        kind:
+          type: string
+          description: "The type of the resource."
+        metadata:
+          $ref: "#/components/schemas/ResourceCollectionMetadata"
+        data:
+          # The 'type' and 'items' for this array are defined by the specific
+          # schema that inherits this component, e.g., AclDataList.
+          type: array
+          description: "A list of resources."
+
+    ResourceCollectionMetadata:
+      type: object
+      required:
+        - self
+      properties:
+        self:
+          type: string
+          format: uri
+          description: "The absolute URL that can be used to retrieve this collection of resources."
+        next:
+          type: string
+          format: uri
+          description: "The absolute URL that can be used to retrieve the next page of this collection of resources."
+          nullable: true
+
+    ClusterData:
+      type: object
+      required:
+        - kind
+        - metadata
+        - cluster_id
+        - acls
+        - brokers
+        - broker_configs
+        - consumer_groups
+        - topics
+        - partition_reassignments
+      properties:
+        kind:
+          type: string
+          enum: ["KafkaCluster"]
+        metadata:
+          $ref: "#/components/schemas/ResourceMetadata"
+        cluster_id:
+          type: string
+          description: "The ID of the cluster."
+        controller:
+          $ref: "#/components/schemas/Relationship"
+          nullable: true
+          description: "The relationship to the broker that is the controller of this cluster."
+        acls:
+          $ref: "#/components/schemas/Relationship"
+          description: "The relationship to the ACLs for this cluster."
+        brokers:
+          $ref: "#/components/schemas/Relationship"
+          description: "The relationship to the brokers in this cluster."
+        broker_configs:
+          $ref: "#/components/schemas/Relationship"
+          description: "The relationship to the broker configs for this cluster."
+        consumer_groups:
+          $ref: "#/components/schemas/Relationship"
+          description: "The relationship to the consumer groups in this cluster."
+        topics:
+          $ref: "#/components/schemas/Relationship"
+          description: "The relationship to the topics in this cluster."
+        partition_reassignments:
+          $ref: "#/components/schemas/Relationship"
+          description: "The relationship to the partition reassignments in this cluster."
+
+    ClusterDataList:
+      type: object
+      required:
+        - kind
+        - metadata
+        - data
+      properties:
+        kind:
+          type: string
+          enum: ["KafkaClusterList"]
+        metadata:
+          $ref: "#/components/schemas/ResourceCollectionMetadata"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClusterData"
+
+    AclResourceType:
+      type: string
+      enum: ["UNKNOWN", "ANY", "TOPIC", "GROUP", "CLUSTER", "TRANSACTIONAL_ID", "DELEGATION_TOKEN"]
+    AclPatternType:
+      type: string
+      enum: ["UNKNOWN", "ANY", "MATCH", "LITERAL", "PREFIXED"]
+    AclOperation:
+      type: string
+      enum: ["UNKNOWN", "ANY", "ALL", "READ", "WRITE", "CREATE", "DELETE", "ALTER", "DESCRIBE", "CLUSTER_ACTION", "DESCRIBE_CONFIGS", "ALTER_CONFIGS", "IDEMPOTENT_WRITE"]
+    AclPermission:
+      type: string
+      enum: ["UNKNOWN", "ANY", "DENY", "ALLOW"]
+      
+    CreateAclRequest:
+      type: object
+      required:
+        - resource_type
+        - resource_name
+        - pattern_type
+        - principal
+        - host
+        - operation
+        - permission
+      properties:
+        resource_type:
+          $ref: "#/components/schemas/AclResourceType"
+        resource_name:
+          type: string
+        pattern_type:
+          $ref: "#/components/schemas/AclPatternType"
+        principal:
+          type: string
+        host:
+          type: string
+        operation:
+          $ref: "#/components/schemas/AclOperation"
+        permission:
+          $ref: "#/components/schemas/AclPermission"
+
+    AclData:
+      allOf:
+        - $ref: "#/components/schemas/Resource"
+        - type: object
+          required:
+            - cluster_id
+            - resource_type
+            - resource_name
+            - pattern_type
+            - principal
+            - host
+            - operation
+            - permission
+          properties:
+            cluster_id:
+              type: string
+            resource_type:
+              $ref: "#/components/schemas/AclResourceType"
+            resource_name:
+              type: string
+            pattern_type:
+              $ref: "#/components/schemas/AclPatternType"
+            principal:
+              type: string
+            host:
+              type: string
+            operation:
+              $ref: "#/components/schemas/AclOperation"
+            permission:
+              $ref: "#/components/schemas/AclPermission"
+
+    AclDataList:
+      allOf:
+        - $ref: "#/components/schemas/ResourceCollection"
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/AclData"
+
+    DeleteAclsResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          description: "A list of the ACLs that were deleted."
+          items:
+            $ref: "#/components/schemas/AclData"
+
+
+    BrokerData:
+      type: object
+      required:
+        - kind
+        - metadata
+        - cluster_id
+        - broker_id
+        - configs
+        - partition_replicas
+      properties:
+        kind:
+          type: string
+          enum: ["KafkaBroker"]
+        metadata:
+          $ref: "#/components/schemas/ResourceMetadata"
+        cluster_id:
+          type: string
+          description: "The cluster ID."
+        broker_id:
+          type: integer
+          format: int32
+          description: "The broker ID."
+        host:
+          type: string
+          nullable: true
+          description: "The broker's hostname."
+        port:
+          type: integer
+          format: int32
+          nullable: true
+          description: "The broker's port."
+        rack:
+          type: string
+          nullable: true
+          description: "The rack of the broker."
+        configs:
+          $ref: "#/components/schemas/Relationship"
+          description: "The relationship to the broker's configs."
+        partition_replicas:
+          $ref: "#/components/schemas/Relationship"
+          description: "The relationship to the partitions hosted on this broker."
+
+    BrokerDataList:
+      type: object
+      required:
+        - kind
+        - metadata
+        - data
+      properties:
+        kind:
+          type: string
+          enum: ["KafkaBrokerList"]
+        metadata:
+          $ref: "#/components/schemas/ResourceCollectionMetadata"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/BrokerData"
+
+    ConfigSource:
+      type: string
+      enum: ["DYNAMIC_CLUSTER_LINK_CONFIG", "DYNAMIC_TOPIC_CONFIG", "DYNAMIC_BROKER_LOGGER_CONFIG", "DYNAMIC_BROKER_CONFIG", "DYNAMIC_DEFAULT_BROKER_CONFIG", "STATIC_BROKER_CONFIG", "DEFAULT_CONFIG", "UNKNOWN"]
+
+    ConfigSynonymData:
+      type: object
+      required:
+        - name
+        - source
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+          nullable: true
+        source:
+          $ref: "#/components/schemas/ConfigSource"
+
+    AbstractConfigData:
+      type: object
+      required:
+        - kind
+        - metadata
+        - cluster_id
+        - name
+        - is_default
+        - is_read_only
+        - is_sensitive
+        - source
+        - synonyms
+      properties:
+        kind:
+          type: string
+        metadata:
+          $ref: "#/components/schemas/ResourceMetadata"
+        cluster_id:
+          type: string
+        name:
+          type: string
+        value:
+          type: string
+          nullable: true
+        is_default:
+          type: boolean
+        is_read_only:
+          type: boolean
+        is_sensitive:
+          type: boolean
+        source:
+          $ref: "#/components/schemas/ConfigSource"
+        synonyms:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConfigSynonymData"
+
+    BrokerConfigData:
+      allOf:
+        - $ref: "#/components/schemas/AbstractConfigData"
+        - type: object
+          required:
+            - broker_id
+          properties:
+            kind:
+              type: string
+              enum: ["KafkaBrokerConfig"]
+            broker_id:
+              type: integer
+              format: int32
+    
+    BrokerConfigDataList:
+      allOf:
+        - $ref: "#/components/schemas/ResourceCollection"
+        - type: object
+          required:
+            - data
+          properties:
+            kind:
+              type: string
+              enum: ["KafkaBrokerConfigList"]
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/BrokerConfigData"
+
+    UpdateBrokerConfigRequest:
+      type: object
+      properties:
+        value:
+          type: string
+          nullable: true
+
+    AlterOperation:
+      type: string
+      enum: [ "SET", "DELETE" ]
+
+    AlterEntry:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: "The name of the configuration parameter."
+        value:
+          type: string
+          nullable: true
+          description: "The new value for the configuration parameter. Required for SET operations."
+        operation:
+          $ref: "#/components/schemas/AlterOperation"
+          default: "SET"
+
+    AlterConfigBatchRequestData:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AlterEntry"
+
+    ClusterConfigType:
+      type: string
+      description: "The type of cluster-wide configuration."
+      enum:
+        - BROKER
+            
+    ClusterConfigData:
+      allOf:
+        - $ref: "#/components/schemas/AbstractConfigData"
+        - type: object
+          required:
+            - config_type
+          properties:
+            kind:
+              type: string
+              enum: ["KafkaClusterConfig"]
+            config_type:
+              $ref: "#/components/schemas/ClusterConfigType"
+
+    ClusterConfigDataList:
+      allOf:
+        - $ref: "#/components/schemas/ResourceCollection"
+        - type: object
+          required:
+            - data
+          properties:
+            kind:
+              type: string
+              enum: ["KafkaClusterConfigList"]
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/ClusterConfigData"
+
+    UpdateClusterConfigRequest:
+      type: object
+      properties:
+        value:
+          type: string
+          nullable: true
+          description: "The new value for the configuration parameter. A `null` value will reset the configuration to its default."
+
+    AlterClusterConfigBatchRequest:
+      type: object
+      description: "A batch of alterations for cluster-wide configurations."
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AlterEntry"
+
+    ConsumerGroupState:
+      type: string
+      enum: [ "UNKNOWN", "PREPARING_REBALANCE", "COMPLETING_REBALANCE", "STABLE", "DEAD", "EMPTY" ]
+      
+    ConsumerGroupData:
+      allOf:
+        - $ref: "#/components/schemas/Resource"
+        - type: object
+          required:
+            - cluster_id
+            - consumer_group_id
+            - is_simple
+            - partition_assignor
+            - state
+            - coordinator
+            - consumers
+            - lag_summary
+          properties:
+            cluster_id:
+              type: string
+            consumer_group_id:
+              type: string
+            is_simple:
+              type: boolean
+            partition_assignor:
+              type: string
+            state:
+              $ref: "#/components/schemas/ConsumerGroupState"
+            coordinator:
+              $ref: "#/components/schemas/Relationship"
+            consumers:
+              $ref: "#/components/schemas/Relationship"
+            lag_summary:
+              $ref: "#/components/schemas/Relationship"
+    
+    ConsumerGroupDataList:
+      allOf:
+        - $ref: "#/components/schemas/ResourceCollection"
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/ConsumerGroupData"
+                
+    ConsumerData:
+      allOf:
+        - $ref: "#/components/schemas/Resource"
+        - type: object
+          required:
+            - cluster_id
+            - consumer_group_id
+            - consumer_id
+            - client_id
+            - assignments
+          properties:
+            cluster_id:
+              type: string
+            consumer_group_id:
+              type: string
+            consumer_id:
+              type: string
+            instance_id:
+              type: string
+              nullable: true
+            client_id:
+              type: string
+            assignments:
+              $ref: "#/components/schemas/Relationship"
+
+    ConsumerDataList:
+      allOf:
+        - $ref: "#/components/schemas/ResourceCollection"
+        - type: object
+          required:
+            - data
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/ConsumerData"
+
+    ConsumerGroupLagSummaryData:
+      allOf:
+        - $ref: "#/components/schemas/Resource"
+        - type: object
+          required:
+            - cluster_id
+            - consumer_group_id
+            - max_lag
+            - total_lag
+            - max_lag_consumer_id
+            - max_lag_consumer
+            - max_lag_client_id
+            - max_lag_topic_name
+            - max_lag_partition_id
+            - max_lag_partition
+          properties:
+            cluster_id:
+              type: string
+            consumer_group_id:
+              type: string
+            max_lag:
+              type: integer
+              format: int64
+              description: "The maximum lag across all partitions assigned to this consumer group."
+            total_lag:
+              type: integer
+              format: int64
+              description: "The sum of lags across all partitions assigned to this consumer group."
+            max_lag_consumer_id:
+              type: string
+              description: "The ID of the consumer with the highest lag."
+            max_lag_consumer:
+              $ref: "#/components/schemas/Relationship"
+              description: "A relationship to the consumer with the highest lag."
+            max_lag_client_id:
+              type: string
+              description: "The client ID of the consumer with the highest lag."
+            max_lag_instance_id:
+              type: string
+              nullable: true
+              description: "The instance ID of the consumer with the highest lag."
+            max_lag_topic_name:
+              type: string
+              description: "The topic name for the partition with the highest lag."
+            max_lag_partition_id:
+              type: integer
+              format: int32
+              description: "The partition number with the highest lag."
+            max_lag_partition:
+              $ref: "#/components/schemas/Relationship"
+              description: "A relationship to the partition with the highest lag."
+
+    ConsumerAssignmentData:
+      allOf:
+        - $ref: "#/components/schemas/Resource"
+        - type: object
+          required:
+            - cluster_id
+            - consumer_group_id
+            - consumer_id
+            - topic_name
+            - partition_id
+            - partition
+            - lag
+          properties:
+            kind:
+              type: string
+              enum: ["KafkaConsumerAssignment"]
+            cluster_id:
+              type: string
+            consumer_group_id:
+              type: string
+            consumer_id:
+              type: string
+            topic_name:
+              type: string
+            partition_id:
+              type: integer
+              format: int32
+            partition:
+              $ref: "#/components/schemas/Relationship"
+              description: "A relationship to the assigned partition."
+            lag:
+              $ref: "#/components/schemas/Relationship"
+              description: "A relationship to the consumer lag for this partition."
+
+    ConsumerAssignmentDataList:
+      allOf:
+        - $ref: "#/components/schemas/ResourceCollection"
+        - type: object
+          required:
+            - data
+          properties:
+            kind:
+              type: string
+              enum: ["KafkaConsumerAssignmentList"]
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/ConsumerAssignmentData"
+
+    CreateTopicRequest:
+      type: object
+      required: ["topic_name"]
+      properties:
+        topic_name:
+          type: string
+        partitions_count:
+          type: integer
+          format: int32
+          nullable: true
+        replication_factor:
+          type: integer
+          format: int32 # OpenAPI uses int32 for short
+          nullable: true
+        replicas_assignments:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: integer
+              format: int32
+        configs:
+          type: array
+          items:
+            type: object
+            required: ["name"]
+            properties:
+              name:
+                type: string
+              value:
+                type: string
+                nullable: true
+
+    TopicData:
+      allOf:
+        - $ref: "#/components/schemas/Resource"
+        - type: object
+          required:
+            - cluster_id
+            - topic_name
+            - is_internal
+            - replication_factor
+            - partitions_count
+            - partitions
+            - configs
+            - partition_reassignments
+            - authorized_operations
+          properties:
+            cluster_id: { type: string }
+            topic_name: { type: string }
+            is_internal: { type: boolean }
+            replication_factor: { type: integer, format: int32 }
+            partitions_count: { type: integer, format: int32 }
+            partitions: { $ref: "#/components/schemas/Relationship" }
+            configs: { $ref: "#/components/schemas/Relationship" }
+            partition_reassignments: { $ref: "#/components/schemas/Relationship" }
+            authorized_operations:
+              type: array
+              items:
+                $ref: "#/components/schemas/AclOperation"
+
+    TopicDataList:
+      allOf:
+        - $ref: "#/components/schemas/ResourceCollection"
+        - type: object
+          required: ["data"]
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/TopicData"
+
+    UpdateTopicConfigRequest:
+      type: object
+      properties:
+        value:
+          type: string
+          nullable: true
+
+    TopicConfigData:
+      allOf:
+        - $ref: "#/components/schemas/AbstractConfigData"
+        - type: object
+          required: ["topic_name"]
+          properties:
+            topic_name:
+              type: string
+
+    TopicConfigDataList:
+      allOf:
+        - $ref: "#/components/schemas/ResourceCollection"
+        - type: object
+          required: ["data"]
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/TopicConfigData"
+
+    ReassignmentData:
+      allOf:
+        - $ref: "#/components/schemas/Resource"
+        - type: object
+          required:
+            - cluster_id
+            - topic_name
+            - partition_id
+            - adding_replicas
+            - removing_replicas
+            - replicas
+          properties:
+            kind:
+              type: string
+              enum: ["KafkaReassignment"]
+            cluster_id:
+              type: string
+            topic_name:
+              type: string
+            partition_id:
+              type: integer
+              format: int32
+            adding_replicas:
+              type: array
+              items:
+                type: integer
+                format: int32
+              description: "The list of brokers that are being added to the partition's replica set."
+            removing_replicas:
+              type: array
+              items:
+                type: integer
+                format: int32
+              description: "The list of brokers that are being removed from the partition's replica set."
+            replicas:
+              $ref: "#/components/schemas/Relationship"
+              description: "A relationship to the partition replicas."
+
+    ReassignmentDataList:
+      allOf:
+        - $ref: "#/components/schemas/ResourceCollection"
+        - type: object
+          required:
+            - data
+          properties:
+            kind:
+              type: string
+              enum: ["KafkaReassignmentList"]
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/ReassignmentData"
+
+    PartitionData:
+      allOf:
+        - $ref: "#/components/schemas/Resource"
+        - type: object
+          required:
+            - cluster_id
+            - topic_name
+            - partition_id
+            - replicas
+            - reassignment
+          properties:
+            kind:
+              type: string
+              enum: ["KafkaPartition"]
+            cluster_id:
+              type: string
+            topic_name:
+              type: string
+            partition_id:
+              type: integer
+              format: int32
+            leader:
+              $ref: "#/components/schemas/Relationship"
+              nullable: true
+              description: "A relationship to the broker that is the leader for this partition."
+            replicas:
+              $ref: "#/components/schemas/Relationship"
+              description: "A relationship to the list of brokers that are replicas for this partition."
+            reassignment:
+              $ref: "#/components/schemas/Relationship"
+              description: "A relationship to the ongoing partition reassignment."
+
+    PartitionDataList:
+      allOf:
+        - $ref: "#/components/schemas/ResourceCollection"
+        - type: object
+          required:
+            - data
+          properties:
+            kind:
+              type: string
+              enum: ["KafkaPartitionList"]
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/PartitionData"
+
+    ReplicaData:
+      type: object
+      description: "Represents a replica of a partition."
+      allOf:
+        - $ref: "#/components/schemas/Resource"
+        - type: object
+          required:
+            - cluster_id
+            - topic_name
+            - partition_id
+            - broker_id
+            - is_leader
+            - is_in_sync
+            - broker
+          properties:
+            kind:
+              type: string
+              enum: ["KafkaReplica"]
+            cluster_id:
+              type: string
+              description: "The Kafka cluster ID."
+            topic_name:
+              type: string
+              description: "The topic name."
+            partition_id:
+              type: integer
+              format: int32
+              description: "The partition ID."
+            broker_id:
+              type: integer
+              format: int32
+              description: "The ID of the broker hosting this replica."
+            is_leader:
+              type: boolean
+              description: "True if this replica is the leader for the partition."
+            is_in_sync:
+              type: boolean
+              description: "True if this replica is in sync with the leader."
+            broker:
+              $ref: "#/components/schemas/ResourceRelationship"
+              description: "A relationship to the broker that hosts this replica."
+
+    ResourceRelationship:
+      type: object
+      required:
+        - related
+      properties:
+        related:
+          type: string
+          format: uri
+          description: "A URL that can be used to retrieve the related resource."
+
+    ReplicaDataList:
+      type: object
+      description: "A list of partition replica resources."
+      allOf:
+        - $ref: "#/components/schemas/ResourceCollection"
+        - type: object
+          required:
+            - data
+          properties:
+            kind:
+              type: string
+              enum: ["KafkaReplicaList"]
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/ReplicaData"
+
+    ProduceRequestHeader:
+      type: object
+      required: ["name"]
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+          format: byte
+          nullable: true
+    
+    EnumSubjectNameStrategy:
+      type: string
+      enum: ["TOPIC_NAME", "RECORD_NAME", "TOPIC_RECORD_NAME"]
+
+    ProduceRequestData:
+      type: object
+      description: |
+        Represents the key or value of a record to be produced.
+        Constraint: Only one of 'subject_name_strategy' or 'subject' can be used.
+        Constraint: Only one of 'schema_id', 'schema_version' or 'schema' can be used.
+      properties:
+        type:
+          $ref: "#/components/schemas/EmbeddedFormat" # We defined this enum in an earlier step
+        subject:
+          type: string
+          nullable: true
+        subject_name_strategy:
+          $ref: "#/components/schemas/EnumSubjectNameStrategy"
+          nullable: true
+        schema_id:
+          type: integer
+          format: int32
+          nullable: true
+        schema_version:
+          type: integer
+          format: int32
+          nullable: true
+        schema:
+          type: string
+          nullable: true
+        data:
+          description: "The record data, which can be any valid JSON."
+          schema: {}
+
+    ProduceRequest:
+      type: object
+      properties:
+        partition_id:
+          type: integer
+          format: int32
+          nullable: true
+        headers:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProduceRequestHeader"
+        key:
+          $ref: "#/components/schemas/ProduceRequestData"
+          nullable: true
+        value:
+          $ref: "#/components/schemas/ProduceRequestData"
+          nullable: true
+        timestamp:
+          type: string
+          format: date-time
+          nullable: true
+          
+    ProduceResponseData:
+      type: object
+      required: ["size"]
+      properties:
+        type:
+          $ref: "#/components/schemas/EmbeddedFormat"
+          nullable: true
+        subject:
+          type: string
+          nullable: true
+        schema_id:
+          type: integer
+          format: int32
+          nullable: true
+        schema_version:
+          type: integer
+          format: int32
+          nullable: true
+        size:
+          type: integer
+          format: int32
+
+    Error:
+      type: object
+      required:
+        - error_code
+        - message
+      properties:
+        error_code:
+          type: integer
+          description: "The error code."
+        message:
+          type: string
+          description: "The error message."
+
+    v2BinaryPartitionProduceRequest:
+      type: object
+      properties:
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/v2BinaryPartitionProduceRecord"
+
+    v2BinaryPartitionProduceRecord:
+      type: object
+      properties:
+        key:
+          type: string
+          format: byte
+          nullable: true
+          description: "The record's key, as a Base64-encoded string."
+        value:
+          type: string
+          format: byte
+          nullable: true
+          description: "The record's value, as a Base64-encoded string."
+
+    v2JsonPartitionProduceRequest:
+      type: object
+      properties:
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/v2JsonPartitionProduceRecord"
+
+    v2JsonPartitionProduceRecord:
+      type: object
+      properties:
+        key:
+          nullable: true
+          description: "The record's key, which can be any valid JSON value."
+        value:
+          nullable: true
+          description: "The record's value, which can be any valid JSON value."
+
+    v2SchemaPartitionProduceRequest:
+      type: object
+      properties:
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/v2SchemaPartitionProduceRecord"
+        key_schema:
+          type: string
+          nullable: true
+          description: "The Avro, JSON, or Protobuf schema for the record key, as a string."
+        key_schema_id:
+          type: integer
+          format: int32
+          nullable: true
+          description: "The ID of a schema in the Schema Registry to use for the record key."
+        value_schema:
+          type: string
+          nullable: true
+          description: "The Avro, JSON, or Protobuf schema for the record value, as a string."
+        value_schema_id:
+          type: integer
+          format: int32
+          nullable: true
+          description: "The ID of a schema in the Schema Registry to use for the record value."
+    
+    v2SchemaPartitionProduceRecord:
+      type: object
+      properties:
+        key:
+          nullable: true
+          description: "The record's key, as a JSON object that matches the key schema."
+        value:
+          nullable: true
+          description: "The record's value, as a JSON object that matches the value schema."
+          
+    ProduceResponse:
+      type: object
+      required: ["error_code", "cluster_id", "topic_name", "partition_id", "offset"]
+      properties:
+        error_code:
+          type: integer
+          format: int32
+        cluster_id:
+          type: string
+        topic_name:
+          type: string
+        partition_id:
+          type: integer
+          format: int32
+        offset:
+          type: integer
+          format: int64
+        timestamp:
+          type: string
+          format: date-time
+          nullable: true
+        key:
+          $ref: "#/components/schemas/ProduceResponseData"
+          nullable: true
+        value:
+          $ref: "#/components/schemas/ProduceResponseData"
+          nullable: true

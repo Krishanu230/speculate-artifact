@@ -1,0 +1,2090 @@
+paths:
+  /organizations/{orgId}:
+    get:
+      tags:
+        - Installation
+      summary: Get a specific organization
+      description: Get the details of a specific organization by its ID.
+      operationId: getOrganizationById
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An organization
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationEntity'
+  /organizations/{orgId}/environments:
+    get:
+      tags:
+        - Installation
+      summary: List all environments of a specific organization
+      description: List all environments available to the authenticated user within a specific organization.
+      operationId: getEnvironments
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A collection of environments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnvironmentEntity'
+  /environments/{envId}:
+    get:
+      tags:
+        - Installation
+      summary: Get a specific environment
+      description: Get the details of a specific environment by its ID.
+      operationId: getEnvironmentById
+      parameters:
+        - name: envId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An environment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentEntity'
+  /environments/{envId}/apis:
+    post:
+      tags:
+        - APIs
+      summary: Create an API
+      description: Create a new v4 API for the specified environment.
+      operationId: createApi
+      parameters:
+        - name: envId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewApiEntityV4'
+        required: true
+      responses:
+        '201':
+          description: API successfully created
+          headers:
+            Location:
+              description: The location of the newly created API.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEntityV4'
+  /apis/{apiId}:
+    get:
+      tags: [APIs]
+      summary: Get a specific API
+      description: Get the details of a specific API by its ID.
+      operationId: getApiById
+      parameters:
+        - name: apiId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: API found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEntityV4'
+    put:
+      tags: [APIs]
+      summary: Update an API
+      description: Update an existing API.
+      operationId: updateApi
+      parameters:
+        - name: apiId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateApiEntityV4'
+        required: true
+      responses:
+        '200':
+          description: API successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEntityV4'
+    delete:
+      tags: [APIs]
+      summary: Delete an API
+      description: Delete an API and optionally close all its associated plans.
+      operationId: deleteApi
+      parameters:
+        - name: apiId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: closePlans
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '204':
+          description: API successfully deleted
+  /apis/{apiId}/deployments:
+    post:
+      tags: [APIs]
+      summary: Request a deployment to gateway instances
+      description: Deploy the last configuration of an API to the gateways.
+      operationId: createAPIDeployment
+      parameters:
+        - name: apiId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiDeploymentEntity'
+        required: true
+      responses:
+        '200':
+          description: API deployment successfully requested
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiEntityV4'
+  /apis/{apiId}/_start:
+    post:
+      tags: [APIs]
+      summary: Start an API
+      description: Start an API.
+      operationId: startApi
+      parameters:
+        - name: apiId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: API successfully started
+  /apis/{apiId}/_stop:
+    post:
+      tags: [APIs]
+      summary: Stop an API
+      description: Stop an API.
+      operationId: stopApi
+      parameters:
+        - name: apiId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: API successfully stopped
+  /apis/{apiId}/plans:
+    get:
+      tags: [API Plans]
+      summary: Get the API's plans
+      description: Get all the plans for a specific API.
+      operationId: getApiPlans
+      parameters:
+        - name: apiId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: A comma-separated list of plan statuses to filter on.
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/PlanStatus'
+            default: [PUBLISHED]
+        - name: security
+          in: query
+          description: A comma-separated list of plan security types to filter on.
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/PlanSecurityType'
+      responses:
+        '200':
+          description: The list of API plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlanEntityV4'
+    post:
+      tags: [API Plans]
+      summary: Create an API plan
+      description: Create a new plan for an API.
+      operationId: createApiPlan
+      parameters:
+        - name: apiId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewPlanEntityV4'
+        required: true
+      responses:
+        '201':
+          description: Plan successfully created
+          headers:
+            Location:
+              description: The location of the newly created plan.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanEntityV4'
+  /apis/{apiId}/plans/{plan}:
+    get:
+      tags: [API Plans]
+      summary: Get an API plan
+      description: Get a specific plan of an API.
+      operationId: getApiPlan
+      parameters:
+        - name: apiId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: plan
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: An API plan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanEntityV4'
+    put:
+      tags: [API Plans]
+      summary: Update an API plan
+      description: Update a specific plan of an API.
+      operationId: updateApiPlan
+      parameters:
+        - name: apiId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: plan
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePlanEntityV4'
+        required: true
+      responses:
+        '200':
+          description: Updated API plan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanEntityV4'
+    delete:
+      tags: [API Plans]
+      summary: Delete an API plan
+      description: Delete a specific plan of an API.
+      operationId: deleteApiPlan
+      parameters:
+        - name: apiId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: plan
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: API plan successfully deleted
+  /apis/{apiId}/plans/{plan}/_close:
+    post:
+      tags: [API Plans]
+      summary: Close an API plan
+      description: Close a specific plan of an API.
+      operationId: closeApiPlan
+      parameters:
+        - name: apiId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: plan
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Closed API plan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanEntityV4'
+  /apis/{apiId}/plans/{plan}/_publish:
+    post:
+      tags: [API Plans]
+      summary: Publish an API plan
+      description: Publish a specific plan of an API.
+      operationId: publishApiPlan
+      parameters:
+        - name: apiId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: plan
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Published API plan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanEntityV4'
+  /apis/{apiId}/plans/{plan}/_deprecate:
+    post:
+      tags: [API Plans]
+      summary: Deprecate an API plan
+      description: Deprecate a specific plan of an API.
+      operationId: deprecateApiPlan
+      parameters:
+        - name: apiId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: plan
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deprecated API plan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanEntityV4'
+  /endpoints:
+    get:
+      tags: [Endpoints]
+      summary: Get available endpoints on the platform
+      description: Get all available endpoint plugins on the platform.
+      operationId: getEndpoints
+      responses:
+        '200':
+          description: A set of endpoint plugins
+          content:
+            application/json:
+              schema:
+                type: array
+                uniqueItems: true
+                items:
+                  $ref: '#/components/schemas/ConnectorPluginEntity'
+  /endpoints/{endpointId}:
+    get:
+      tags: [Endpoints]
+      summary: Get an endpoint
+      description: Get a specific endpoint plugin by its ID.
+      operationId: getEndpoint
+      parameters:
+        - name: endpointId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Endpoint plugin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorPluginEntity'
+  /endpoints/{endpointId}/schema:
+    get:
+      tags: [Endpoints]
+      summary: Get an endpoint schema
+      description: Get the JSON schema of an endpoint plugin's configuration.
+      operationId: getEndpointSchema
+      parameters:
+        - name: endpointId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Endpoint schema
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /endpoints/{endpointId}/documentation:
+    get:
+      tags: [Endpoints]
+      summary: Get an endpoint documentation
+      description: Get the documentation of an endpoint plugin.
+      operationId: getEndpointDocumentation
+      parameters:
+        - name: endpointId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Endpoint documentation
+          content:
+            text/plain:
+              schema:
+                type: string
+  /entrypoints:
+    get:
+      tags: [Entrypoints]
+      summary: Get available entrypoints on the platform
+      description: Get all available entrypoint plugins on the platform.
+      operationId: getEntrypoints
+      responses:
+        '200':
+          description: A set of entrypoint plugins
+          content:
+            application/json:
+              schema:
+                type: array
+                uniqueItems: true
+                items:
+                  $ref: '#/components/schemas/ConnectorPluginEntity'
+  /entrypoints/{entrypointId}:
+    get:
+      tags: [Entrypoints]
+      summary: Get an entrypoint
+      description: Get a specific entrypoint plugin by its ID.
+      operationId: getEntrypoint
+      parameters:
+        - name: entrypointId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Entrypoint plugin
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectorPluginEntity'
+  /entrypoints/{entrypointId}/schema:
+    get:
+      tags: [Entrypoints]
+      summary: Get an entrypoint schema
+      description: Get the JSON schema of an entrypoint plugin's configuration.
+      operationId: getEntrypointSchema
+      parameters:
+        - name: entrypointId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Entrypoint schema
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /entrypoints/{entrypointId}/subscriptionSchema:
+    get:
+      tags: [Entrypoints]
+      summary: Get an entrypoint subscription schema
+      description: Get the JSON schema of an entrypoint plugin's subscription configuration.
+      operationId: getEntrypointSubscriptionSchema
+      parameters:
+        - name: entrypointId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Entrypoint subscription schema
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+  /entrypoints/{entrypointId}/documentation:
+    get:
+      tags: [Entrypoints]
+      summary: Get an entrypoint documentation
+      description: Get the documentation of an entrypoint plugin.
+      operationId: getEntrypointDocumentation
+      parameters:
+        - name: entrypointId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Entrypoint documentation
+          content:
+            text/plain:
+              schema:
+                type: string
+  /openapi.yaml:
+    get:
+      tags: [OpenAPI]
+      summary: Get the OpenAPI specification
+      description: Get the OpenAPI specification for this API in YAML format.
+      operationId: getOpenApiSpecification
+      responses:
+        '200':
+          description: OpenAPI specification in YAML format
+          content:
+            application/yaml:
+              schema:
+                type: string
+components:
+  schemas:
+    ConnectorFeature:
+      type: string
+      enum:
+        - limit
+        - resume
+        - dlq
+    PlatformPluginEntity:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The plugin identifier
+        name:
+          type: string
+          description: The plugin name
+        description:
+          type: string
+          description: The plugin description
+        category:
+          type: string
+          description: The plugin category
+        version:
+          type: string
+          description: The plugin version
+    ConnectorPluginEntity:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/PlatformPluginEntity'
+      properties:
+        supportedApiType:
+          $ref: '#/components/schemas/ApiType'
+        supportedModes:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/ConnectorMode'
+        supportedQos:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/Qos'
+        availableFeatures:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/ConnectorFeature'
+        supportedListenerType:
+          $ref: '#/components/schemas/ListenerType'
+    UpdateApiEntityV4:
+      type: object
+      required:
+        - name
+        - apiVersion
+        - definitionVersion
+        - type
+        - description
+        - listeners
+        - endpointGroups
+        - analytics
+        - visibility
+      properties:
+        id:
+          type: string
+        crossId:
+          type: string
+        name:
+          type: string
+          minLength: 1
+        apiVersion:
+          type: string
+        definitionVersion:
+          type: string
+          enum: [V4]
+        type:
+          $ref: '#/components/schemas/ApiType'
+        description:
+          type: string
+        tags:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        listeners:
+          type: array
+          items:
+            $ref: '#/components/schemas/Listener'
+        endpointGroups:
+          type: array
+          items:
+            $ref: '#/components/schemas/EndpointGroup'
+        analytics:
+          $ref: '#/components/schemas/Analytics'
+        properties:
+          type: array
+          items:
+            $ref: '#/components/schemas/PropertyEntityV4'
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResourceV4'
+        plans:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/PlanEntityV4'
+        flowMode:
+          $ref: '#/components/schemas/FlowMode'
+        flows:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowV4'
+        responseTemplates:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              $ref: '#/components/schemas/ResponseTemplate'
+        services:
+          $ref: '#/components/schemas/ApiServicesV4'
+        groups:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        visibility:
+          $ref: '#/components/schemas/Visibility'
+        picture:
+          type: string
+        pictureUrl:
+          type: string
+        categories:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        labels:
+          type: array
+          items:
+            type: string
+        metadata:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiMetadataEntity'
+        lifecycleState:
+          $ref: '#/components/schemas/ApiLifecycleState'
+        disableMembershipNotifications:
+          type: boolean
+        background:
+          type: string
+        backgroundUrl:
+          type: string
+    ApiDeploymentEntity:
+      type: object
+      properties:
+        deploymentLabel:
+          type: string
+          maxLength: 32
+    ReferenceMetadataEntity:
+      type: object
+      properties:
+        key:
+          type: string
+          minLength: 1
+        name:
+          type: string
+        format:
+          $ref: '#/components/schemas/MetadataFormat'
+        value:
+          type: string
+          minLength: 1
+        defaultValue:
+          type: string
+      required:
+        - key
+        - value
+    ApiMetadataEntity:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/ReferenceMetadataEntity'
+      properties:
+        apiId:
+          type: string
+    PropertyEntityV4:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/PropertyV4'
+      properties:
+        encryptable:
+          type: boolean
+          default: false
+    MetadataFormat:
+      type: string
+      enum:
+        - STRING
+        - NUMERIC
+        - BOOLEAN
+        - DATE
+        - MAIL
+        - URL
+    Policy:
+      type: object
+      properties:
+        name:
+          type: string
+        configuration:
+          type: object
+          additionalProperties: true
+          description: The configuration of the policy.
+    Rule:
+      type: object
+      description: A rule to apply a policy. Extends a map of strings to objects to support policy-specific configurations.
+      additionalProperties: true
+      properties:
+        methods:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/HttpMethod'
+        description:
+          type: string
+        enabled:
+          type: boolean
+          default: true
+    PlanEntityV4:
+      type: object
+      properties:
+        id:
+          type: string
+        crossId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        publishedAt:
+          type: string
+          format: date-time
+        closedAt:
+          type: string
+          format: date-time
+        validation:
+          $ref: '#/components/schemas/PlanValidationType'
+        type:
+          $ref: '#/components/schemas/PlanType'
+        security:
+          $ref: '#/components/schemas/PlanSecurity'
+        selectionRule:
+          type: string
+        flows:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowV4'
+        tags:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        status:
+          $ref: '#/components/schemas/PlanStatus'
+        apiId:
+          type: string
+        order:
+          type: integer
+          format: int32
+        characteristics:
+          type: array
+          items:
+            type: string
+        excludedGroups:
+          type: array
+          items:
+            type: string
+        commentRequired:
+          type: boolean
+        commentMessage:
+          type: string
+        generalConditions:
+          type: string
+    ApiEntityV4:
+      type: object
+      properties:
+        id:
+          type: string
+        crossId:
+          type: string
+        name:
+          type: string
+        apiVersion:
+          type: string
+        definitionVersion:
+          type: string
+          enum: [V4]
+        type:
+          $ref: '#/components/schemas/ApiType'
+        deployedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        description:
+          type: string
+        tags:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        listeners:
+          type: array
+          items:
+            $ref: '#/components/schemas/Listener'
+        endpointGroups:
+          type: array
+          items:
+            $ref: '#/components/schemas/EndpointGroup'
+        analytics:
+          $ref: '#/components/schemas/Analytics'
+        properties:
+          type: array
+          items:
+            $ref: '#/components/schemas/PropertyV4'
+        resources:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResourceV4'
+        plans:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/PlanEntityV4'
+        flowMode:
+          $ref: '#/components/schemas/FlowMode'
+        flows:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowV4'
+        responseTemplates:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              $ref: '#/components/schemas/ResponseTemplate'
+        services:
+          $ref: '#/components/schemas/ApiServicesV4'
+        groups:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        visibility:
+          $ref: '#/components/schemas/Visibility'
+        state:
+          type: string
+          enum: [INITIALIZED, STARTED, STOPPED] # Based on io.gravitee.common.component.Lifecycle.State
+        primaryOwner:
+          $ref: '#/components/schemas/PrimaryOwnerEntity'
+        picture:
+          type: string
+        pictureUrl:
+          type: string
+        categories:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        labels:
+          type: array
+          items:
+            type: string
+        definitionContext:
+          $ref: '#/components/schemas/DefinitionContext'
+        lifecycleState:
+          $ref: '#/components/schemas/ApiLifecycleState'
+        workflowState:
+          $ref: '#/components/schemas/WorkflowState'
+        disableMembershipNotifications:
+          type: boolean
+        background:
+          type: string
+        backgroundUrl:
+          type: string
+    NewApiEntityV4:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        apiVersion:
+          type: string
+        definitionVersion:
+          type: string
+          enum: [V4]
+          default: V4
+        type:
+          $ref: '#/components/schemas/ApiType'
+        description:
+          type: string
+        tags:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        listeners:
+          type: array
+          items:
+            $ref: '#/components/schemas/Listener'
+        endpointGroups:
+          type: array
+          items:
+            $ref: '#/components/schemas/EndpointGroup'
+        analytics:
+          $ref: '#/components/schemas/Analytics'
+        flowMode:
+          $ref: '#/components/schemas/FlowMode'
+        flows:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowV4'
+        groups:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+      required:
+        - name
+        - apiVersion
+        - definitionVersion
+        - type
+        - description
+        - listeners
+        - endpointGroups
+    UserEntity:
+      type: object
+      properties:
+        id:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        password:
+          type: string
+          writeOnly: true
+        email:
+          type: string
+        roles:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserRoleEntity'
+        envRoles:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/UserRoleEntity'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        picture:
+          type: string
+        source:
+          type: string
+        sourceId:
+          type: string
+        lastConnectionAt:
+          type: string
+          format: date-time
+          readOnly: true
+        firstConnectionAt:
+          type: string
+          format: date-time
+          readOnly: true
+        primary_owner:
+          type: boolean
+        status:
+          type: string
+        loginCount:
+          type: integer
+          format: int64
+        number_of_active_tokens:
+          type: integer
+          format: int32
+        newsletterSubscribed:
+          type: boolean
+          nullable: true
+        customFields:
+          type: object
+          additionalProperties: true
+        displayName:
+          type: string
+          readOnly: true
+          description: A readonly field which is a concatenation of the firstname and lastname, or the email, or the sourceId.
+    GroupEntity:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        event_rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroupEventRuleEntity'
+        manageable:
+          type: boolean
+        roles:
+          type: object
+          additionalProperties:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        max_invitation:
+          type: integer
+          format: int32
+        lock_api_role:
+          type: boolean
+        lock_application_role:
+          type: boolean
+        system_invitation:
+          type: boolean
+        email_invitation:
+          type: boolean
+        disable_membership_notifications:
+          type: boolean
+        apiPrimaryOwner:
+          type: string
+        primary_owner:
+          type: boolean
+    PrimaryOwnerEntity:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The user or group id.
+          example: 005197cc-cc84-86a6-a75a-88f9772c67db
+        email:
+          type: string
+          description: The user or group email.
+          example: contact@gravitee.io
+        displayName:
+          type: string
+          description: The user or group display name.
+          example: John Doe
+        type:
+          type: string
+          description: The primary owner type
+          example: USER
+    RoleScope:
+      type: string
+      enum:
+        - API
+        - APPLICATION
+        - GROUP
+        - ENVIRONMENT
+        - ORGANIZATION
+        - PLATFORM
+    UserRoleEntity:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        scope:
+          $ref: '#/components/schemas/RoleScope'
+        permissions:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+              # In Java this is char[], but string array is the closest representation
+              # for permissions like ['C', 'R', 'U', 'D'].
+    GroupEventRuleEntity:
+      type: object
+      properties:
+        event:
+          type: string
+    ResponseTemplate:
+      type: object
+      properties:
+        status:
+          type: integer
+          format: int32
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+        body:
+          type: string
+    PropertyV4:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+        encrypted:
+          type: boolean
+        dynamic:
+          type: boolean
+      required:
+        - key
+        - value
+    ResourceV4:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        configuration:
+          type: object
+          additionalProperties: true
+          description: The configuration for the resource.
+        enabled:
+          type: boolean
+          default: true
+      required:
+        - name
+        - type
+    DefinitionContext:
+      type: object
+      description: The context where the API definition was created.
+      properties:
+        origin:
+          type: string
+          description: The origin of the API.
+          enum: [management, kubernetes]
+          default: management
+        mode:
+          type: string
+          description: The mode of the API.
+          enum: [fully_managed, api_definition_only]
+          default: fully_managed
+    Visibility:
+      type: string
+      description: The visibility of the API regarding the portal.
+      enum:
+        - PUBLIC
+        - PRIVATE
+    WorkflowState:
+      type: string
+      description: The status of the API regarding the review feature.
+      enum:
+        - DRAFT
+        - IN_REVIEW
+        - REQUEST_FOR_CHANGES
+        - REVIEW_OK
+    ApiLifecycleState:
+      type: string
+      description: The lifecycle state of the API.
+      enum:
+        - CREATED
+        - PUBLISHED
+        - UNPUBLISHED
+        - DEPRECATED
+        - ARCHIVED
+    ServiceV4:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          default: true
+        type:
+          type: string
+        configuration:
+          type: object
+          additionalProperties: true
+          description: The configuration of the service.
+      required:
+        - type
+    ApiServicesV4:
+      type: object
+      properties:
+        dynamicProperty:
+          $ref: '#/components/schemas/ServiceV4'
+    StepV4:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        enabled:
+          type: boolean
+          default: true
+        policy:
+          type: string
+        configuration:
+          type: object
+          additionalProperties: true
+          description: The configuration of the policy.
+        condition:
+          type: string
+        messageCondition:
+          type: string
+      required:
+        - name
+        - policy
+    FlowV4:
+      type: object
+      properties:
+        name:
+          type: string
+        enabled:
+          type: boolean
+          default: true
+        selectors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Selector'
+        request:
+          type: array
+          items:
+            $ref: '#/components/schemas/StepV4'
+        response:
+          type: array
+          items:
+            $ref: '#/components/schemas/StepV4'
+        subscribe:
+          type: array
+          items:
+            $ref: '#/components/schemas/StepV4'
+        publish:
+          type: array
+          items:
+            $ref: '#/components/schemas/StepV4'
+        tags:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+    Analytics:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          default: true
+        messageSampling:
+          $ref: '#/components/schemas/Sampling'
+        logging:
+          $ref: '#/components/schemas/Logging'
+    HttpSelector:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Selector'
+      properties:
+        path:
+          type: string
+          default: /
+        pathOperator:
+          $ref: '#/components/schemas/Operator'
+        methods:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/HttpMethod'
+      required:
+        - path
+        - pathOperator
+    ChannelSelector:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Selector'
+      properties:
+        operations:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            enum:
+              - subscribe
+              - publish
+        channel:
+          type: string
+          default: /
+        channelOperator:
+          $ref: '#/components/schemas/Operator'
+        entrypoints:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+      required:
+        - channel
+        - channelOperator
+    ConditionSelector:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Selector'
+      properties:
+        condition:
+          type: string
+      required:
+        - condition
+    Selector:
+      type: object
+      discriminator:
+        propertyName: type
+        mapping:
+          http: '#/components/schemas/HttpSelector'
+          channel: '#/components/schemas/ChannelSelector'
+          condition: '#/components/schemas/ConditionSelector'
+      properties:
+        type:
+          $ref: '#/components/schemas/SelectorType'
+      required:
+        - type
+    Sampling:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/SamplingType'
+        value:
+          type: string
+      required:
+        - type
+        - value
+    LoggingContent:
+      type: object
+      properties:
+        headers:
+          type: boolean
+        messageHeaders:
+          type: boolean
+        payload:
+          type: boolean
+        messagePayload:
+          type: boolean
+        messageMetadata:
+          type: boolean
+    Logging:
+      type: object
+      properties:
+        mode:
+          type: object
+          properties:
+            entrypoint:
+              type: boolean
+            endpoint:
+              type: boolean
+        phase:
+          type: object
+          properties:
+            request:
+              type: boolean
+            response:
+              type: boolean
+        content:
+          $ref: '#/components/schemas/LoggingContent'
+        condition:
+          type: string
+        messageCondition:
+          type: string
+    Endpoint:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        secondary:
+          type: boolean
+        weight:
+          type: integer
+          format: int32
+          default: 1
+        inheritConfiguration:
+          type: boolean
+        configuration:
+          type: object
+          additionalProperties: true
+          description: The configuration of the endpoint.
+        services:
+          $ref: '#/components/schemas/EndpointServices'
+      required:
+        - name
+        - type
+    EndpointGroupServices:
+      type: object
+      properties:
+        discovery:
+          $ref: '#/components/schemas/Service'
+        healthCheck:
+          $ref: '#/components/schemas/Service'
+    EndpointGroup:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        loadBalancer:
+          $ref: '#/components/schemas/LoadBalancer'
+        sharedConfiguration:
+          type: object
+          additionalProperties: true
+          description: The shared configuration of the endpoint group.
+        endpoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Endpoint'
+        services:
+          $ref: '#/components/schemas/EndpointGroupServices'
+      required:
+        - name
+        - type
+    LoadBalancer:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/LoadBalancerType'
+    Service:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          default: true
+        type:
+          type: string
+        configuration:
+          type: object
+          additionalProperties: true
+          description: The configuration of the service.
+      required:
+        - type
+    EndpointServices:
+      type: object
+      properties:
+        healthCheck:
+          $ref: '#/components/schemas/Service'
+    SubscriptionListener:
+      type: object
+      description: A listener which subscribes to messages from an endpoint.
+      allOf:
+        - $ref: '#/components/schemas/Listener'
+    TcpListener:
+      type: object
+      description: A listener which accepts TCP connections.
+      allOf:
+        - $ref: '#/components/schemas/Listener'
+    Listener:
+      type: object
+      description: Describes how the gateway will receive requests.
+      discriminator:
+        propertyName: type
+        mapping:
+          http: '#/components/schemas/HttpListener'
+          subscription: '#/components/schemas/SubscriptionListener'
+          tcp: '#/components/schemas/TcpListener'
+      properties:
+        type:
+          $ref: '#/components/schemas/ListenerType'
+        entrypoints:
+          type: array
+          items:
+            $ref: '#/components/schemas/Entrypoint'
+      required:
+        - type
+        - entrypoints
+    Dlq:
+      type: object
+      properties:
+        endpoint:
+          type: string
+    Entrypoint:
+      type: object
+      properties:
+        type:
+          type: string
+        qos:
+          $ref: '#/components/schemas/Qos'
+        dlq:
+          $ref: '#/components/schemas/Dlq'
+        configuration:
+          type: object
+          additionalProperties: true
+          description: The configuration of the entrypoint.
+      required:
+        - type
+    HttpListener:
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/Listener'
+      properties:
+        paths:
+          type: array
+          items:
+            $ref: '#/components/schemas/Path'
+        pathMappings:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        cors:
+          $ref: '#/components/schemas/Cors'
+      required:
+        - paths
+    Cors:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        allowOrigin:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        exposeHeaders:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        maxAge:
+          type: integer
+          format: int32
+          default: -1
+        allowCredentials:
+          type: boolean
+        allowMethods:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        allowHeaders:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+        runPolicies:
+          type: boolean
+          description: "This property is not serialized if it is false (the default)."
+    Path:
+      type: object
+      properties:
+        host:
+          type: string
+        path:
+          type: string
+          default: /
+        overrideAccess:
+          type: boolean
+          description: "This property is not serialized if it is false (the default)."
+      required:
+        - path
+    Qos:
+      type: string
+      description: Quality of Service
+      enum:
+        - none
+        - auto
+        - at-most-once
+        - at-least-once
+    EnvironmentEntity:
+      type: object
+      properties:
+        id:
+          type: string
+        cockpitId:
+          type: string
+        hrids:
+          type: array
+          items:
+            type: string
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        organizationId:
+          type: string
+        domainRestrictions:
+          type: array
+          items:
+            type: string
+      required:
+        - name
+        - organizationId
+    ApiType:
+      type: string
+      description: API's type
+      enum:
+        - sync
+        - async
+    ListenerType:
+      type: string
+      description: Type of the listener
+      enum:
+        - http
+        - subscription
+        - tcp
+    LoadBalancerType:
+      type: string
+      description: Load balancer type.
+      enum:
+        - round-robin
+        - random
+        - weighted-round-robin
+        - weighted-random
+    FlowMode:
+      type: string
+      description: The flow mode.
+      enum:
+        - DEFAULT
+        - BEST_MATCH
+      default: DEFAULT
+    Operator:
+      type: string
+      description: The operator to apply on the path.
+      enum:
+        - STARTS_WITH
+        - EQUALS
+      default: STARTS_WITH
+    ConsumerType:
+      type: string
+      description: The type of consumer.
+      enum:
+        - TAG
+    HttpMethod:
+      type: string
+      description: An HTTP verb.
+      enum:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - PATCH
+        - OPTIONS
+        - HEAD
+        - TRACE
+    Step:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the step.
+        policy:
+          type: string
+          description: The policy associated with the step.
+        description:
+          type: string
+          description: A description of the step.
+        configuration:
+          type: object
+          additionalProperties: true
+          description: The configuration of the policy.
+        enabled:
+          type: boolean
+          default: true
+        condition:
+          type: string
+          description: The condition to execute the step.
+    PathOperator:
+      type: object
+      properties:
+        path:
+          type: string
+          default: ""
+        operator:
+          $ref: '#/components/schemas/Operator'
+    Consumer:
+      type: object
+      properties:
+        consumerType:
+          $ref: '#/components/schemas/ConsumerType'
+        consumerId:
+          type: string
+    Flow:
+      type: object
+      properties:
+        name:
+          type: string
+        path-operator:
+          $ref: '#/components/schemas/PathOperator'
+        pre:
+          type: array
+          items:
+            $ref: '#/components/schemas/Step'
+        post:
+          type: array
+          items:
+            $ref: '#/components/schemas/Step'
+        enabled:
+          type: boolean
+          default: true
+        methods:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/HttpMethod'
+        condition:
+          type: string
+        consumers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Consumer'
+    OrganizationEntity:
+      type: object
+      properties:
+        id:
+          type: string
+        cockpitId:
+          type: string
+        hrids:
+          type: array
+          items:
+            type: string
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        domainRestrictions:
+          type: array
+          items:
+            type: string
+        flowMode:
+          $ref: '#/components/schemas/FlowMode'
+        flows:
+          type: array
+          items:
+            $ref: '#/components/schemas/Flow'
+      required:
+        - name
+    EnvironmentEntity:
+      type: object
+      properties:
+        id:
+          type: string
+        cockpitId:
+          type: string
+        hrids:
+          type: array
+          items:
+            type: string
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        organizationId:
+          type: string
+        domainRestrictions:
+          type: array
+          items:
+            type: string
+      required:
+        - name
+        - organizationId
+
+    PlanStatus:
+      type: string
+      enum:
+      - STAGING
+      - PUBLISHED
+      - CLOSED
+      - DEPRECATED
+      properties: {}
+    PlanStatusV4:
+      type: string
+      enum:
+      - staging
+      - published
+      - deprecated
+      - closed
+      properties: {}
+
+    PlanValidationType:
+      type: string
+      enum:
+      - AUTO
+      - MANUAL
+      properties: {}
+    PlanValidationTypeV4:
+      type: string
+      enum:
+      - auto
+      - manual
+      properties: {}
+    PlanTypeV4:
+      type: string
+      enum:
+      - api
+      - catalog
+      properties: {}
+    
+
+    PlanSecurityType:
+      type: string
+      enum:
+      - KEY_LESS
+      - API_KEY
+      - OAUTH2
+      - JWT
+      - SUBSCRIPTION
+      properties: {}
+    
+    PlanSecurity:
+      type: object
+      properties:
+        type:
+          type: string
+        configuration:
+          type: object
+          additionalProperties:
+            type: object
+      required:
+      - type
+
+    SamplingType:
+      type: string
+      enum:
+      - probability
+      - temporal
+      - count
+      properties: {}
+    SamplingV4:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/SamplingType'
+        value:
+          type: string
+          minLength: 1
+      required:
+      - type
+      - value
+    
+    Selector:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/SelectorTypeV4'
+      required:
+      - type
+      discriminator:
+        propertyName: type
+        mapping:
+          http: '#/components/schemas/HttpSelector'
+          channel: '#/components/schemas/ChannelSelector'
+          condition: '#/components/schemas/ConditionSelector'
+    SelectorTypeV4:
+      type: string
+      enum:
+      - HTTP
+      - CHANNEL
+      - CONDITION
+      properties: {}
+
+    ConnectorMode:
+      type: string
+      enum:
+      - subscribe
+      - publish
+      - request_response
+      properties: {}
+    
+    UpdatePlanEntityV4:
+      type: object
+      properties:
+        id:
+          type: string
+        crossId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        validation:
+          $ref: '#/components/schemas/PlanValidationTypeV4'
+        characteristics:
+          type: array
+          items:
+            type: string
+        order:
+          type: integer
+          format: int32
+        excludedGroups:
+          type: array
+          items:
+            type: string
+        security:
+          $ref: '#/components/schemas/PlanSecurity'
+        commentRequired:
+          type: boolean
+        commentMessage:
+          type: string
+        generalConditions:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        selectionRule:
+          type: string
+        flows:
+          type: array
+          items:
+            $ref: '#/components/schemas/Flow'
+      required:
+      - name
+      - description
+      - validation
+      - order
+      - commentRequired
+    
+    PlanType:
+      type: string
+      enum:
+      - API
+      - CATALOG
+      properties: {}
+    
+    NewPlanEntityV4:
+      type: object
+      properties:
+        id:
+          type: string
+        crossId:
+          type: string
+        apiId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        validation:
+          $ref: '#/components/schemas/PlanValidationTypeV4'
+        security:
+          $ref: '#/components/schemas/PlanSecurity'
+        type:
+          $ref: '#/components/schemas/PlanTypeV4'
+        status:
+          $ref: '#/components/schemas/PlanStatusV4'
+        flows:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowV4'
+        characteristics:
+          type: array
+          items:
+            type: string
+        excludedGroups:
+          type: array
+          items:
+            type: string
+        commentRequired:
+          type: boolean
+        commentMessage:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+          uniqueItems: true
+        selectionRule:
+          type: string
+        generalConditions:
+          type: string
+        order:
+          type: integer
+          format: int32
+      required:
+      - name
+      - description
+      - flows
+    
+    
+    

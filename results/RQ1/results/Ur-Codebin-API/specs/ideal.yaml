@@ -1,0 +1,339 @@
+openapi: 3.0.3
+info:
+  title: Ur-Codebin API
+  description: API for creating and sharing code pastes.
+  version: 1.0.0
+paths:
+  /api/paste:
+    post:
+      tags:
+        - Paste
+      summary: Create a new code paste
+      description: Uploads and creates a new code paste.
+      operationId: create-new-paste
+      requestBody:
+        description: The details of the paste to be created.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadPasteRequestBody'
+      responses:
+        '200':
+          description: Paste Created Successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodePasteDTO'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/paste/public:
+    get:
+      tags:
+        - Paste
+      summary: Search for public code pastes
+      description: Retrieves a list of public pastes with optional filtering.
+      operationId: search-public-pastes
+      parameters:
+        - name: paste_title
+          in: query
+          description: The title to search for within public pastes.
+          schema:
+            type: string
+            default: ''
+        - name: paste_syntax
+          in: query
+          description: The syntax highlighting to filter by.
+          schema:
+            type: string
+            enum: [NONE, JAVA, CSHARP, Python, JAVASCRIPT, GO, CLANG, CPLUSPLUS, PHP, SWIFT, LUA, RUBY, MYSQL, POSTGRESQL]
+        - name: limit
+          in: query
+          description: The maximum number of pastes to return.
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 20
+            default: 5
+      responses:
+        '200':
+          description: A list of public pastes matching the criteria.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CodePasteDTO'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/paste/{paste_id}:
+    get:
+      tags:
+        - Paste
+      summary: Get a specific code paste by ID
+      description: Retrieves a single code paste by its ID.
+      operationId: get-paste-by-id
+      parameters:
+        - name: paste_id
+          in: path
+          description: The UUID of the paste.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful retrieval of the paste.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CodePasteDTO'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - Paste
+      summary: Delete a specific code paste by ID
+      description: Deletes a single code paste by its ID.
+      operationId: delete-paste-by-id
+      parameters:
+        - name: paste_id
+          in: path
+          description: The UUID of the paste.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: No Content. The paste was successfully deleted.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/account/login:
+    post:
+      tags:
+        - Account
+      summary: Login to user account
+      description: >
+        Authenticates a user with a username and password. On success, returns
+        an empty body with a JWT in the 'Authorization' response header.
+      operationId: login-account
+      requestBody:
+        description: The user's credentials for authentication.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginDTO'
+      responses:
+        '200':
+          description: >-
+            Login Successful. The response body is empty. A JWT is returned in
+            the Authorization header.
+          headers:
+            Authorization:
+              description: >-
+                The JWT Bearer token for authenticating subsequent requests.
+              schema:
+                type: string
+                example: "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ..."
+          content: {} # Explicitly defining an empty response body content
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/account/signup:
+    post:
+      tags:
+        - Account
+      summary: Register a new user account
+      description: Creates a new user account. Username and email must be unique.
+      operationId: signup-new-account
+      requestBody:
+        description: The details required for the new user account.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequestBody'
+      responses:
+        '200':
+          description: Account Created Successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAccountDTO'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/account/{account_id}:
+    get:
+      tags:
+        - Account
+      summary: Get user account by ID
+      description: Retrieves public information about a user account.
+      operationId: get-account-by-id
+      parameters:
+        - name: account_id
+          in: path
+          description: The numerical ID of the user account to retrieve.
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful retrieval of account details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserAccountDTO'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  schemas:
+    UploadPasteRequestBody:
+      type: object
+      description: Request body for creating a new paste.
+      properties:
+        paste_title:
+          type: string
+          description: Title for the paste.
+          minLength: 1
+          maxLength: 50
+          default: "Untitled Paste"
+        source_code:
+          type: string
+          description: The source code to be pasted.
+          minLength: 1
+        paste_syntax:
+          type: string
+          default: NONE
+          enum: [NONE, JAVA, CSHARP, Python, JAVASCRIPT, GO, CLANG, CPLUSPLUS, PHP, SWIFT, LUA, RUBY, MYSQL, POSTGRESQL]
+        paste_visibility:
+          type: string
+          default: PRIVATE
+          enum: [PUBLIC, PRIVATE]
+        paste_expiration:
+          type: string
+          default: ONEHOUR
+          enum: [TENMINUTES, THIRTYMINUTES, ONEHOUR, FIVEHOURS, ONEDAY, THREEDAYS, FIVEDAYS, ONEWEEK]
+      required:
+        - source_code
+    CodePasteDTO:
+      type: object
+      description: The response object representing a created paste.
+      properties:
+        paste_id:
+          type: string
+          format: uuid
+        source_code:
+          type: string
+        paste_title:
+          type: string
+        paste_syntax:
+          type: string
+          enum: [NONE, JAVA, CSHARP, Python, JAVASCRIPT, GO, CLANG, CPLUSPLUS, PHP, SWIFT, LUA, RUBY, MYSQL, POSTGRESQL]
+        paste_expiration_date:
+          type: string
+          format: date-time
+          example: '2025-08-05 19:23:45'
+        paste_visibility:
+          type: string
+          enum: [PUBLIC, PRIVATE]
+    LoginDTO:
+      type: object
+      description: Request body for authenticating a user.
+      properties:
+        username:
+          type: string
+          example: "testuser"
+        password:
+          type: string
+          format: password
+          example: "password123"
+      required:
+        - username
+        - password
+    SignupRequestBody:
+      type: object
+      description: Request body for creating a new user account.
+      properties:
+        account_username:
+          type: string
+          minLength: 1
+        account_email:
+          type: string
+          format: email
+          minLength: 1
+        account_password:
+          type: string
+          format: password
+          minLength: 1
+      required:
+        - account_username
+        - account_email
+        - account_password
+    UserAccountDTO:
+      type: object
+      description: The response object representing a user's public information.
+      properties:
+        account_id:
+          type: integer
+          format: int64
+        account_username:
+          type: string
+        account_email:
+          type: string
+          format: email
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: '2025-08-05 19:23:45'
+        status:
+          type: integer
+          example: 404
+        error:
+          type: string
+          example: Not Found
+        message:
+          type: string
+          example: "No CodePaste has been found with the given id."
+  responses:
+    BadRequest:
+      description: The request was invalid (e.g., bad parameter, invalid JSON).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: The requested resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Unauthorized. Invalid username or password provided.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Conflict:
+      description: The provided username or email is already in use.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
