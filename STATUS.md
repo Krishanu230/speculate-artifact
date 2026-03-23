@@ -1,6 +1,6 @@
 # Status
 
-We are applying for the **Functional** and **Reusable** badges.
+We are applying for the **Available**, **Functional**, and **Reusable** badges.
 
 ## Functional
 
@@ -34,3 +34,11 @@ The artifact supports reuse beyond the paper's evaluation:
 - The `.env.example` template documents how to add new Azure deployments
   or providers
 - Source code is included and inspectable within the Docker image
+
+## Available
+
+The artifact is publicly accessible on archival and container registries:
+
+- **Zenodo**: https://doi.org/10.5281/zenodo.19185245
+- **Docker Hub**: `krishannu/speculate-artifact:latest`
+- **GitHub**: https://github.com/Krishanu230/speculate-artifact
