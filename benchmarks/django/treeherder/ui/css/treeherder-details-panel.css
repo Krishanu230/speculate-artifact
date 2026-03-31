@@ -1,0 +1,445 @@
+strong {
+  font-weight: bold;
+}
+
+#details-panel {
+  font-size: 12px;
+  height: 100%;
+}
+
+.details-panel-slide {
+  animation: details-panel-slide 0.4s;
+  height: 100%;
+}
+
+@keyframes details-panel-slide {
+  0% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(0%);
+  }
+}
+
+div#details-panel-content .navbar,
+div#tabs-panel .tab-headers {
+  border-radius: 0;
+  height: 33px;
+  width: 100%;
+  margin: 0;
+  font-size: 12px;
+  min-height: 33px;
+  min-width: initial;
+  z-index: 100;
+  background-color: #252c33;
+  border: 1px solid transparent;
+  color: #ced3d9;
+  justify-content: space-between;
+}
+
+#tab-header-buttons > span > svg {
+  margin-left: 5px;
+}
+
+div#details-panel-content .actionbar-nav > li > a.disabled,
+div#details-panel-content .actionbar-nav > li > button.disabled,
+ul.actionbar-menu > li > .disabled {
+  cursor: not-allowed;
+  text-decoration: none;
+}
+
+div#details-panel-content .details-panel-navbar > ul.tab-headers > li {
+  border-right: 1px solid #42484f;
+}
+
+.details-panel-navbar {
+  background-color: #252c33;
+  border: 1px solid transparent;
+  color: #ced3d9;
+  display: flex;
+  flex-direction: row;
+  z-index: 100;
+  height: 33px;
+}
+
+.details-panel-navbar li {
+  align-self: center;
+}
+
+.tab-header-tabs {
+  flex-direction: row;
+  display: flex;
+}
+
+.tab-header-tabs > li {
+  padding: 1px 12px;
+  line-height: 30px;
+  cursor: pointer;
+  color: #9fa3a5;
+}
+
+#details-panel-content ul.tab-headers {
+  list-style: none;
+  flex-direction: row;
+  min-width: 550px;
+  display: flex;
+  padding-left: 0;
+  font-size: 12px;
+}
+
+.details-panel-close-btn {
+  padding-top: 3px;
+  font-size: 12px;
+  color: unset; /* reset from bootstrap button class */
+}
+
+.details-panel-close-btn:hover {
+  color: unset; /* reset from bootstrap button class */
+}
+
+.perf-job-selected {
+  /* An override to optimize all other non-perf jobs at 550px */
+  min-width: 646px !important;
+}
+
+.details-panel-navbar .actionbar-nav > li > a,
+.details-panel-navbar .actionbar-nav > li > .btn {
+  color: #9fa3a5;
+  padding: 4px 15px;
+  margin-bottom: 4px;
+  display: inline-block;
+}
+
+div#details-panel-content .actionbar-nav > li > a:hover,
+div#details-panel-content .actionbar-nav > li > a:focus,
+div#details-panel-content .actionbar-nav > li > button:hover,
+div#details-panel-content .actionbar-nav > li > button:focus {
+  background-color: #1e252b;
+  color: #d3d8da;
+}
+
+.details-panel-navbar .actionbar-nav {
+  flex: auto;
+}
+
+.tab-header-tabs > li.selected-tab {
+  background-color: #1a4666;
+  color: #eef0f2;
+}
+
+.react-tabs {
+  height: 100%;
+  width: 100%;
+}
+
+.react-tabs__tab-panel--selected {
+  height: 100%;
+  padding: 0.5em 1em;
+  overflow-y: auto;
+}
+
+.react-tabs__tab--disabled {
+  font-style: italic !important;
+}
+
+#tabs-panel {
+  height: 100%;
+  max-height: calc(100% - 35px);
+  width: 100%;
+}
+
+#details-panel-content #job-artifacts-list,
+#details-panel-content .similar-jobs > .similar-job-list tbody {
+  overflow-y: auto;
+  height: 100%;
+}
+
+#details-panel-content {
+  position: relative; /* So we can absolutely position the loading overlay */
+  height: 100%;
+  flex: auto;
+  display: flex;
+  flex-flow: row;
+}
+
+#actionbar {
+  min-height: 33px;
+}
+
+/*
+ * action bar
+ */
+
+.actionbar-nav-btn {
+  cursor: pointer;
+  padding: 5px 15px;
+  color: #9fa3a5;
+}
+
+.actionbar-nav-btn.disabled {
+  cursor: not-allowed;
+}
+
+.action-bar-spin {
+  animation: action-bar-spin 0.7s;
+}
+
+@keyframes action-bar-spin {
+  0% {
+    transform: rotate(0turn);
+  }
+  100% {
+    transform: rotate(1turn);
+  }
+}
+
+/*
+ * Job details panel (left side)
+ */
+
+#summary-panel {
+  width: 310px;
+  min-width: 310px;
+  display: flex;
+  flex-direction: column;
+}
+
+#summary-panel-content {
+  flex: 1;
+  overflow: auto;
+}
+
+/*
+ * Classification stars
+ * These generally match the job button colors
+ */
+
+.star-success {
+  color: rgba(2, 130, 51, 0.75);
+}
+
+.star-testfailed {
+  color: #dd6602;
+}
+
+.star-busted {
+  color: #90010a;
+}
+
+.star-skipped {
+  color: rgb(101, 191, 221);
+}
+
+.star-exception {
+  color: #6f0296;
+}
+
+.star-retry {
+  color: #283aa2;
+}
+
+.star-unknown {
+  color: #fbd890;
+}
+
+.star-usercancel {
+  color: #ff40d9;
+}
+.star-superseded {
+  color: #488ae9;
+}
+
+.star-pending,
+.star-running {
+  color: grey;
+}
+
+#summary-panel em.testfail {
+  color: red;
+}
+
+#result-status-pane {
+  width: 100%;
+  padding: 4px;
+}
+
+#result-status-pane div {
+  display: inline-block;
+}
+
+#result-status-pane div:first-child {
+  width: 11.25em;
+}
+
+/*
+ * Job tabs panel (right side)
+ */
+
+.job-tabs-divider {
+  border-left: 1px solid lightgrey;
+}
+
+#job-artifacts-list label {
+  margin-left: 2px;
+}
+
+/*
+ * Annotations
+ */
+
+annotations-tab {
+  overflow: auto;
+  margin-right: 0;
+}
+
+.classifications-pane {
+  border-right: solid 1px lightgray;
+}
+
+/* Annotation tab classification headers */
+.classifications-pane table tr th {
+  padding-right: 16px;
+  padding-bottom: 4px;
+}
+
+/* Annotation tab classification fields */
+.classifications-pane table tr td {
+  padding-right: 16px;
+}
+
+/* Annotations tab classification deletion container */
+.classifications-pane table tr td:last-child {
+  padding-left: 10px;
+}
+
+.classification-delete-icon {
+  font-size: 11px;
+  color: #bababa;
+}
+
+/* Override bootstrap row highlighting */
+.classifications-pane table tr:hover td {
+  background: #fff;
+}
+
+.annotations-bug-list {
+  list-style: none inside none;
+  padding-left: 0;
+}
+
+.annotations-bug-header {
+  margin-top: 4px;
+  margin-bottom: 2px;
+  font-size: 0.9em;
+}
+
+.annotations-bug {
+  padding-top: 2px;
+  padding-bottom: 0;
+  padding-left: 0;
+  border: none;
+  font-size: 0.9em;
+}
+
+/*
+ * Similar jobs
+ */
+
+.btn-similar-jobs {
+  cursor: default;
+  font-size: 12px;
+}
+
+.similar-jobs {
+  display: flex;
+  flex-flow: row;
+  height: 100%;
+}
+
+div.similar-jobs .similar-job-detail-panel {
+  border-left: 1px solid #101010;
+  margin-right: 1px;
+  overflow-y: auto;
+  flex: 1 1;
+}
+
+div.similar-jobs .similar-job-detail-panel form {
+  overflow: hidden;
+  background-color: #d3d3d3;
+}
+
+div.similar-jobs
+  .similar-job-detail-panel
+  form
+  .checkbox
+  input[type='checkbox'] {
+  margin-left: 0;
+  position: relative;
+}
+
+div.similar-jobs .similar-job-detail-panel .similar_job_detail {
+  border-top: 1px solid #101010;
+}
+
+div.similar-jobs .similar-job-detail-panel .similar_job_detail table {
+  width: 100%;
+  overflow: hidden;
+}
+
+div.similar-jobs .similar-job-list {
+  overflow: auto;
+  flex: 1 1;
+}
+
+div.similar-jobs .similar-job-list table {
+  margin-bottom: 7px;
+}
+
+/* We override bootstrap table style for cleaner layout */
+div.similar-jobs .similar-job-list table tr > td {
+  vertical-align: middle;
+  border-top: 1px solid lightgrey;
+  border-bottom: 0;
+  border-right: 0;
+  border-left: 0;
+}
+
+/* Selected Similar Job row in blue */
+div.similar-jobs .similar-job-list table tr.active > td {
+  background: #e2ebfa;
+  border-top: 1px solid darkgrey;
+  border-bottom: 1px solid darkgrey;
+}
+
+/* Avoid using the hand pointer unless we are on a link */
+div.similar-jobs .similar-job-list table tr {
+  cursor: default;
+}
+
+/*
+ * Performance
+ */
+
+div.performance-panel {
+  display: block !important;
+}
+
+.performance-panel-actions > * {
+  /* This is the same value as m-1 */
+  margin: 0.25rem;
+}
+
+/**
+ * This rule is a bit ugly, but the button doesn't fit in the table row without
+ * resizing the vertical contents. In addition, there isn't a button size that
+ * matches the font size of the row.
+ */
+.performance-panel-view-button {
+  padding: 0px 6px;
+  margin: -3px 0;
+  display: inline-block;
+  font-size: 12px;
+  position: relative;
+  top: -1px;
+  line-height: 17px;
+}

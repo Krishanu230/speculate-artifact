@@ -1,0 +1,43 @@
+.*/
+ui/glean/generated/
+node_modules/
+.DS_store
+*.pyc
+yarn-error.log
+npm-error.log
+vagrant/env_local.sh
+__pycache__
+
+# vi
+*.swp
+
+# Caches
+.eslintcache
+# PyCharm
+*.iml
+# Perf sheriffing criteria
+perf-sheriffing-criteria.csv
+
+# emacs
+*~
+\#*
+
+# Celery
+celerybeat-schedule
+
+#docker custom environment
+.env
+
+# Ignore coverage results
+coverage
+coverage.xml
+.coverage
+
+# pytest-testmon cached structure
+.testmondata
+
+# Ignore tox installation
+.tox
+
+# Docs generation
+docs.egg-info

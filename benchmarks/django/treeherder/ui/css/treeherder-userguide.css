@@ -1,0 +1,82 @@
+body {
+  overflow: auto;
+}
+
+#userguide {
+  padding: 10px;
+}
+
+#userguide.dt,
+#userguide.dd {
+  text-align: center;
+}
+
+#userguide.panel {
+  padding: 5px;
+}
+
+#userguide a {
+  color: #0056b3;
+}
+
+/*
+ * Job notation table
+ */
+
+.ug-btn {
+  margin: 2px;
+  border: 2px solid;
+}
+
+.ug-btn-comment {
+  border: none;
+  background-color: #fff;
+}
+
+.ug-btn-orange {
+  border-color: #743603;
+}
+
+.ug-btn-purple {
+  border-color: #3a004d;
+}
+
+.ug-btn-red {
+  border-color: #a1020e;
+}
+
+.ug-btn-yellow {
+  border-color: #fbd890;
+}
+
+.ug-btn-bg {
+  background-color: #fff;
+}
+
+/*
+ * Copy values on hover
+ */
+
+#ug-job-name {
+  color: #3675ac;
+}
+
+#ug-raw-log-icon {
+  color: #666;
+}
+
+#ug-logviewer-icon {
+  vertical-align: text-bottom;
+  width: 15px;
+}
+
+/*
+ * Footer
+ */
+
+.ug-footer {
+  overflow: auto;
+  display: flex;
+  justify-content: space-between;
+  border-radius: 0 calc(0.25rem - 1px);
+}

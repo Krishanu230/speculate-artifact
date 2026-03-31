@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+# This script is for running tasks that are 'release' rather than 'build' specific:
+
+# Make non-zero exit codes & other errors fatal.
+set -euo pipefail
+
+if [[ -v SKIP_PREDEPLOY ]]; then
+    echo "-----> PRE-DEPLOY: Warning: Skipping pre-deploy!"
+    exit 0
+fi
+
+PRE_COMMAND=""
+if [[ -v NEW_RELIC_CONFIG_FILE ]]; then
+    PRE_COMMAND="newrelic-admin run-program"
+fi
+
+echo "-----> PRE-DEPLOY: Running Django migration..."
+$PRE_COMMAND ./manage.py migrate --noinput
+
+echo "-----> PRE-DEPLOY: Loading initial data..."
+# Retry load_initial_data if it fails, to work around:
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1428031
+# TODO: Look into this again when using newer MySQL and Django 2.x.
+ATTEMPTS=0
+until $PRE_COMMAND ./manage.py load_initial_data; do
+    if (( ++ATTEMPTS == 10 )); then
+        echo "Failed to load initial data after ${ATTEMPTS} attempts!"
+        exit 1
+    fi
+    echo "Retrying after 5 seconds..."
+    sleep 5
+done
+
+echo "-----> PRE-DEPLOY: Complete!"

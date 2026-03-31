@@ -1,0 +1,64 @@
+.labeled-input {
+  --spacing-y-default: 0.4em;
+  --spacing-x-default: 0.4em;
+
+  .label {
+    display: inline-block;
+    color: var(--slate-800);
+  }
+  .input {
+    display: block;
+
+    // TODO: Unify styling for all form elements
+    > button.dropdown.trigger {
+      display: flex;
+      width: 100%;
+    }
+  }
+
+  .help {
+    display: block;
+    font-size: var(--text-size-small);
+    color: var(--color-text-muted);
+    margin-top: var(--spacing-y, var(--spacing-y-default));
+    &:empty {
+      display: none;
+    }
+  }
+
+  &.layout-stacked {
+    .input {
+      margin-top: var(--spacing-y, var(--spacing-y-default));
+    }
+  }
+
+  // TODO: add support for help text with an inline layout.
+  &.layout-inline .label-content {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center; // To support a text input that's taller than the label
+    .label {
+      flex: 1 1 auto;
+    }
+    .input {
+      flex: 0 0 auto;
+      margin-left: var(--spacing-x, var(--spacing-x-default));
+    }
+  }
+
+  &.layout-inline-input-first .label-content {
+    display: grid;
+    grid-template: auto auto / auto 1fr;
+    .input {
+      grid-area: 1 / 1 / 1 / 1;
+      margin-right: var(--spacing-x, var(--spacing-x-default));
+    }
+    .label {
+      grid-area: 1 / 2 / 1 / 2;
+    }
+    .help {
+      grid-area: 2 / 2 / 2 / 2;
+      margin-top: var(--spacing-y, var(--spacing-y-default));
+    }
+  }
+}

@@ -1,0 +1,30 @@
+/*
+ * Failure summary
+ */
+
+.failure-summary-line-empty {
+  padding: 2px 4px 0;
+  font-size: 12px;
+  background: #ffffff;
+}
+
+.failure-summary-bugs-container {
+  /* These styles don't use the bootstrap system as they are creating a vertical
+   * line underneath the bug icon. When only using bootstrap classes, this vertical line
+   * is not aligned with the bug icon. */
+  margin: 0 11px;
+  padding: 10px 15px;
+  border-left: 2px solid #0004;
+}
+
+.show-hide-more {
+  /* Override the selector complexity of: "ul.failure-summary-list li .btn-xs" */
+  font-size: 11px !important;
+}
+
+.failure-summary-new-message {
+  padding: 2px 4px 0;
+  font-size: 11px;
+  background-color: var(--failure-bg-color);
+  color: var(--failure-color);
+}

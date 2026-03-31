@@ -1,0 +1,93 @@
+/**
+ * File to place common css & scss variables for the component library
+ */
+:root {
+  // Danger colors
+  --danger-color: #d67171;
+  --danger-background-color: #fde9e9;
+  --dander-border-color: #f2aaaa;
+
+  // Idea here is to use the same token naming
+  // between the Figma designs and the codebase
+  // which then makes it easier and faster to create
+  // element from design into code.
+  --green-100: #e5fde6;
+
+  --purple-100: #ebe5fd;
+  --purple-300: #a586ff;
+  --purple-400: #6b45dd;
+  --purple-500: #4b2c9d;
+
+  --red-100: #fdeeed;
+  --red-200: #f9cdc8;
+  --red-500: #eb5441;
+  --red-600: #dd4734;
+  --red-800: #c63826;
+
+  --slate-50: #f6f9f9;
+  --slate-100: #eff1f1;
+  --slate-200: #d5d8dc;
+  --slate-300: #b8bdc4;
+  --slate-400: #5e646e;
+  --slate-500: #4a4f58;
+  --slate-600: #3a3f48;
+  --slate-700: #424952;
+  --slate-800: #25292e;
+
+  --sand-100: #f9f8f6;
+  --sand-200: #efece7;
+  --sand-300: #e2dcd4;
+  --sand-400: #cec5b6;
+  --sand-800: #776850;
+
+  --sky-200: #e8f1fd;
+  --sky-300: #b0ccf0;
+  --sky-500: #bcd9f9;
+  --sky-600: #1269cf;
+  --sky-700: #145bbe;
+  --sky-800: #36537a;
+
+  // TODO: Get this incorporated in figma
+  --slate-50-tentative: #f6f9f9;
+  --sky-600-tentative: #87bcf6;
+
+  --yellow-100: #fdf7ed;
+  --yellow-200: #ffedaf;
+  --yellow-300: #f8ceb0;
+
+  --white: white;
+
+  --red-box-shadow: #eb544133;
+
+  // Setting a new variable as brand color
+  // provides the ability to later change its
+  // value and support white-labelling
+
+  // Brand Color
+  --brand-100: var(--red-100);
+  --brand-500: var(--red-500);
+  --brand-600: var(--red-600);
+  --brand-800: var(--red-800);
+  --brand-box-shadow: var(--red-box-shadow);
+
+  --size-extreme-small: 0.1429rem; // 2px
+  --size-super-ultra-small: 0.2858rem; // 4px
+  --size-ultra-small: 0.4286rem; // 6px
+  --size-xx-small: 0.5715rem; // 8px
+  --size-x-small: 0.7143rem; // 10px
+  --size-small: 0.8572rem; // 12px
+  --size-base: 1rem; // 14px
+  --size-large: 1.2rem; // 16.8px
+  --size-x-large: 1.44rem; // 20.2px
+  --size-xx-large: 1.728rem; // 24.2px
+  --size-ultra-large: 2.074rem; // 29px
+  --size-super-ultra-large: 2.488rem; // 34.8px
+
+  --border-radius-xs: 0.071rem; //1px
+  --border-radius-s: 0.142rem; //2px
+  --border-radius-m: 0.285rem; //4px
+  --border-radius-l: 0.571rem; //8px
+  --border-radius-xl: 1.142rem; //16px
+
+  --input-padding: 0.5em;
+}

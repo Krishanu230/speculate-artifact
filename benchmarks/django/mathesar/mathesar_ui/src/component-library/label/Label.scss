@@ -1,0 +1,10 @@
+.label-component {
+  display: var(--Label__display, inline);
+  &:hover {
+    cursor: pointer;
+  }
+  &.disabled {
+    color: #777;
+    cursor: not-allowed;
+  }
+}

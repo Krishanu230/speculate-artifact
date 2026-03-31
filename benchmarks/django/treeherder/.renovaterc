@@ -1,0 +1,30 @@
+{
+  "extends": [
+    "config:js-app",
+    "schedule:earlyMondays",
+    ":maintainLockFilesWeekly",
+    ":prNotPending",
+    ":unpublishSafe"
+  ],
+  "ignoreDeps": [
+    "@types/angular",
+    "@types/prop-types",
+    "@types/react",
+    "@types/react-dom",
+    "@uirouter/angularjs"
+  ],
+  "labels": ["dependencies", "javascript"],
+  "reviewers": ["mozilla/treeherder-admins"],
+  "semanticCommits": false,
+  "minor": {
+    "enabled": false
+  },
+  "separateMinorPatch": true,
+  "patch": {
+    "automerge": true,
+    "automergeType": "branch"
+  },
+  "lockFileMaintenance": {
+    "automerge": true
+  }
+}

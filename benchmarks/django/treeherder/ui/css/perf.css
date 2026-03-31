@@ -1,0 +1,695 @@
+html {
+  overflow: auto;
+  height: auto;
+}
+
+body {
+  overflow: visible;
+  height: auto;
+}
+
+section {
+  height: calc(100% - 50px);
+  overflow-y: auto;
+}
+
+h1 {
+  margin-top: 20px;
+}
+
+.table {
+  margin-bottom: 20px;
+}
+
+.checkbox label {
+  font-weight: normal;
+}
+
+.blink {
+  animation: blink 1s ease-in-out infinite alternate;
+}
+@keyframes blink {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+#perf-logo {
+  padding: 15px;
+  border: none;
+  color: #555;
+  background: #f8f8f8;
+}
+
+.graph-chooser {
+  flex: none;
+  width: 300px;
+  padding: 8px;
+}
+
+.graph-legend {
+  width: 275px;
+}
+
+.graph-legend-card {
+  border-left: 10px solid;
+}
+
+.graph-legend-card > button {
+  word-wrap: break-word;
+  font-size: 13px;
+  max-width: 200px;
+}
+
+.graph-legend-card > button:hover {
+  text-decoration: underline;
+}
+
+.show-hide-check {
+  float: right;
+  position: static;
+  margin-right: 13px !important;
+  margin-top: -27px;
+}
+
+.graph-right-padding {
+  flex: none;
+  width: 120px;
+}
+
+.graph-tooltip {
+  pointer-events: none;
+  width: 280px;
+  text-align: left;
+}
+.graph-tooltip.locked {
+  pointer-events: auto;
+  -webkit-touch-callout: text;
+  -webkit-user-select: text;
+  -khtml-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+.graph-tooltip .body {
+  display: block;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  border-radius: 5px;
+  padding: 10px 15px;
+}
+.graph-tooltip.locked .body {
+  background: rgba(0, 0, 0, 0.9);
+}
+.graph-tooltip .body div {
+  margin-top: 0.5em;
+}
+.graph-tooltip .body div:first-child {
+  margin-top: 0.5em;
+}
+.graph-tooltip .body p {
+  margin: 0;
+}
+.graph-tooltip .body p.small {
+  font-size: 10px;
+  color: #c0c0c0;
+}
+.graph-tooltip .body a {
+  color: #17a2b8;
+}
+.graph-tooltip .tip {
+  display: block;
+  height: 10px;
+  background: url('../img/tip.png') no-repeat center top;
+}
+.graph-tooltip.locked .tip {
+  background-image: url('../img/tip-locked.png');
+}
+
+.graphchooser-close {
+  color: #fff;
+  outline: none;
+  z-index: 999;
+}
+
+.graphchooser-close:hover {
+  color: #fff;
+}
+
+.reset-highlight-button {
+  display: inline-block;
+  margin-left: -20px;
+  width: 17px;
+  cursor: pointer;
+}
+
+.overview-plot {
+  margin-top: 5px;
+  margin-bottom: 10px;
+  width: 1200px;
+  height: 150px;
+}
+
+.subtest-header th {
+  padding: 5px;
+}
+
+.subtest-result button {
+  display: none;
+}
+
+.subtest-result:hover button {
+  display: inline-block;
+}
+
+/* Test Chooser graph */
+
+.test-chooser {
+  width: 650px;
+}
+
+.btn-group-vertical {
+  flex: none;
+  position: relative;
+  top: 115px;
+  padding: 3px;
+}
+
+#unselect-test {
+  position: relative;
+  bottom: 4px;
+}
+
+.test-list-container {
+  flex: auto;
+}
+
+.test-list-container .form-control {
+  height: 345px;
+  width: 100%;
+}
+
+.choose-test-list {
+  font-size: 11px;
+  margin-top: 8px;
+  height: 85px;
+}
+
+.test-loading-placeholder {
+  width: 480px;
+  height: 120px;
+}
+
+/* Compare interface stuff */
+
+.permalink:hover {
+  background-color: rgba(168, 169, 167, 0.9);
+}
+
+.push-information {
+  font-size: 18px;
+  color: #727272;
+  margin-left: -4px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 2rem;
+}
+
+.push-information-revisions {
+  list-style: none;
+  font-size: 0.7em;
+  font-style: italic;
+  color: #757575;
+  padding: 0;
+  padding-top: 5px;
+  text-align: left;
+}
+
+.vertical-box {
+  display: flex;
+  flex-flow: column;
+}
+
+.spacer {
+  flex: auto;
+}
+
+.horizontal-box {
+  display: flex;
+  flex-flow: row;
+}
+
+.compare-form {
+  align: center;
+  display: flex;
+  flex-flow: column;
+}
+
+.compare-form .form-group {
+  display: flex;
+  flex-flow: row;
+  flex: none;
+}
+
+.compare-form .form-group .card {
+  flex: none;
+  width: 360px;
+  height: 250px;
+  margin-right: 15px;
+  margin-bottom: 0;
+}
+
+.compare-form .button-container {
+  width: 740px;
+  position: relative;
+  left: -5px;
+}
+.compare-form .input-group-btn button:hover {
+  background-color: darkgrey;
+}
+
+.compare-form .input-group-btn button:focus {
+  box-shadow: none;
+}
+
+.compare-table td,
+th {
+  cursor: default;
+}
+
+.compare-table th h3 {
+  font-size: inherit;
+}
+
+.compare-table .subtest-header > th,
+.compare-table .subtest-header a,
+.compare-table .subtest-header button {
+  color: transparent;
+  transition: color 150ms ease-in-out;
+}
+
+.compare-table .subtest-header > th:first-child,
+.compare-table .subtest-header > th,
+.compare-table .subtest-header a,
+.compare-table .subtest-header button,
+.compare-table {
+  color: #333;
+}
+
+.compare-table tr:hover .detail-hint {
+  border-bottom: 1px dotted #777;
+}
+
+.compare-table .result-links span,
+.compare-table .result-links button {
+  color: transparent;
+  transition: color 150ms ease-in-out;
+}
+
+.compare-table .result-links a,
+.compare-table .subtest-header a {
+  color: #23527c;
+}
+
+.retrigger-btn {
+  background-color: transparent;
+  border-color: transparent;
+  color: darkgrey;
+  visibility: hidden;
+  transition: visibility 150ms ease-in-out;
+}
+
+.compare-table tr:hover .result-links button,
+.compare-table tr:focus-within .result-links a,
+.compare-table tr:focus-within .result-links button {
+  color: #23527c;
+}
+
+.compare-table tr:hover .retrigger-btn {
+  visibility: visible;
+}
+
+.sticky-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 900;
+}
+
+.sticky-scroll-nav-top {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  z-index: 998;
+}
+
+.alerts-container {
+  padding-left: 90px;
+  padding-right: 90px;
+}
+
+.alert-summary a {
+  cursor: pointer;
+}
+
+.alert-summary {
+  margin-bottom: 20px;
+}
+
+.alert-summary-heading {
+  display: flex;
+  flex-flow: row;
+  padding: 0;
+  border-bottom: 1px solid transparent;
+}
+
+.alert-summary-header-element {
+  flex: none;
+  padding: 8px;
+}
+
+.alert-summary .compare-table {
+  margin-bottom: 0;
+}
+
+.alert-summary .card-body {
+  border-top: 1px solid #ddd;
+  padding: 15px;
+}
+
+.alert-summary .card-body p {
+  margin: 0 0 10px;
+}
+
+.dropdown {
+  padding: 0;
+  vertical-align: inherit;
+}
+
+.dropdown .caret {
+  margin-left: 2px;
+}
+
+.alert-summary-date {
+  width: 160px;
+  text-align: right;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Various styles for individual alerts ("changes" in UI) */
+.alert-selects .form-group {
+  margin-right: 6px;
+}
+
+.compare-table-tooltip {
+  max-width: 335px;
+}
+
+.tooltip-table {
+  border: 1px solid white;
+  height: 20px;
+  margin-bottom: 5px;
+}
+
+.tooltip-table .value-column {
+  width: 35px;
+  border: 1px solid white;
+  align-items: center;
+  font-family: 'Helvetica';
+  font-size: 11px;
+}
+
+.tooltip-table .distribution-column {
+  width: 200px;
+  border: 1px solid white;
+}
+
+.replicate-graph .mg-header {
+  font-family: 'Helvetica';
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.replicate-graph .mg-x-axis text {
+  font-size: 0;
+}
+
+.replicate-graph .mg-category-guides line {
+  stroke: #ffffff;
+}
+
+.item-badge {
+  padding: 3px 6px;
+  color: #17a2b8;
+}
+
+/* for use with global max-width-default style */
+.max-width-row-text {
+  max-width: 1194px;
+}
+
+li.pagination-active.active > button {
+  background-color: lightgray !important;
+  border-color: lightgray !important;
+  color: black !important;
+}
+
+.page-item.disabled {
+  cursor: not-allowed;
+}
+
+.page-item.disabled .page-link {
+  color: lightgray !important;
+}
+
+/* Make the size of pagination link consistent */
+.page-link {
+  min-width: 2.5rem;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* graph colors */
+.orange {
+  border-left-color: #ffb851;
+}
+
+.fire-red {
+  border-left-color: #c92d2f;
+}
+
+.cerulean {
+  border-left-color: #16bcde;
+}
+
+.blue-bell {
+  border-left-color: #464876;
+}
+
+.purple {
+  border-left-color: #921181;
+}
+
+.dark-puce {
+  border-left-color: #4c3146;
+}
+
+@media only screen and (min-width: 1700px) {
+  .custom-col-xxl-auto {
+    flex: 0 0 auto;
+    width: auto;
+    max-width: 100%;
+  }
+}
+
+.edit-icon {
+  visibility: hidden;
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.page-title-text:hover .edit-icon {
+  visibility: visible;
+}
+
+/* table in graphs view */
+.table-header {
+  border-top: 10px solid;
+}
+
+.table-header.blue-bell {
+  border-top-color: #464876;
+}
+
+.table-header.orange {
+  border-top-color: #ffb851;
+}
+
+.table-header.fire-red {
+  border-top-color: #c92d2f;
+}
+
+.table-header.cerulean {
+  border-top-color: #16bcde;
+}
+
+.table-header.purple {
+  border-top-color: #921181;
+}
+
+.table-header.dark-puce {
+  border-top-color: #4c3146;
+}
+
+.table-graphs-view .job-links {
+  opacity: 0.8;
+}
+
+.table-graphs-view .rt-td:hover .job-links,
+.table-graphs-view .rt-td:focus-within .job-links {
+  opacity: 1;
+}
+
+.alert-docs a:visited,
+.legend-docs a:visited {
+  color: #337ab7;
+}
+
+.disabled-button {
+  border: 1px solid transparent;
+  box-sizing: border-box;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.information-container {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+}
+
+.information-container .option {
+  display: flex;
+  align-items: center;
+}
+
+.information-container .option .icon {
+  margin: 0px 2px 5px 2px;
+  color: #dc3545;
+}
+
+.information-container .option .icon-green-flame {
+  color: #2da745;
+}
+
+.information-container .option .icon-plus {
+  font-size: 12px;
+  color: #dc3545;
+  margin-left: 5px;
+}
+
+.download-json-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 15px;
+}
+
+.download-json-container .btn {
+  margin-left: 5px;
+}
+
+.download-json-container .download-button {
+  background-color: transparent !important;
+  color: #1f7d8e !important;
+}
+
+.download-json-container .download-button:hover {
+  background-color: #1f7d8e !important;
+  color: white !important;
+}
+
+.download-json-container .download-json-icon {
+  margin-right: 10px;
+}
+
+.bottom-pagination-container {
+  margin-top: 30px;
+}
+
+.icon-container {
+  margin: 0px 5px;
+  padding: 0px 3px 0px 3px;
+}
+
+.active-platform {
+  border: 1px solid;
+  border-radius: 3px;
+  background-color: #d3d3d3;
+  padding: 3px;
+}
+
+.due-date-container {
+  width: 50px;
+}
+
+.due-date-container .due-date-ok {
+  color: #2da745;
+}
+
+.due-date-container .due-date-today {
+  color: #dc7835;
+}
+
+.due-date-container .due-date-overdue {
+  color: #dc3545;
+}
+
+.due-date-container .due-date-ready {
+  color: #2da745;
+}
+
+.status-drop-down-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex-direction: row-reverse;
+}
+
+.clock-container {
+  margin-top: 5px;
+  margin-left: 23px;
+}
+
+.tests-table .rt-tr-group {
+  flex: initial;
+}
+
+.alert-title-container {
+  width: 250px;
+}
+
+.alert-title-container .alert-title {
+  overflow-wrap: break-word !important;
+}
+
+.tags-and-options-container {
+  width: fit-content;
+}
+
+.tags-and-options-container span {
+  white-space: pre-wrap;
+  text-align: left;
+}
+
+.tags-and-options-td {
+  padding: 0.75rem 0px 0px 0px !important;
+}

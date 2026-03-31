@@ -1,0 +1,38 @@
+.input-element {
+  border: 1px solid var(--slate-200);
+  align-items: center;
+  border-radius: 0.285rem;
+  background: #fff;
+  margin: 0;
+  padding: var(--input-padding);
+  line-height: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: var(--input-element-text-align, 'left');
+
+  &:focus {
+    border-color: var(--slate-300);
+    outline: 0;
+    box-shadow: 0 0 0 2px var(--slate-100);
+  }
+
+  &:disabled {
+    background: var(--slate-100);
+  }
+
+  &.read-only {
+    background: var(--slate-50);
+  }
+
+  &.has-error {
+    border-color: var(--red-500);
+    background: var(--red-100);
+  }
+
+  &.text-area {
+    resize: vertical;
+  }
+}

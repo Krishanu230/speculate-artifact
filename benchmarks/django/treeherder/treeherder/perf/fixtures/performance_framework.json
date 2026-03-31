@@ -1,0 +1,98 @@
+[
+  {
+    "pk": 1,
+    "model": "perf.PerformanceFramework",
+    "fields": {
+      "name": "talos",
+      "enabled": true
+    }
+  },
+  {
+    "pk": 2,
+    "model": "perf.PerformanceFramework",
+    "fields": {
+      "name": "build_metrics",
+      "enabled": true
+    }
+  },
+  {
+    "pk": 4,
+    "model": "perf.PerformanceFramework",
+    "fields": {
+      "name": "awsy",
+      "enabled": true
+    }
+  },
+  {
+    "pk": 5,
+    "model": "perf.PerformanceFramework",
+    "fields": {
+      "name": "awfy",
+      "enabled": false
+    }
+  },
+  {
+    "pk": 6,
+    "model": "perf.PerformanceFramework",
+    "fields": {
+      "name": "platform_microbench",
+      "enabled": true
+    }
+  },
+  {
+    "pk": 10,
+    "model": "perf.PerformanceFramework",
+    "fields": {
+      "name": "raptor",
+      "enabled": true
+    }
+  },
+  {
+    "pk": 11,
+    "model": "perf.PerformanceFramework",
+    "fields": {
+      "name": "js-bench",
+      "enabled": true
+    }
+  },
+  {
+    "pk": 12,
+    "model": "perf.PerformanceFramework",
+    "fields": {
+      "name": "devtools",
+      "enabled": true
+    }
+  },
+  {
+    "pk": 13,
+    "model": "perf.PerformanceFramework",
+    "fields": {
+      "name": "browsertime",
+      "enabled": true
+    }
+  },
+  {
+    "pk": 14,
+    "model": "perf.PerformanceFramework",
+    "fields": {
+      "name": "vcs",
+      "enabled": false
+    }
+  },
+  {
+    "pk": 15,
+    "model": "perf.PerformanceFramework",
+    "fields": {
+      "name": "mozperftest",
+      "enabled": true
+    }
+  },
+  {
+    "pk": 16,
+    "model": "perf.PerformanceFramework",
+    "fields": {
+      "name": "fxrecord",
+      "enabled": true
+    }
+  }
+]

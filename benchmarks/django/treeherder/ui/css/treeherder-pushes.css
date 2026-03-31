@@ -1,0 +1,198 @@
+/*
+ * Resultset bar
+ */
+
+.push-bar {
+  border-top: 1px solid black;
+  padding: 2px 0 1px 34px;
+  white-space: nowrap;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.push-left {
+  display: flex;
+  flex-flow: row wrap;
+  flex: auto;
+  align-items: center;
+}
+
+.push-title-left {
+  flex: 0 0 24.2em;
+  padding-right: 10px;
+}
+
+.push-body-divider {
+  margin-left: 34px;
+  border-bottom: 1px solid lightgrey;
+}
+
+.push-body {
+  padding-left: 15px;
+  padding-right: 25px;
+}
+
+.push {
+  padding-bottom: 0;
+  margin-left: 0;
+  margin-top: 2px;
+  white-space: normal;
+  width: 100%;
+}
+
+.push-counts {
+  flex: none;
+  padding-right: 10px;
+}
+
+.push-health .badge.badge-success {
+  background-color: #1b7e32;
+}
+
+.push-progress {
+  color: #6f6d70;
+  font-style: italic;
+  margin-left: 10px;
+}
+
+.push-buttons {
+  margin-right: 25px;
+}
+
+.push-buttons > .btn,
+.push-buttons > .btn-group {
+  margin: 0 5px;
+}
+
+.btn-push {
+  color: #666;
+  background-color: transparent;
+  padding-left: 9px;
+  padding-right: 10px;
+  border: 0;
+}
+
+.btn-push:hover {
+  background-color: #6f6d70;
+  color: white;
+}
+
+.btn-push.disabled:hover,
+.btn-push.disabled:active,
+.btn-push.disabled.active,
+.btn-push:disabled:hover,
+.btn-push:disabled:active,
+.btn-push:disabled.active,
+fieldset[disabled] .btn-push:hover {
+  background-color: #7c7a7d;
+  border-color: #7c7a7d;
+  color: white;
+}
+
+.watch-commit-btn:not([data-watch-state='none']) {
+  border: 1px solid;
+  border-radius: 3px;
+  overflow: visible;
+}
+
+/* Encompasses unknown push,repo */
+.unknown-message-body {
+  padding-top: 10px;
+}
+
+.push .job-list-pad {
+  padding-right: 0;
+}
+
+.push .job-list-nopad {
+  padding-left: 20px;
+  padding-right: 0;
+  display: block;
+}
+
+.push .revision-list {
+  padding-left: 15px;
+}
+
+/*
+ * Revision list
+ */
+
+.revision {
+  font-size: 12px;
+}
+
+.revision[data-tags~='backout'] .revision-comment {
+  color: #e20303;
+}
+
+.commit-sha {
+  font-size: 11px;
+}
+
+/*
+ * Revision
+ */
+
+.tooltip-content {
+  text-align: left;
+  min-width: 100%;
+  max-width: 100%;
+}
+
+/*
+ * Job table
+ */
+
+.platform {
+  font-size: 12px;
+  padding: 0 5px 0 0;
+  line-height: 15px;
+  width: 14.5em;
+  min-width: 14.5em;
+  overflow: hidden;
+  vertical-align: top;
+}
+
+.job-row {
+  display: table-cell;
+  line-height: 15px;
+  white-space: normal;
+  word-break: normal;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.job-list table {
+  width: 100%;
+}
+
+.job-list table tr {
+  border-bottom: 1px dotted lightgrey;
+}
+
+.job-list table tr:nth-child(even) {
+  background: #f8f8f896;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.get-next {
+  flex-direction: row;
+  font-size: 14px;
+  background-color: #f5f5f5;
+  border: 1px solid #e3e3e3;
+}
+
+.get-next > span {
+  align-self: center;
+  padding-right: 8px;
+}
+
+.get-next .btn {
+  font-size: 12px;
+}

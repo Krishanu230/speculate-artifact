@@ -1,0 +1,23 @@
+# Start from the successfully verified base image
+FROM mathesar-verify:latest
+
+# Switch to root to ensure pip installs packages globally without permission errors
+USER root
+
+# Install the Speculate tool dependencies
+RUN pip install --no-cache-dir \
+    httpcore \
+    httpx \
+    mixpanel \
+    openai \
+    python-dotenv \
+    aiofiles \
+    google-generativeai \
+    colorama \
+    azure-ai-inference
+
+# CRITICAL: Clear the original entrypoint so it doesn't launch Gunicorn.
+# This prevents the container from hanging and allows the wrapper script 
+# to run the Speculate tool in a single terminal command.
+ENTRYPOINT []
+CMD ["/bin/bash"]
