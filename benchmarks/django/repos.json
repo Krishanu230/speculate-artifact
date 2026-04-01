@@ -1,0 +1,39 @@
+{
+  "mathesar": {
+    "path": "mathesar",
+    "source_root": "mathesar",
+    "log_root": "mathesar",
+    "framework": "django",
+    "language": "python",
+    "venv_path": "/opt/django-venvs/mathesar",
+    "django_settings_module": "config.settings.production"
+  },
+  "education-backend": {
+    "path": "education-backend/src",
+    "source_root": "education-backend/src",
+    "log_root": "education-backend/src",
+    "framework": "django",
+    "language": "python",
+    "venv_path": "/opt/django-venvs/education-backend",
+    "django_settings_module": "core.settings",
+    "django_explicit_urls_file": "/artifact/benchmarks/django/education-backend/src/core/urls/v2.py"
+  },
+  "librephotos": {
+    "path": "librephotos",
+    "source_root": "librephotos",
+    "log_root": "librephotos",
+    "framework": "django",
+    "language": "python",
+    "venv_path": "/opt/django-venvs/librephotos",
+    "django_settings_module": "librephotos.settings.production"
+  },
+  "treeherder": {
+    "path": "treeherder",
+    "source_root": "treeherder",
+    "log_root": "treeherder",
+    "framework": "django",
+    "language": "python",
+    "venv_path": "/opt/django-venvs/treeherder",
+    "django_settings_module": "treeherder.config.settings"
+  }
+}
