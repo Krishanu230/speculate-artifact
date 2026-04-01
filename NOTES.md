@@ -10,11 +10,12 @@ Things Tried:
 1. The most faithful approach would have been compiling the repos from source and then running Speculate on them. We tried compiling during the Docker image build step but could not get the time below 30 minutes, even with Maven cache mounts and parallel compile stages. In the end we fell back to baking pre-compiled classes into the image, similar to what the Respector artifact does.
 
 ## TODOs
-- [ ] Fill in the Django repos.
+- [x] Fill in the Django repos.
 - [ ] Work on code refactoring and cleanup things like unwanted logs and keywords like 'knowl'.
-- [ ] Verify on a case-by-case basis that the runs match the numbers reported in the paper.
+- [ ] Verify on a case-by-case basis that the runs match the numbers reported in the paper: differing on gravitee
 - [ ] Add a run-all mode to the runner.
-- [ ] Find a safe way to share LLM keys with reviewers. Perhaps a one-time fetch during setup could work.
+- [x] Find a safe way to share LLM keys with reviewers. Perhaps a one-time fetch during setup could work.
+- [ ] Add instructions on how to run it on any new django/jersey/spring repo
 
 ## Size Breakdown
 
