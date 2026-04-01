@@ -1,0 +1,61 @@
+{
+  "count": 2,
+  "next": "/jobs/?push_id=526443&page=2",
+  "previous": null,
+  "results": [
+    [
+      2,
+      1,
+      259537193,
+      "unknown",
+      "?",
+      "Gecko Decision Task",
+      "D",
+      "2019-08-05T20:19:51.818175",
+      "102210fe594ee9b33d82058545b1ed14f4c8206e",
+      "gecko-decision",
+      "opt",
+      526443,
+      "success",
+      "2aa083621bb989d6acf1151667288d5fe9616178",
+      "completed",
+      1
+    ],
+    [
+      18,
+      1,
+      259537372,
+      "unknown",
+      "?",
+      "build-android-api-16/debug",
+      "B",
+      "2019-08-05T20:37:45.258535",
+      "32faaecac742100f7753f0c1d0aa0add01b4046b",
+      "android-4-0-armv7-api16",
+      "debug",
+      526443,
+      "success",
+      "e2e58eb7f14af83019d3f8433c0642dde8082c4d",
+      "completed",
+      1
+    ]
+  ],
+  "job_property_names": [
+    "duration",
+    "failure_classification_id",
+    "id",
+    "job_group_name",
+    "job_group_symbol",
+    "job_type_name",
+    "job_type_symbol",
+    "last_modified",
+    "option_collection_hash",
+    "platform",
+    "platform_option",
+    "push_id",
+    "result",
+    "signature",
+    "state",
+    "tier"
+  ]
+}

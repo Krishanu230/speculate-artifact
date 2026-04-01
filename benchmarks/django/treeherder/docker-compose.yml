@@ -1,0 +1,172 @@
+version: '3'
+services:
+  backend:
+    container_name: backend
+    build:
+      context: .
+      dockerfile: docker/dev.Dockerfile
+      # TODO: Try using cache_from pointed at a Docker Hub image built from master
+      # Though may need to also use the workaround for local vs remote:
+      # https://github.com/moby/moby/issues/32612#issuecomment-294055017
+      # cache_from: TODO
+    image: treeherder-backend
+    platform: linux/amd64
+    environment:
+      # Development/CI-specific environment variables only.
+      # Those that do not vary across environments should go in `Dockerfile`.
+      - BROKER_URL=amqp://guest:guest@rabbitmq//
+      - DATABASE_URL=${DATABASE_URL:-mysql://root@mysql/treeherder}
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - UPSTREAM_DATABASE_URL=${UPSTREAM_DATABASE_URL:-}
+      - PERF_SHERIFF_BOT_CLIENT_ID=${PERF_SHERIFF_BOT_CLIENT_ID:-}
+      - PERF_SHERIFF_BOT_ACCESS_TOKEN=${PERF_SHERIFF_BOT_ACCESS_TOKEN:-}
+      - NOTIFY_CLIENT_ID=${NOTIFY_CLIENT_ID:-}
+      - NOTIFY_ACCESS_TOKEN=${NOTIFY_ACCESS_TOKEN:-}
+      - PULSE_AUTO_DELETE_QUEUES=True
+      - REDIS_URL=redis://redis:6379
+      - SITE_URL=http://backend:8000/
+      - TREEHERDER_DEBUG=True
+      - NEW_RELIC_INSIGHTS_API_KEY=${NEW_RELIC_INSIGHTS_API_KEY:-}
+      - PROJECTS_TO_INGEST=${PROJECTS_TO_INGEST:-autoland,try}
+      - BUGZILLA_API_URL=${BUGZILLA_API_URL:-}
+      - BUG_FILER_API_KEY=${BUG_FILER_API_KEY:-}
+      - TLS_CERT_PATH=${TLS_CERT_PATH:-}
+    entrypoint: './docker/entrypoint.sh'
+    # We *ONLY* initialize the data when we're running the backend
+    command: './initialize_data.sh ./manage.py runserver 0.0.0.0:8000'
+    # Django's runserver doesn't listen to the default of SIGTERM, so docker-compose
+    # must send SIGINT instead to avoid waiting 10 seconds for the time out.
+    stop_signal: SIGINT
+    shm_size: 2g # 2 Gig seems like a good size
+    volumes:
+      - .:/app
+    ports:
+      - '8000:8000'
+    depends_on:
+      - mysql
+      - redis
+      - postgres
+      - rabbitmq
+    stdin_open: true
+    tty: true
+
+  frontend:
+    container_name: frontend
+    # https://hub.docker.com/_/node
+    image: nikolaik/python-nodejs:python3.11-nodejs19-alpine
+    # Installing JS dependencies at runtime so that they share the `node_modules` from the
+    # host, improving speed (both install and build due to the webpack cache) and ensuring
+    # the host copy stays in sync (for people that switch back and forth between UI-only
+    # and full stack Treeherder development).
+    working_dir: /app
+    environment:
+      BACKEND: http://backend:8000
+    command: sh -c "yarn && yarn build:glean && yarn start --host 0.0.0.0"
+    volumes:
+      - .:/app
+    ports:
+      - '5000:5000'
+    platform: linux/amd64
+
+  mysql:
+    container_name: mysql
+    # https://hub.docker.com/r/library/mysql/
+    image: mysql:5.7.44
+    platform: linux/amd64
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+      - MYSQL_DATABASE=treeherder
+      - LANG=C.UTF_8
+    volumes:
+      - ./docker/mysql.cnf:/etc/mysql/conf.d/mysql.cnf
+      - mysql_data:/var/lib/mysql
+    ports:
+      - '3306:3306'
+    command: --character-set-server=utf8 --collation-server=utf8_bin
+
+  postgres:
+    container_name: postgres
+    # https://hub.docker.com/r/library/postgres/
+    image: postgres:15-bullseye
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=mozilla1234
+      - POSTGRES_DB=treeherder
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+
+  redis:
+    container_name: redis
+    # https://hub.docker.com/_/redis/
+    image: redis:7.0.14-alpine
+    # Messages after starting the redis-server
+    # WARNING Memory overcommit must be enabled! Without it, a background save or replication may fail under low memory condition. Being disabled, it can can also cause failures without low memory condition, see https://github.com/jemalloc/jemalloc/issues/1328. To fix this issue add 'vm.overcommit_memory = 1' to /etc/sysctl.conf and then reboot or run the command 'sysctl vm.overcommit_memory=1' for this to take effect.
+    # Hide Redis `notice` log level startup output spam.
+    command: redis-server --loglevel warning
+    ports:
+      - '6379:6379'
+
+  rabbitmq:
+    container_name: rabbitmq
+    # https://hub.docker.com/r/library/rabbitmq/
+    image: rabbitmq:3.11.25-alpine
+    environment:
+      # Hide INFO and WARNING log levels to reduce log spam.
+      - 'RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log [{console,[{level,error}]}]'
+    ports:
+      - '5672:5672'
+
+  pulse-task-push:
+    build:
+      context: .
+      dockerfile: docker/dev.Dockerfile
+    environment:
+      - PULSE_URL=${PULSE_URL:-}
+      - LOGGING_LEVEL=INFO
+      - PULSE_AUTO_DELETE_QUEUES=True
+      - DATABASE_URL=mysql://root@mysql:3306/treeherder
+      - BROKER_URL=amqp://guest:guest@rabbitmq//
+      - SKIP_INGESTION=${SKIP_INGESTION:-False}
+    entrypoint: './docker/entrypoint.sh'
+    command: ./manage.py pulse_listener
+    volumes:
+      - .:/app
+    depends_on:
+      - mysql
+      - postgres
+      - rabbitmq
+    platform: linux/amd64
+
+  celery:
+    build:
+      context: .
+      dockerfile: docker/dev.Dockerfile
+    environment:
+      - BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - DATABASE_URL=mysql://root@mysql:3306/treeherder
+      - PROJECTS_TO_INGEST=${PROJECTS_TO_INGEST:-autoland,try}
+    entrypoint: './docker/entrypoint.sh'
+    command: celery -A treeherder worker --uid=nobody --gid=nogroup --without-gossip --without-mingle --without-heartbeat -Q store_pulse_pushes,store_pulse_tasks,store_pulse_tasks_classification,statsd --concurrency=1 --loglevel=INFO
+    volumes:
+      - .:/app
+    depends_on:
+      - mysql
+      - postgres
+      - redis
+      - rabbitmq
+    platform: linux/amd64
+
+  statsd:
+    container_name: statsd
+    image: statsd/statsd:v0.10.2
+    volumes:
+      - ./docker/statsd_config.js:/usr/src/app/config.js
+    ports:
+      - '8125:8125'
+
+volumes:
+  # TODO: Experiment with using tmpfs when testing, to speed up database-using Python tests.
+  mysql_data: {}
+  postgres_data: {}

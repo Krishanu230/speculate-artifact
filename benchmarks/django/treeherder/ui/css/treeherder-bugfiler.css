@@ -1,0 +1,10 @@
+/*
+ * Intermittent Bug Filer
+ */
+#summaryLength {
+  font-size: large;
+}
+
+#summary:invalid + span {
+  color: red;
+}

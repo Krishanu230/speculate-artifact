@@ -1,0 +1,26 @@
+{
+  "name": "Treeherder",
+  "description": "Dashboard & service for managing CI data for Mozilla projects",
+  "repository": {
+    "url": "https://github.com/mozilla/treeherder",
+    "license": "MPL2",
+    "tests": "https://app.circleci.com/pipelines/github/mozilla/treeherder"
+  },
+  "participate": {
+    "home": "https://wiki.mozilla.org/EngineeringProductivity/Projects/Treeherder",
+    "docs": "https://treeherder.readthedocs.io/",
+    "chat": {
+      "url": "https://chat.mozilla.org/#/room/#treeherder:mozilla.org"
+    }
+  },
+  "bugs": {
+    "list": "https://bugzilla.mozilla.org/buglist.cgi?quicksearch=%3Atreeherder",
+    "report": "https://bugzilla.mozilla.org/enter_bug.cgi?product=Tree%20Management&component=Treeherder"
+  },
+  "urls": {
+    "prod": "https://treeherder.mozilla.org/",
+    "stage": "https://treeherder.allizom.org/",
+    "prototype": "https://prototype.treeherder.nonprod.cloudops.mozgcp.net/"
+  },
+  "keywords": ["css", "django", "react", "js", "python"]
+}

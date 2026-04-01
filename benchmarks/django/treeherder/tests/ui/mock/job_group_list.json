@@ -1,0 +1,194 @@
+[
+  {
+    "id": 1,
+    "symbol": "Buri/Hamac",
+    "name": "Buri/Hamachi Device Image",
+    "description": ""
+  },
+  {
+    "id": 2,
+    "symbol": "?",
+    "name": "unknown",
+    "description": ""
+  },
+  {
+    "id": 3,
+    "symbol": "SM",
+    "name": "SpiderMonkey",
+    "description": ""
+  },
+  {
+    "id": 4,
+    "symbol": "M",
+    "name": "Mochitest",
+    "description": ""
+  },
+  {
+    "id": 5,
+    "symbol": "R",
+    "name": "Reftest",
+    "description": ""
+  },
+  {
+    "id": 6,
+    "symbol": "T",
+    "name": "Talos Performance",
+    "description": ""
+  },
+  {
+    "id": 7,
+    "symbol": "Flame",
+    "name": "Flame Device Image",
+    "description": ""
+  },
+  {
+    "id": 8,
+    "symbol": "Sets",
+    "name": "Android x86 Test Combos",
+    "description": ""
+  },
+  {
+    "id": 9,
+    "symbol": "M-e10s",
+    "name": "Mochitest e10s",
+    "description": ""
+  },
+  {
+    "id": 10,
+    "symbol": "Wasabi",
+    "name": "Wasabi Device Image",
+    "description": ""
+  },
+  {
+    "id": 11,
+    "symbol": "Nexus 4",
+    "name": "Nexus 4 Device Image",
+    "description": ""
+  },
+  {
+    "id": 12,
+    "symbol": "Helix",
+    "name": "Helix Device Image",
+    "description": ""
+  },
+  {
+    "id": 13,
+    "symbol": "Unknown",
+    "name": "Unknown Device Image",
+    "description": ""
+  },
+  {
+    "id": 14,
+    "symbol": "L10n",
+    "name": "L10n Repack",
+    "description": ""
+  },
+  {
+    "id": 15,
+    "symbol": "M-oop",
+    "name": "Mochitest OOP",
+    "description": ""
+  },
+  {
+    "id": 16,
+    "symbol": "R-oop",
+    "name": "Reftest Sanity OOP",
+    "description": ""
+  },
+  {
+    "id": 17,
+    "symbol": "Dolphin",
+    "name": "Dolphin Device Image",
+    "description": ""
+  },
+  {
+    "id": 18,
+    "symbol": "Rs-oop",
+    "name": "Reftest Sanity OOP",
+    "description": ""
+  },
+  {
+    "id": 19,
+    "symbol": "Flame-KK",
+    "name": "Flame KitKat Device Image",
+    "description": ""
+  },
+  {
+    "id": 20,
+    "symbol": "Buri/Hamachi",
+    "name": "Buri/Hamachi Device Image",
+    "description": ""
+  },
+  {
+    "id": 21,
+    "symbol": "Tarako",
+    "name": "Tarako Device Image",
+    "description": ""
+  },
+  {
+    "id": 22,
+    "symbol": "Gip",
+    "name": "Gaia Python Integration Tests",
+    "description": ""
+  },
+  {
+    "id": 23,
+    "symbol": "Gij",
+    "name": "Gaia JS Integration Test",
+    "description": ""
+  },
+  {
+    "id": 24,
+    "symbol": "W",
+    "name": "W3C Web Platform Tests",
+    "description": ""
+  },
+  {
+    "id": 25,
+    "symbol": "I",
+    "name": "Android Instrumentation Tests",
+    "description": ""
+  },
+  {
+    "id": 26,
+    "symbol": "Gip-oop",
+    "name": "Gaia Python Integration Tests OOP",
+    "description": ""
+  },
+  {
+    "id": 27,
+    "symbol": "T-e10s",
+    "name": "Talos Performance e10s",
+    "description": ""
+  },
+  {
+    "id": 28,
+    "symbol": "A",
+    "name": "Autophone",
+    "description": ""
+  },
+  {
+    "id": 29,
+    "symbol": "M-csb",
+    "name": "Mochitest csb",
+    "description": ""
+  },
+  {
+    "id": 30,
+    "symbol": "R-e10s",
+    "name": "Reftest e10s",
+    "description": ""
+  },
+  {
+    "id": 31,
+    "symbol": "GB",
+    "name": "Gaia build tests",
+    "description": ""
+  },
+  {
+    "id": 32,
+    "symbol": "LINT",
+    "name": "Linters",
+    "description": ""
+  }
+]

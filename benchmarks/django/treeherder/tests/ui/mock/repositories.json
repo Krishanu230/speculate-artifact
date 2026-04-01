@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "repository_group": {
+      "name": "development",
+      "description": "Collection of repositories where code initially lands in the development process"
+    },
+    "name": "mozilla-central",
+    "dvcs_type": "hg",
+    "url": "https://hg.mozilla.org/mozilla-central",
+    "branch": null,
+    "codebase": "gecko",
+    "description": "",
+    "active_status": "active",
+    "performance_alerts_enabled": false,
+    "expire_performance_data": false,
+    "tc_root_url": "https://firefox-ci-tc.services.mozilla.com",
+    "is_try_repo": false,
+    "pushLogUrl": "https://hg.mozilla.org/mozilla-central/pushloghtml",
+    "revisionHrefPrefix": "https://hg.mozilla.org/mozilla-central/rev/"
+  },
+  {
+    "id": 4,
+    "repository_group": {
+      "name": "development",
+      "description": "Collection of repositories where code initially lands in the development process"
+    },
+    "name": "try",
+    "dvcs_type": "hg",
+    "url": "https://hg.mozilla.org/try",
+    "branch": null,
+    "codebase": "gecko",
+    "description": "",
+    "active_status": "active",
+    "performance_alerts_enabled": false,
+    "expire_performance_data": true,
+    "tc_root_url": "https://firefox-ci-tc.services.mozilla.com",
+    "is_try_repo": true,
+    "pushLogUrl": "https://hg.mozilla.org/try/pushloghtml",
+    "revisionHrefPrefix": "https://hg.mozilla.org/try/rev/"
+  },
+  {
+    "id": 77,
+    "repository_group": {
+      "name": "development",
+      "description": "Collection of repositories where code initially lands in the development process"
+    },
+    "name": "autoland",
+    "dvcs_type": "hg",
+    "url": "https://hg.mozilla.org/integration/autoland",
+    "branch": null,
+    "codebase": "gecko",
+    "description": "The destination for automatically landed Firefox commits.",
+    "active_status": "active",
+    "performance_alerts_enabled": true,
+    "expire_performance_data": false,
+    "tc_root_url": "https://firefox-ci-tc.services.mozilla.com",
+    "is_try_repo": false,
+    "pushLogUrl": "https://hg.mozilla.org/integration/autoland/pushloghtml",
+    "revisionHrefPrefix": "https://hg.mozilla.org/integration/autoland/rev/"
+  }
+]

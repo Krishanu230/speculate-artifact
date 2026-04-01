@@ -1,0 +1,123 @@
+.tab-container {
+  display: flex;
+  flex-direction: column;
+  > ul.tabs {
+    align-items: center;
+    display: flex;
+    position: relative;
+    isolation: isolate;
+    flex-direction: row;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-bottom: 1px solid var(--slate-200);
+
+    > li.tab {
+      align-items: stretch;
+      cursor: pointer;
+      display: inline-flex;
+      outline: none;
+      position: relative;
+      user-select: none;
+      -webkit-user-select: none; /* Safari */
+      list-style: none;
+      overflow: hidden;
+      border-radius: 2px 2px 0px 0px;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      margin-right: 2rem;
+      font-size: var(--text-size-large);
+
+      > div,
+      a {
+        padding: 0.75rem 0;
+        white-space: nowrap;
+        text-decoration: none;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        color: inherit;
+        font-weight: var(--tab-header-font-weight, 500);
+        width: 100%;
+      }
+
+      &:hover {
+        border-bottom-color: var(--slate-300);
+      }
+
+      & + li.tab {
+        margin-left: -1px;
+      }
+
+      &.active {
+        border-bottom-color: var(--brand-500);
+      }
+
+      &.focused {
+        border-color: var(--brand-500);
+        z-index: 1;
+      }
+
+      > button.remove {
+        cursor: pointer;
+        padding: 4px 10px;
+        border: none;
+        background: none;
+        margin: 0;
+        color: inherit;
+
+        &:hover {
+          background: #f3f3f3;
+        }
+      }
+
+      @media (hover: hover) {
+        &:not(:hover) > button.remove {
+          display: none;
+        }
+      }
+    }
+
+    &.fill-tab-width {
+      > li.tab {
+        flex-grow: 1;
+
+        > div {
+          width: 100%;
+        }
+      }
+    }
+  }
+
+  > ul.tabs:before {
+    border-bottom: 1px solid #efefef;
+  }
+
+  .tab-content-holder {
+    min-height: 0;
+    min-width: 0;
+    position: relative;
+    isolation: isolate;
+  }
+
+  &.fill-container-height {
+    height: 100%;
+    overflow: hidden;
+
+    .tab-content-holder {
+      overflow: auto;
+    }
+  }
+
+  &.compact {
+    > ul.tabs {
+      > li.tab {
+        font-size: var(--text-size-base);
+        text-align: center;
+        margin-right: 0;
+        > div {
+          padding: 0.5rem 0;
+        }
+      }
+    }
+  }
+}

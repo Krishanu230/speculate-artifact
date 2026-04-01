@@ -1,0 +1,262 @@
+#pinboard-btn {
+  margin-top: 0;
+  margin-bottom: 1px;
+  background-color: #e6eef5;
+  color: #252c33;
+  line-height: 22px;
+  cursor: pointer;
+  border-radius: 0;
+  padding: 3px 10px 4px 14px;
+}
+
+.pinboard-btn-text {
+  font-size: 12px;
+}
+
+#pin-count-group {
+  display: inline-block;
+  position: relative;
+  top: -14px;
+  left: -3px;
+  height: 16px;
+  width: 16px;
+  border: 1px solid #2398ff;
+  border-radius: 8px;
+  background: white;
+}
+
+.pin-count-pulse {
+  animation: pin-count-pulse 0.4s;
+}
+
+@keyframes pin-count-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(3);
+  }
+}
+
+.pin-count-text {
+  line-height: 14px;
+  font-size: 9px;
+  font-weight: bold;
+  text-align: center;
+  color: #2398ff;
+}
+
+.pin-count-group-3-digit {
+  height: 20px;
+  width: 20px;
+  border-radius: 10px;
+}
+
+.pin-count-text-3-digit {
+  line-height: 18px;
+}
+
+#pinboard-contents {
+  background-color: #e6eef5;
+  color: #252c33;
+  flex: auto;
+  display: flex;
+  flex-flow: row;
+  min-height: 100px;
+}
+
+#pinboard-panel .header {
+  padding-left: 2px;
+  height: 18px;
+}
+
+/*
+ * Pinned jobs container
+ */
+
+#pinned-job-list {
+  position: relative;
+  flex: auto;
+  margin: 7px 7px 10px;
+}
+
+#pinned-job-list .content {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  padding: 2px;
+  overflow: auto;
+  background-color: #ffffff;
+}
+
+.pinned-job {
+  font-size: 12px;
+  margin-bottom: 2px;
+  padding: 1px 2px;
+  min-width: 2em;
+}
+
+.pinned-job-close-btn {
+  font-size: 12px;
+  padding: 1px 2px 1px 2px;
+  border-color: #fafafa #fafafa #fafafa transparent;
+}
+
+.pinboard-preload-txt {
+  font-size: 12px;
+  color: #bfbfbf;
+}
+
+/*
+ * Related bugs container
+ */
+
+#pinboard-related-bugs {
+  position: relative;
+  width: 200px;
+  flex: none;
+  margin: 7px 7px 10px;
+}
+
+#pinboard-related-bugs .content {
+  position: absolute;
+  height: 100%;
+  width: 200px;
+  padding: 2px;
+  overflow-x: hidden;
+  color: black;
+  background-color: #ffffff;
+}
+
+.add-related-bugs-icon {
+  margin-right: 2px;
+  font-size: 17px;
+  color: #98c3da;
+}
+
+.add-related-bugs-form {
+  position: relative;
+  top: -18px;
+  left: 20px;
+}
+
+.add-related-bugs-input {
+  width: 12em;
+  margin: -3px 0 0 -3px;
+  font-size: 12px;
+  line-height: 12px;
+}
+
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.pinboard-related-bug-preload-txt {
+  vertical-align: top;
+}
+
+.pinboard-related-bugs-btn {
+  margin-bottom: -1px;
+}
+
+.pinboard-related-bugs-btn:hover > .related-bugs-link {
+  color: #2a6496;
+  text-decoration: underline;
+}
+
+/*
+ * Classification container
+ */
+
+#pinboard-classification {
+  flex: none;
+  width: 185px;
+  padding: 5px;
+}
+
+.pinboard-label {
+  color: #777;
+}
+
+#pinboard-classification-content {
+  color: black;
+}
+
+#pinboard-classification-content .form-group {
+  margin-bottom: 5px;
+  margin-top: 5px;
+}
+
+select#pinboard-classification-select.classification-select,
+select#pinboard-revision-select.classification-select {
+  width: 177px;
+  height: 20px;
+  font-size: 12px;
+  padding: 0;
+}
+
+.add-classification-input {
+  width: 177px;
+  height: 20px;
+  padding: 0 0 0 3px;
+  border-radius: 0;
+  font-size: 12px;
+}
+
+/*
+ * Save container and dropdown menu controls
+ */
+
+#pinboard-controls {
+  flex: none;
+  height: 43px;
+  margin: 20px;
+}
+
+#pinboard-controls .dropdown-menu {
+  z-index: 2000;
+}
+
+#pinboard-controls .save-btn-dropdown {
+  margin-left: -1px;
+  padding-top: 1px;
+  display: inline;
+  width: 24px;
+  float: right;
+}
+
+#pinboard-controls .save-btn {
+  float: left;
+  display: inline;
+  width: 70px;
+}
+
+.save-btn-group {
+  margin-top: -22px;
+}
+
+.save-btn {
+  width: 81px;
+}
+
+.save-btn-dropdown {
+  width: 18px;
+}
+
+.save-btn-dropdown > .caret {
+  margin-left: -4px;
+}
+
+.save-btn-dropdown-menu {
+  right: 0;
+  left: -88px !important;
+  transform: inherit !important;
+  top: 22px !important;
+}
+
+.btn-group + .btn + .save-btn-dropdown {
+  margin-left: -5px;
+}

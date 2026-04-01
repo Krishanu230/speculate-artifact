@@ -1,0 +1,43 @@
+{
+  "count": 1,
+  "next": null,
+  "previous": null,
+  "results": [
+    [
+      1,
+      1,
+      259539688,
+      "unknown",
+      "?",
+      "test-android-hw-p2-8-0-arm7-api-16/debug-fennec-jittest-1proc-8",
+      "Jit8",
+      "2019-08-05T20:57:09.299269",
+      "32faaecac742100f7753f0c1d0aa0add01b4046b",
+      "android-hw-p2-8-0-arm7-api-16",
+      "debug",
+      526443,
+      "unknown",
+      "33ba86f5b1d8ad61599cb04b8d1f50b97fe19379",
+      "running",
+      2
+    ]
+  ],
+  "job_property_names": [
+    "duration",
+    "failure_classification_id",
+    "id",
+    "job_group_name",
+    "job_group_symbol",
+    "job_type_name",
+    "job_type_symbol",
+    "last_modified",
+    "option_collection_hash",
+    "platform",
+    "platform_option",
+    "push_id",
+    "result",
+    "signature",
+    "state",
+    "tier"
+  ]
+}

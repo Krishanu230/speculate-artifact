@@ -1,0 +1,108 @@
+.file-upload {
+  display: flex;
+  width: 100%;
+
+  .files {
+    flex-grow: 1;
+    min-width: calc(50% - 8px);
+
+    .file {
+      padding: var(--size-xx-small);
+      border: 1px solid var(--slate-300);
+      border-radius: var(--border-radius-l);
+      display: flex;
+
+      & + .file {
+        margin-top: var(--size-xx-small);
+      }
+
+      > svg {
+        color: #c4c7ca;
+      }
+
+      > .file-info {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+
+        > .file-name {
+          font-size: var(--size-large);
+
+          span {
+            font-weight: 500;
+          }
+        }
+
+        > .progress {
+          height: var(--size-xx-small);
+          border-radius: var(--size-super-ultra-small);
+          margin: var(--size-xx-small) 0;
+        }
+
+        > .upload-info {
+          display: flex;
+          justify-content: space-between;
+          color: var(--slate-500);
+        }
+      }
+    }
+  }
+
+  .file-upload-trigger {
+    display: block;
+    background: transparent;
+    border: 1px dashed var(--slate-300);
+    border-radius: 3px;
+    color: inherit;
+    font-family: inherit;
+    padding: 0px;
+    min-height: 16.6rem;
+    flex-grow: 1;
+    cursor: pointer;
+
+    .message {
+      display: flex;
+      height: 100%;
+      width: 100%;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+
+      .icon-holder {
+        font-size: var(--size-super-ultra-large);
+      }
+
+      .text {
+        margin-top: var(--size-xx-small);
+
+        .title {
+          font-weight: 500;
+          font-size: var(--size-large);
+        }
+        .desc {
+          color: var(--slate-500);
+          margin-top: var(--size-extreme-small);
+        }
+      }
+    }
+
+    &:focus {
+      border-color: var(--sky-600);
+      border-width: 2px;
+    }
+    &:hover {
+      background: var(--slate-50-tentative);
+    }
+    &.dragging-over {
+      background: var(--sky-200);
+    }
+  }
+
+  &.disabled {
+    .file-upload-trigger {
+      pointer-events: none;
+      cursor: not-allowed;
+    }
+  }
+}

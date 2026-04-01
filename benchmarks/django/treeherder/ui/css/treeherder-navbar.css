@@ -1,0 +1,460 @@
+/*
+ * Main navbar settings
+ */
+
+#global-navbar-container {
+  background-color: #273038;
+  margin-bottom: 0;
+  flex: none;
+}
+
+#th-global-navbar-top {
+  padding-left: 0;
+  padding-top: 1px;
+  border-bottom: 1px solid black;
+  justify-content: space-between;
+  display: flex;
+  width: 100%;
+  background-color: #222;
+}
+
+.navbar {
+  padding: 0;
+}
+
+#th-global-navbar-top .dropdown-menu {
+  top: inherit;
+}
+
+.dropdown-menu {
+  min-width: inherit;
+}
+
+.dropdown-menu > li > a,
+.dropdown-menu a {
+  font-weight: normal;
+  line-height: 1.42857143;
+  color: #333;
+  white-space: nowrap;
+}
+
+.dropdown-menu > li > a:hover,
+.dropdown-menu > li > a:focus {
+  color: #262626;
+  text-decoration: none;
+}
+
+label.dropdown-item {
+  margin-bottom: 0;
+}
+
+label.dropdown-item.active,
+.dropdown-item:active {
+  color: #0b0c0e;
+}
+
+.dropdown-item input[type='checkbox'] {
+  margin-right: 5px;
+}
+
+#th-logo {
+  padding-left: 14px;
+  border-left: 0;
+}
+
+#th-logo img {
+  margin-top: -8px;
+  max-height: 18px;
+}
+
+/*
+ * Right hand upper navbar
+ */
+
+.navbar-right {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.nav-menu-btn {
+  margin-right: -4px;
+  padding-left: 14px;
+  padding-right: 14px;
+  font-size: 13px;
+}
+
+.nav-menu-btn.dropdown-toggle {
+  width: 98%;
+}
+
+.nav-menu-btn:after {
+  font-size: 14px;
+}
+
+.nav-help-btn {
+  margin-right: -4px;
+  padding-left: 12px;
+  padding-right: 8px;
+}
+
+.th-context-navbar {
+  background-color: #354048;
+  overflow: visible;
+}
+
+/*
+ * Left hand lower navbar
+ */
+
+secondary-nav-bar {
+  width: 100%;
+}
+
+.watched-repo-main-btn {
+  border-right: 0;
+  padding-right: 5px;
+}
+
+.watched-repo-main-btn:visited,
+.watched-repo-main-btn:link {
+  color: lightgrey;
+}
+
+.watched-repo-navbar {
+  overflow: visible;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+  display: flex;
+  background-color: #354048;
+}
+
+.tree-closed {
+  color: rgb(161, 52, 53);
+}
+
+.tree-open {
+  color: green;
+}
+
+.tree-approval {
+  color: #fb9910;
+}
+
+.tree-unavailable {
+  color: lightgray;
+}
+
+/*
+ * Right hand lower navbar
+ */
+
+.group-state-nav-icon {
+  width: 7px;
+  display: inline-block;
+}
+
+.btn-nav-filter {
+  padding: 7px 2px;
+}
+
+#filter-chicklets .btn {
+  padding: 0;
+  margin: 0px 1px 2px 1px;
+}
+
+.btn.btn-view-nav.btn-orange-filter-chicklet,
+.btn.btn-view-nav.btn-orange-filter-chicklet:hover {
+  color: #dd6602;
+}
+
+.btn.btn-view-nav.btn-red-filter-chicklet,
+.btn.btn-view-nav.btn-red-filter-chicklet:hover {
+  color: #c03a44;
+}
+
+.btn.btn-view-nav.btn-purple-filter-chicklet,
+.btn.btn-view-nav.btn-purple-filter-chicklet:hover {
+  color: #77438d;
+}
+
+.btn.btn-view-nav.btn-green-filter-chicklet,
+.btn.btn-view-nav.btn-green:hover {
+  color: rgba(2, 130, 51, 0.75);
+}
+
+.btn.btn-view-nav.btn-dkblue-filter-chicklet,
+.btn.btn-view-nav.btn-dkblue-filter-chicklet:hover {
+  color: #3656ff;
+}
+
+.btn.btn-view-nav.btn-pink-filter-chicklet,
+.btn.btn-view-nav.btn-pink-filter-chicklet:hover {
+  color: rgba(250, 115, 172, 0.82);
+}
+
+.btn.btn-view-nav.btn-ltblue-filter-chicklet,
+.btn.btn-view-nav.btn-ltblue-filter-chicklet:hover {
+  color: #81b8ed;
+}
+
+.btn.btn-view-nav.btn-ltgray-filter-chicklet,
+.btn.btn-view-nav.btn-ltgray-filter-chicklet:hover {
+  color: #e0e0e0;
+}
+
+.btn.btn-view-nav.btn-dkgray-filter-chicklet,
+.btn.btn-view-nav.btn-dkgray-filter-chicklet:hover {
+  color: #7c7a7d;
+}
+
+.btn.btn-view-nav.btn-black-filter-chicklet,
+.btn.btn-view-nav.btn-black-filter-chicklet:hover {
+  color: black;
+}
+
+/*
+ * Quick Filter
+ */
+
+#quick-filter {
+  height: 28px;
+  width: 150px;
+  display: inherit;
+  transition: width 0.2s;
+}
+
+#quick-filter-parent {
+  position: relative;
+}
+
+@media (min-width: 850px) {
+  #quick-filter:focus,
+  #quick-filter:valid {
+    width: 300px !important;
+    padding-right: 20px;
+  }
+}
+
+#quick-filter:valid + #quick-filter-clear-button {
+  display: inherit;
+}
+
+#quick-filter-clear-button {
+  color: #bababa;
+  font-size: 13px;
+  cursor: pointer;
+  position: relative;
+  display: none;
+  top: 1px;
+  right: 20px;
+  height: 16px;
+}
+
+/*
+ * Unclassified failures button
+ */
+
+.btn-unclassified-failures {
+  margin-top: 1px;
+  padding: 3px 10px;
+  background-color: rgba(78, 93, 21, 0.56);
+  border-color: #9fa01d;
+  color: lightgray;
+}
+.btn-unclassified-failures:hover,
+.btn-unclassified-failures:focus {
+  background-color: rgba(78, 93, 21, 0.56);
+  border-color: #cdce1d;
+  color: lightgray;
+}
+.btn-unclassified-failures:active,
+.btn-unclassified-failures.active {
+  background-color: #cdce1d;
+  border-color: #cdce1d;
+  color: #25292b;
+}
+.btn-unclassified-failures.disabled:hover,
+.btn-unclassified-failures.disabled:focus,
+.btn-unclassified-failures.disabled:active,
+.btn-unclassified-failures.disabled.active,
+.btn-unclassified-failures:disabled:hover,
+.btn-unclassified-failures:disabled:focus,
+.btn-unclassified-failures:disabled:active,
+.btn-unclassified-failures:disabled.active,
+fieldset[disabled] .btn-unclassified-failures:hover,
+fieldset[disabled] .btn-unclassified-failures:focus,
+fieldset[disabled] .btn-unclassified-failures:active,
+fieldset[disabled] .btn-unclassified-failures.active {
+  color: #e0e0e0;
+  border-color: #e0e0e0;
+}
+
+/*
+ * Navbar button customization
+ */
+
+.btn-view-nav,
+.btn-view-nav:visited {
+  background-color: transparent;
+  border-color: #373d40;
+  color: lightgray;
+  border-radius: 0;
+  border-bottom: 0;
+  border-top: 0;
+  border-right: 0;
+}
+
+.btn-view-nav:hover,
+.btn-view-nav:focus,
+.btn-view-nav:active,
+.btn-view-nav.active {
+  background-color: #2c3133 !important;
+  border-color: #1a1d20 !important;
+  color: white;
+}
+.btn-view-nav.disabled:hover,
+.btn-view-nav.disabled:focus,
+.btn-view-nav.disabled:active,
+.btn-view-nav.disabled.active,
+.btn-view-nav:disabled:hover,
+.btn-view-nav:disabled:focus,
+.btn-view-nav:disabled:active,
+.btn-view-nav:disabled.active,
+fieldset[disabled] .btn-view-nav:hover,
+fieldset[disabled] .btn-view-nav:focus,
+fieldset[disabled] .btn-view-nav:active,
+fieldset[disabled] .btn-view-nav.active {
+  color: #e0e0e0;
+  border-color: #e0e0e0;
+}
+
+.btn-view-nav-closed {
+  background-color: rgba(107, 4, 4, 0.53);
+  border-color: #22282d;
+  color: lightgray;
+  border-radius: 0;
+  border-bottom: 0;
+  border-top: 0;
+  border-left: 0;
+}
+.btn-view-nav-closed:hover,
+.btn-view-nav-closed:focus,
+.btn-view-nav-closed:active,
+.btn-view-nav-closed.active {
+  background-color: rgba(107, 4, 4, 0.53);
+  border-color: #1a1d20;
+  color: white;
+}
+.btn-view-nav-closed.disabled:hover,
+.btn-view-nav-closed.disabled:focus,
+.btn-view-nav-closed.disabled:active,
+.btn-view-nav-closed.disabled.active,
+.btn-view-nav-closed:disabled:hover,
+.btn-view-nav-closed:disabled:focus,
+.btn-view-nav-closed:disabled:active,
+.btn-view-nav-closed:disabled.active,
+fieldset[disabled] .btn-view-nav-closed:hover,
+fieldset[disabled] .btn-view-nav-closed:focus,
+fieldset[disabled] .btn-view-nav-closed:active,
+fieldset[disabled] .btn-view-nav-closed.active {
+  color: #e0e0e0;
+  border-color: #e0e0e0;
+}
+
+@media (min-width: 960px) {
+  .strikethrough::after {
+    text-decoration: line-through;
+  }
+
+  .btn-toggle-duplicate-jobs::after {
+    content: ' Duplicates';
+  }
+}
+
+.navbar-badge.badge * {
+  cursor: default;
+}
+
+.navbar-badge.badge {
+  margin: 0 5px;
+}
+
+#notification-dropdown {
+  max-width: 25em;
+  max-height: 20em;
+  overflow-y: scroll;
+  padding-left: 20px;
+  padding-right: 14px;
+}
+
+#notification-dropdown .dropdown-header {
+  padding-left: 0;
+  padding-bottom: 4px;
+}
+
+.notification-dropdown-line {
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+}
+
+.notification-dropdown-btn {
+  margin-left: 4px;
+  font-size: 10px;
+}
+
+#repo-dropdown {
+  min-width: 30rem;
+  max-height: 35rem;
+  overflow-x: hidden;
+}
+
+.dropdown-menu li {
+  list-style: none;
+}
+
+.dropdown-header {
+  font-size: 12px;
+  color: #656f77;
+}
+
+.dropdown-link,
+.dropdown-link > a {
+  color: #212529cc;
+  padding-top: 0.5rem;
+}
+
+#infra-dropdown {
+  min-width: 21rem;
+}
+
+.checkbox-dropdown-menu .repogroup {
+  padding-left: 0;
+}
+
+.dropdown-item:hover {
+  background-color: #d3d3d34d;
+}
+
+/* Used by Perfherder and IFV */
+.top-navbar {
+  background-color: #222;
+}
+
+.navbar-link {
+  color: lightgray;
+}
+
+.navbar-link:hover {
+  color: lightgray;
+}
+
+.navbar-link:visited {
+  color: lightgray;
+}
+
+/* Watched repo */
+
+.btn-watched-repo {
+  padding: 0.375rem 0.5rem;
+}

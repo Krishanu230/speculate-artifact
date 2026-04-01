@@ -1,0 +1,66 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PIP_NO_CACHE_DIR=1
+
+RUN apt-get update && apt-get install -y \
+    software-properties-common curl gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /etc/apt/keyrings/postgresql.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt jammy-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+
+RUN apt-get update && apt-get install -y \
+    bash ca-certificates curl \
+    postgresql-client-15 nodejs npm dos2unix gcc default-libmysqlclient-dev \
+    ffmpeg exiftool libmagic1 libpq-dev gettext tzdata \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN add-apt-repository -y ppa:deadsnakes/ppa && \
+    apt-get update && apt-get install -y \
+    python3.9 python3.9-venv python3.9-dev \
+    python3.11 python3.11-venv python3.11-dev cmake g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /artifact
+
+COPY tool /artifact/tool
+COPY benchmarks/django /artifact/benchmarks/django
+COPY scripts /artifact/scripts
+
+RUN chmod +x /artifact/scripts/*.sh && mkdir -p /artifact/outputs
+
+RUN python3.9 -m venv /venvs/treeherder && \
+    python3.9 -m venv /venvs/mathesar && \
+    python3.11 -m venv /venvs/librephotos && \
+    python3.11 -m venv /venvs/education-backend
+
+WORKDIR /artifact/benchmarks/django/treeherder
+RUN /venvs/treeherder/bin/pip install --upgrade pip && \
+    /venvs/treeherder/bin/pip install -r requirements/common.txt && \
+    /venvs/treeherder/bin/pip install -r /artifact/tool/knowl-apidocs/requirements.txt
+
+WORKDIR /artifact/benchmarks/django/mathesar
+RUN find . -type f -name "*.sh" -exec sed -i 's/\r$//' {} + && \
+    /venvs/mathesar/bin/pip install --upgrade pip && \
+    /venvs/mathesar/bin/pip install -r requirements.txt && \
+    /venvs/mathesar/bin/pip install --upgrade --force-reinstall numpy pandas && \
+    /venvs/mathesar/bin/pip install -r /artifact/tool/knowl-apidocs/requirements.txt
+
+WORKDIR /artifact/benchmarks/django/librephotos
+RUN /venvs/librephotos/bin/pip install --upgrade pip && \
+    /venvs/librephotos/bin/pip install --default-timeout=1000 -r requirements.txt && \
+    /venvs/librephotos/bin/pip install -r /artifact/tool/knowl-apidocs/requirements.txt
+
+WORKDIR /artifact/benchmarks/django/education-backend
+RUN dos2unix src/manage.py && \
+    cp src/core/.env.ci src/core/.env && \
+    /venvs/education-backend/bin/pip install --upgrade pip poetry poetry-plugin-export && \
+    /venvs/education-backend/bin/poetry export --format=requirements.txt > generated_requirements.txt && \
+    /venvs/education-backend/bin/pip install --default-timeout=1000 -r generated_requirements.txt && \
+    /venvs/education-backend/bin/pip install -r /artifact/tool/knowl-apidocs/requirements.txt
+
+WORKDIR /artifact
+ENTRYPOINT ["/bin/bash", "/artifact/scripts/entrypoint.sh"]
+CMD ["/bin/bash"]

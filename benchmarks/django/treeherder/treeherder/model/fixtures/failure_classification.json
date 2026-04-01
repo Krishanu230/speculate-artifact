@@ -1,0 +1,51 @@
+[
+  {
+    "pk": 1,
+    "model": "model.failureclassification",
+    "fields": {
+      "name": "not classified"
+    }
+  },
+  {
+    "pk": 2,
+    "model": "model.failureclassification",
+    "fields": {
+      "name": "fixed by commit"
+    }
+  },
+  {
+    "pk": 3,
+    "model": "model.failureclassification",
+    "fields": {
+      "name": "expected fail"
+    }
+  },
+  {
+    "pk": 4,
+    "model": "model.failureclassification",
+    "fields": {
+      "name": "intermittent"
+    }
+  },
+  {
+    "pk": 5,
+    "model": "model.failureclassification",
+    "fields": {
+      "name": "infra"
+    }
+  },
+  {
+    "pk": 6,
+    "model": "model.failureclassification",
+    "fields": {
+      "name": "new failure not classified"
+    }
+  },
+  {
+    "pk": 7,
+    "model": "model.failureclassification",
+    "fields": {
+      "name": "autoclassified intermittent"
+    }
+  }
+]

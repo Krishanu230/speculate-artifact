@@ -1,0 +1,95 @@
+.menu {
+  $spacing-x-default: 0.5em;
+  $spacing-y-default: 0.5em;
+  display: inline-flex;
+  flex-direction: column;
+  min-width: var(--min-width, 0);
+
+  .menu-heading {
+    color: var(--slate-500);
+    padding: 0.2em 0.5em;
+  }
+
+  .menu-divider {
+    border-top: 0.1em solid var(--slate-200);
+    height: 0;
+  }
+
+  .menu-item {
+    cursor: pointer;
+    color: var(--slate-800);
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    background-color: var(--Menu__item-background, transparent);
+    padding: 0 var(--spacing-x, $spacing-x-default);
+    border-radius: var(--Menu__item-border-radius, 0);
+
+    &.menu-item-link {
+      text-decoration: none;
+    }
+    &.menu-item-button {
+      border-radius: inherit;
+      border: inherit;
+      font-family: inherit;
+      font-size: inherit;
+      font-weight: inherit;
+      text-align: inherit;
+      margin: 0;
+    }
+
+    &.danger {
+      color: var(--red-500);
+    }
+    &:not(.disabled):hover {
+      background-color: var(--Menu__item-hover-background, var(--slate-100));
+    }
+    &.disabled {
+      color: var(--slate-300);
+      cursor: not-allowed;
+    }
+    > .label {
+      flex-grow: 1;
+    }
+    > .cell:not(:empty) {
+      padding: var(--spacing-y, $spacing-y-default)
+        calc(var(--spacing-x, $spacing-x-default) / 2);
+    }
+    > .control,
+    > .icon {
+      display: inline-flex;
+      align-items: center;
+      flex-grow: 0;
+    }
+    > .control {
+      --checkbox-margin-bottom: 0;
+    }
+    &.active {
+      background-color: var(--Menu__item-active-background, transparent);
+      &:hover {
+        background-color: var(
+          --Menu__item-active-hover-background,
+          var(--slate-100)
+        );
+      }
+    }
+    &:focus {
+      outline: 2px solid var(--Menu__item-focus-outline-color, transparent);
+    }
+  }
+
+  &.has-icon {
+    .menu-item > .icon {
+      width: calc(
+        var(--Menu__icon-width) + var(--spacing-x, $spacing-x-default)
+      );
+    }
+  }
+  &.has-control {
+    .menu-item > .control {
+      width: calc(
+        var(--Menu__control-width) + var(--spacing-x, $spacing-x-default)
+      );
+    }
+  }
+}

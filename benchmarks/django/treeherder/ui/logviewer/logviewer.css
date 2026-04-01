@@ -1,0 +1,35 @@
+html,
+body,
+#root {
+  height: 100%;
+}
+
+.dropdown-menu {
+  top: inherit;
+}
+
+.error-lines {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.error-line:hover {
+  background-color: lightgrey;
+}
+
+.error-line-text {
+  word-break: break-all;
+}
+
+.job-data-panel {
+  overflow-y: auto;
+  flex: 1;
+}
+
+#job-info label {
+  margin-right: 5px;
+}
+
+.run-data {
+  max-height: 250px;
+}

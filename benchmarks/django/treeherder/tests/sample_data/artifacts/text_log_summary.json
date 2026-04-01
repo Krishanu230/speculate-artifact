@@ -1,0 +1,27 @@
+{
+  "blob": {
+    "errors": [
+      {
+        "line": "05:35:49     INFO -  2018 INFO TEST-UNEXPECTED-FAIL | dom/indexedDB/test/test_transaction_lifetimes.html | Should be able to get objectStore - expected PASS",
+        "linenumber": 8151
+      },
+      {
+        "line": "05:35:49     INFO -  2019 INFO TEST-UNEXPECTED-FAIL | dom/indexedDB/test/test_transaction_lifetimes.html | Should be able to get index - expected PASS",
+        "linenumber": 8152
+      },
+      {
+        "line": "05:35:49     INFO -  2023 INFO TEST-UNEXPECTED-FAIL | dom/indexedDB/test/test_transaction_lifetimes.html | Ordering is correct. - expected PASS",
+        "linenumber": 8156
+      },
+      {
+        "line": "05:35:49     INFO -  2024 INFO TEST-UNEXPECTED-FAIL | dom/indexedDB/test/test_transaction_lifetimes.html | Worker: uncaught exception [http://mochi.test:8888/tests/dom/indexedDB/test/unit/test_transaction_lifetimes.js:45]: ': InvalidStateError: An attempt was made to use an object that is not, or is no longer, usable' - expected PASS",
+        "linenumber": 8157
+      }
+    ],
+    "logurl": "http://ftp.mozilla.org/pub/mozilla.org/firefox/nightly/2015/04/2015-04-15-03-02-06-mozilla-central/mozilla-central_snowleopard_test-mochitest-2-bm107-tests1-macosx-build128.txt.gz"
+  },
+  "type": "json",
+  "id": 8217463,
+  "name": "text_log_summary",
+  "job_id": 1330578
+}

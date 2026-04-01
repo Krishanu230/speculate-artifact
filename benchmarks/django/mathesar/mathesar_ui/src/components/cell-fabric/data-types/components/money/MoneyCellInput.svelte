@@ -1,0 +1,46 @@
+<script lang="ts">
+  import { StringifiedNumberInput } from '@mathesar-component-library';
+  import type { StringifiedNumberInputProps } from '@mathesar-component-library/types';
+  import type { NumberCellProps } from '../typeDefinitions';
+
+  interface $$Props extends Omit<StringifiedNumberInputProps, 'value'> {
+    value: NumberCellProps['value'];
+  }
+
+  type ParentValue = $$Props['value'];
+  type ChildValue = string | null;
+
+  let parentValue: ParentValue = undefined;
+  export { parentValue as value };
+
+  let childValue: ChildValue = null;
+
+  function getNewChildValue(newParentValue: ParentValue): ChildValue {
+    if (newParentValue === undefined || newParentValue === null) {
+      return null;
+    }
+    return String(newParentValue);
+  }
+  function handleParentValueChange(newParentValue: ParentValue) {
+    childValue = getNewChildValue(newParentValue);
+  }
+  $: handleParentValueChange(parentValue);
+  $: cssVariables = {
+    '--input-element-text-align': 'right',
+    ...($$restProps.cssVariables || {}),
+  };
+</script>
+
+<StringifiedNumberInput
+  {...$$restProps}
+  value={childValue}
+  {cssVariables}
+  on:blur
+  on:focus
+  on:keydown
+  on:artificialInput={({ detail: newChildValue }) => {
+    parentValue = newChildValue;
+  }}
+  on:artificialInput
+  on:artificialChange
+/>

@@ -1,0 +1,48 @@
+<script lang="ts">
+  import { FormattedInput } from '@mathesar-component-library';
+  import SteppedInputCell from '../SteppedInputCell.svelte';
+  import type { FormattedInputCellProps } from '../typeDefinitions';
+
+  type $$Props = FormattedInputCellProps;
+
+  export let isActive: $$Props['isActive'];
+  export let isSelectedInRange: $$Props['isSelectedInRange'];
+  export let value: $$Props['value'];
+  export let disabled: $$Props['disabled'];
+  export let isIndependentOfSheet: $$Props['isIndependentOfSheet'];
+  export let showTruncationPopover: $$Props['showTruncationPopover'] = false;
+  export let formatter: $$Props['formatter'];
+  export let formatForDisplay: $$Props['formatForDisplay'];
+
+  $: cssVariables = {
+    '--input-element-text-align': 'right',
+    ...($$restProps.cssVariables || {}),
+  };
+</script>
+
+<SteppedInputCell
+  bind:value
+  {isActive}
+  {isSelectedInRange}
+  {disabled}
+  {isIndependentOfSheet}
+  {showTruncationPopover}
+  horizontalAlignment="right"
+  let:handleInputBlur
+  let:handleInputKeydown
+  formatValue={formatForDisplay}
+  on:movementKeyDown
+  on:activate
+  on:mouseenter
+  on:update
+>
+  <FormattedInput
+    focusOnMount={true}
+    {...$$restProps}
+    bind:value
+    {formatter}
+    {cssVariables}
+    on:blur={handleInputBlur}
+    on:keydown={handleInputKeydown}
+  />
+</SteppedInputCell>

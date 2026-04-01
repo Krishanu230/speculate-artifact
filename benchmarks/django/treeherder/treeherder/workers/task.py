@@ -1,0 +1,68 @@
+import random
+import zlib
+from functools import wraps
+
+import jsonschema
+import newrelic.agent
+from celery import shared_task
+from django.db.utils import IntegrityError, ProgrammingError
+
+from treeherder.etl.exceptions import MissingPushException
+
+
+class retryable_task:
+    """Wrapper around a celery task to add conditional task retrying."""
+
+    NON_RETRYABLE_EXCEPTIONS = (
+        IndexError,
+        IntegrityError,
+        jsonschema.ValidationError,
+        KeyError,
+        ProgrammingError,
+        TypeError,
+        UnicodeDecodeError,
+        ValueError,
+        zlib.error,  # eg during log decompression
+    )
+
+    # For these exceptions, we expect a certain amount of retries
+    # but to report each one is just noise.  So don't raise to
+    # New Relic until the retries have been exceeded.
+    HIDE_DURING_RETRIES = (MissingPushException,)
+
+    def __init__(self, *args, **kwargs):
+        self.task_args = args
+        self.task_kwargs = kwargs
+
+    def __call__(self, f):
+        @wraps(f)
+        def inner(*args, **kwargs):
+            try:
+                return f(*args, **kwargs)
+            except self.NON_RETRYABLE_EXCEPTIONS:
+                raise
+            except Exception as e:
+                number_of_prior_retries = task_func.request.retries
+                # Whilst the New Relic agent does report the exception that caused a retry,
+                # it does so in a form like:
+                #   `celery.exceptions:Retry: Retry in 640s: error('Error -3 while decompressing: incorrect header check',)`
+                # ...which causes all retry exceptions to be lumped together in the same
+                # `celery.exceptions:Retry` group. The original exception is then only
+                # reported to New Relic once the max number of retries has been reached.
+                # As such we manually report the retried exceptions to New Relic here, so
+                # that the original exception is shown verbatim immediately, and then filter
+                # out the automatic `celery.exceptions:Retry` exceptions via the web UI. See:
+                # https://docs.newrelic.com/docs/agents/python-agent/back-end-services/python-agent-celery#ignoring-task-retry-errors
+                if not any(isinstance(e, x) for x in self.HIDE_DURING_RETRIES):
+                    params = {
+                        "number_of_prior_retries": number_of_prior_retries,
+                    }
+                    newrelic.agent.notice_error(attributes=params)
+                # Implement exponential backoff with some randomness to prevent
+                # thundering herd type problems. Constant factor chosen so we get
+                # reasonable pause between the fastest retries.
+                timeout = 10 * int(random.uniform(1.9, 2.1) ** number_of_prior_retries)
+                raise task_func.retry(exc=e, countdown=timeout, throw=False)
+
+        task_func = shared_task(*self.task_args, **self.task_kwargs)(inner)
+        return task_func

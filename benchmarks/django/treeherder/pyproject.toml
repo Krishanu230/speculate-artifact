@@ -1,0 +1,54 @@
+[project]
+name = "treeherder"
+version = "1.0.0"
+description = "Defaut package, used for development or readthedocs"
+
+[project.optional-dependencies]
+docs = [
+  "mkdocs==1.5.3",
+  "mkdocs-material==9.1.21",
+  "mdx_truly_sane_lists==1.3",
+]
+
+[tool.setuptools]
+packages = ["treeherder"]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+# A list of all of the optional dependencies, some of which are included in the
+# below `extras`. They can be opted into by apps.
+mkdocs = { version = "==1.4.2", optional = true }
+mkdocs-material = { version = "==8.5.11", optional = true }
+mdx_truly_sane_lists = { version = "1.3", optional = true }
+
+[tool.ruff]
+# Same as Black.
+line-length = 100
+
+# Assume Python 3.9
+target-version = "py39"
+
+# In addition to the standard set of exclusions, omit all tests, plus a specific file.
+extend-exclude = ["*/.*/",".*/","__pycache__","node_modules"]
+
+select = [
+  # pycodestyle
+  "E",
+  "W",
+  # pyflakes
+  "F",
+  # pyupgrade
+  "UP",
+]
+
+ignore = [
+  # E501: line too long
+  "E501",
+]
+
+# Also lint/format pyi files
+extend-include = ["*.pyi"]
+
+[tool.ruff.per-file-ignores]
+# Ignore `module-import-not-at-top-of-file` rule of `pycodestyle`
+"treeherder/model/models.py" = ["E402"]

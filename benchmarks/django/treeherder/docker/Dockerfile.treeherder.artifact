@@ -1,0 +1,23 @@
+# Start from the successfully verified base image
+FROM treeherder-verify:latest
+
+# Switch to root to ensure pip installs packages globally without permission errors
+USER root
+
+# Install the Speculate tool dependencies 
+RUN pip install --no-cache-dir \
+    httpcore \
+    httpx \
+    mixpanel \
+    openai \
+    python-dotenv \
+    aiofiles \
+    google-generativeai \
+    colorama \
+    azure-ai-inference
+
+# CRITICAL: Clear the original entrypoint. 
+# Treeherder's base image tries to start the Django web server by default.
+# We clear it so the wrapper script can run the Speculate python script instead.
+ENTRYPOINT []
+CMD ["/bin/bash"]

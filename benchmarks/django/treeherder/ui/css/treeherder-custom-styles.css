@@ -1,0 +1,580 @@
+/*
+ * Treeherder style settings
+ *
+ * This file contains opt-in styles which can be used across Treeherder
+ * without affecting settings which are either not specific to our
+ * UI component css files, or are shared across Treeherder, Logviewer,
+ * UserGuide, and/or Perfherder.
+ *
+ * Please consider the appropriate css file and attribute location
+ * when adding new styles.
+ */
+
+/* Bootstrap 4 will not show <a> as a link style if it has no href.
+   This adds that style back. */
+.link-style {
+  color: #337ab7 !important;
+  cursor: pointer;
+}
+
+.pagination,
+.panel-title a {
+  cursor: pointer;
+}
+
+.hidden {
+  display: none;
+  visibility: hidden;
+}
+
+.small-text {
+  font-size: 12px;
+}
+
+.font-size-11 {
+  font-size: 11px;
+}
+
+.font-size-12 {
+  font-size: 12px;
+}
+
+.font-size-14 {
+  font-size: 14px;
+}
+
+.font-size-16 {
+  font-size: 16px;
+}
+
+.font-size-18 {
+  font-size: 18px;
+}
+
+.font-size-20 {
+  font-size: 20px;
+}
+
+.font-size-24 {
+  font-size: 24px;
+}
+
+.font-weight-400 {
+  font-weight: 400;
+}
+
+.font-weight-500 {
+  font-weight: 500;
+}
+
+.font-weight-700 {
+  font-weight: 700;
+}
+
+.min-width-1 {
+  min-width: 1rem;
+}
+
+/* this is better for drop down menu items because
+  display: none will change text alignment */
+.hide {
+  visibility: hidden;
+}
+
+.show {
+  visibility: visible;
+}
+
+.button-border {
+  border: 1px solid;
+  border-radius: 5px;
+}
+
+/* Similar Jobs panel */
+.checkbox {
+  min-height: 20px;
+  padding-left: 4px;
+  padding-top: 2px;
+  justify-content: center;
+}
+
+.dropdown-menu > li > a {
+  cursor: pointer;
+}
+
+.dropdown-menu > li.disabled > a {
+  pointer-events: none;
+  font-style: italic;
+  color: grey;
+}
+
+.dropdown-menu > li.disabled {
+  cursor: not-allowed;
+}
+
+.dropdown-item {
+  cursor: pointer;
+}
+
+.form-control:focus {
+  border: 1px solid #ced4da;
+  box-shadow: none;
+}
+
+/* Spacing for menus with adjacent icons */
+.icon-menu li a span {
+  width: 20px;
+}
+
+.modal-header .close:hover {
+  cursor: pointer;
+}
+
+/*
+ * Icons
+ */
+
+.logviewer-icon {
+  width: 14px;
+  height: 16px;
+  vertical-align: text-top;
+  opacity: 0.7;
+  user-select: none;
+}
+
+.logviewer-icon:hover {
+  opacity: 0.9;
+}
+
+.icon-blue:hover,
+.icon-blue:focus,
+.icon-blue:active {
+  color: #68aae2 !important;
+}
+
+.icon-green:hover,
+.icon-green:focus,
+.icon-green:active {
+  color: #0de00d !important;
+}
+
+.icon-cyan:hover,
+.icon-cyan:focus,
+.icon-cyan:active {
+  color: #00ffff !important;
+}
+
+.icon-superscript {
+  vertical-align: super;
+  font-size: 0.625em;
+  margin-left: -0.2em;
+}
+
+.hover-warning:hover {
+  color: #fa4444 !important;
+}
+
+.dim-quarter {
+  opacity: 0.75;
+}
+
+/*
+ * Cursors
+ */
+
+.th-spinner {
+  color: rgba(145, 164, 221, 0.7);
+}
+
+.th-spinner-lg {
+  color: rgba(145, 164, 221, 0.3);
+}
+
+.pointable,
+.nav-tabs li {
+  cursor: pointer;
+}
+
+/*
+ * Result status colors
+ *
+ * These colors are used both by Treeherder and Logviewer
+ * so receive global status.
+ */
+
+.result-status-shading-success {
+  background-color: rgba(2, 131, 44, 0.24);
+  border-color: rgba(2, 131, 44, 0.24);
+}
+
+.result-status-shading-testfailed {
+  background-color: rgba(221, 102, 2, 0.5);
+  border-color: rgba(221, 102, 2, 0.25);
+}
+
+.result-status-shading-busted {
+  background-color: rgba(144, 0, 0, 0.5);
+  border-color: rgba(144, 0, 0, 0.25);
+}
+
+.result-status-shading-skipped {
+  background-color: rgba(101, 191, 221, 0.25);
+  border-color: rgba(101, 191, 221, 0.25);
+}
+
+.result-status-shading-exception {
+  background-color: rgba(61, 2, 85, 0.25);
+  border-color: rgba(61, 2, 85, 0.25);
+}
+
+.result-status-shading-retry {
+  background-color: rgba(38, 63, 195, 0.25);
+  border-color: rgba(38, 63, 195, 0.25);
+}
+
+.result-status-shading-usercancel {
+  background-color: rgba(250, 115, 172, 0.25);
+  border-color: rgba(250, 115, 172, 0.25);
+}
+
+.result-status-shading-pending {
+  background-color: rgba(160, 160, 160, 0.2);
+  border-color: rgba(160, 160, 160, 0.2);
+}
+
+.result-status-shading-running {
+  background-color: rgba(70, 70, 70, 0.25);
+  border-color: rgba(70, 70, 70, 0.25);
+}
+
+.result-status-shading-unknown {
+  background-color: rgb(252, 248, 227);
+  border-color: rgb(251, 216, 144);
+}
+
+.result-status-shading-superseded {
+  background-color: white;
+}
+
+/*
+ * Colors
+ */
+
+.lightgray,
+.lightgray a {
+  color: lightgray;
+}
+
+.bg-lightgray {
+  background-color: lightgray;
+}
+
+.midgray,
+.midgray a {
+  color: gray;
+}
+
+.lightorange {
+  color: #eba870;
+}
+
+.darkorange {
+  color: #dd6602;
+}
+
+/*
+ * Text
+ */
+
+.queryparam {
+  display: inline-block;
+  font: 12px Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+  color: #555;
+}
+
+.strike-through {
+  text-decoration: line-through;
+}
+
+.nowrap {
+  overflow-x: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.help-block {
+  color: #737373;
+}
+
+/*
+ * Bootstrap/Reactstrap Custom Colors
+ */
+
+/* Darker Info */
+.text-darker-info {
+  color: #0d7d8f;
+}
+
+.alert-darker-info,
+.badge-darker-info {
+  background: #0d7d8f;
+  color: white;
+}
+
+.bg-darker-info {
+  background-color: #0d7d8f;
+}
+
+.btn-darker-info {
+  background-color: #0d7d8f;
+  border-color: #0d7d8f;
+  color: #ffffff;
+}
+
+.btn-darker-info:hover {
+  color: #ffffff;
+  background-color: #0a5e6d;
+}
+
+.btn-darker-info.disabled {
+  color: black;
+  background-color: #30b9ce80;
+}
+
+.btn-outline-darker-info {
+  color: #0d7d8f;
+  border-color: #0d7d8f;
+}
+
+.btn-outline-darker-info:hover,
+.btn-outline-darker-info:not(:disabled):not(.disabled).active {
+  background-color: #0d7d8f;
+  border-color: #0d7d8f;
+  color: #ffffff;
+}
+
+.btn-outline-darker-info.disabled {
+  color: #02363f;
+  background-color: white;
+  border-color: #0d7d8f;
+}
+
+/* Darker Secondary */
+.text-darker-secondary {
+  color: #53595f !important;
+}
+
+.alert-darker-secondary,
+.badge-darker-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.bg-darker-secondary {
+  background-color: #6c757d;
+}
+
+.btn-darker-secondary {
+  color: #ffffff;
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.btn-darker-secondary:hover {
+  color: #ffffff;
+  background-color: #5a6268;
+  border-color: #545b62;
+}
+
+.btn-darker-secondary:visited {
+  color: #ffffff;
+}
+
+.btn-darker-secondary.disabled {
+  color: #242424;
+  background-color: white;
+  border-color: #6c757d;
+}
+
+.btn-outline-darker-secondary {
+  color: #6c757d;
+  background-color: #fff;
+  border-color: #6c757d;
+}
+
+.link-darker-secondary {
+  color: #6c757d;
+}
+
+.link-darker-secondary:visited {
+  color: #6c757d;
+}
+
+.link-darker-secondary:hover {
+  color: #5a6268;
+}
+/*
+ * Tables and panels
+ */
+
+.table-super-condensed thead > tr > th,
+.table-super-condensed tbody > tr > th,
+.table-super-condensed tfoot > tr > th,
+.table-super-condensed thead > tr > td,
+.table-super-condensed tbody > tr > td,
+.table-super-condensed tfoot > tr > td {
+  padding: 2px;
+  font-size: 0.9em;
+}
+
+.panel-spacing table {
+  width: 100%;
+}
+
+.panel-spacing tr th:first-child {
+  padding-right: 2em;
+}
+
+.panel-spacing tr:nth-child(even) {
+  background-color: #f8f8f8;
+}
+
+.panel-spacing table tr {
+  border-bottom: 1px dotted lightgrey;
+}
+
+.modal-lg {
+  max-width: 890px;
+}
+
+.row-height-tight {
+  line-height: 15px !important;
+}
+
+/* ReactTable overriding row, button and link color style for contrast pass */
+.ReactTable .-pagination .-btn:focus {
+  box-shadow: 0 0 0 0.2rem rgba(130, 138, 145, 0.5);
+}
+
+.ReactTable .-pagination .-btn[disabled] {
+  background-color: rgba(0, 0, 0, 0.03);
+  opacity: 1;
+}
+
+.ReactTable .item-badge {
+  color: black;
+}
+
+.rt-tbody a {
+  color: #187c86;
+}
+
+/*
+ * Onscreen help
+ */
+#onscreen-shortcuts {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10000;
+  width: 100%;
+  max-width: 960px;
+}
+
+#onscreen-shortcuts div div.card {
+  max-height: 90vh;
+  overflow: auto;
+}
+
+/*
+ * Clipboard
+ *
+ * This facilitates copy on hover for
+ * Logviewer, Raw Log, and Job:name buttons/links
+ */
+
+#clipboard-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  z-index: 100;
+  display: none;
+  opacity: 0;
+}
+
+#clipboard {
+  width: 1px;
+  height: 1px;
+  padding: 0;
+}
+
+/*
+ * Fonts
+ *
+ * Styles for modifying basic font styles
+ */
+
+.pre {
+  font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+.max-width-default {
+  max-width: 1250px;
+}
+
+/* Custom widths for compare table cells */
+.table-width-lg {
+  width: 140px;
+}
+
+.table-width-md {
+  width: 100px;
+}
+
+.table-width-sm {
+  width: 50px;
+}
+
+.table-width-xs {
+  width: 20px;
+}
+
+.card-height {
+  height: 260px;
+}
+
+.dropdown-menu-height {
+  max-height: 300px;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+.loading {
+  position: fixed;
+  z-index: 999;
+  height: 2em;
+  width: 2em;
+  overflow: show;
+  margin: auto;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+
+/* overlay */
+.loading:before {
+  content: '';
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(20, 19, 19, 0.3);
+}
