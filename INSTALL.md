@@ -18,8 +18,9 @@ From the `artifact/` directory:
 docker build --target fast -t knowl-artifact -f docker/Dockerfile .
 ```
 
-This takes **2-3 minutes**. It uses pre-compiled Java class files so no
-external Maven/Gradle downloads are needed.
+This uses pre-compiled Java class files so no external Maven/Gradle downloads
+are needed. Build time: **2-3 minutes** on a warm cache; **25-35 minutes** on
+a first build (librephotos ML dependencies are compiled from source).
 
 ### 2. Verify the build
 
@@ -36,7 +37,7 @@ docker run --rm -v "$(pwd)/outputs:/artifact/outputs" knowl-artifact
 This runs the `restcountries` benchmark end-to-end. LLM credentials are
 fetched automatically on startup. Generated output appears in `outputs/`.
 
-### 4. Run any benchmark
+### 4. Run any Java benchmark
 
 ```bash
 docker run --rm \
@@ -45,15 +46,23 @@ docker run --rm \
   /artifact/scripts/run_java_repo.sh --analyze-only <repo-id>
 ```
 
+### 5. Run any Django benchmark
+
+```bash
+bash scripts/run_django.sh <repo-id>
+# repo-ids: mathesar, education-backend, treeherder, librephotos
+```
+
 See `README.md` for the full list of repo IDs and options.
 
 ## Expected install time
 
 | Step | Time |
 |------|------|
-| Docker image build (fast mode) | 2-3 minutes |
-| First benchmark run (restcountries) | 2-5 minutes (depends on LLM response time) |
-| **Total** | **< 10 minutes** |
+| Docker image build (warm cache) | 2-3 minutes |
+| Docker image build (first build) | 25-35 minutes (librephotos ML compilation) |
+| First Java benchmark run (restcountries) | 2-5 minutes (depends on LLM response time) |
+| First Django benchmark run | 3-10 minutes (depends on repo and LLM response time) |
 
 ## Alternate build: compile from source
 

@@ -5,7 +5,7 @@
 - **CPU**: Any modern x86_64 or ARM64 processor
 - **RAM**: At least 4 GB allocated to Docker (8 GB recommended for the
   gravitee-apim-rest-api benchmark)
-- **Disk**: ~2 GB free (1.2 GB artifact bundle + 1 GB Docker image)
+- **Disk**: ~12 GB free (1.2 GB artifact bundle + ~10 GB Docker image including Django ML deps)
 
 ## Software
 
@@ -22,6 +22,5 @@
 
 ## Platform note
 
-The Docker image is built for `linux/amd64`. On ARM64 hosts (e.g., Apple
-Silicon Macs), Docker runs the image under emulation. This is functional
-but slower than native execution.
+The Docker image is multi-arch and builds natively for both `linux/amd64`
+and `linux/arm64` (Apple Silicon Macs). No emulation overhead.

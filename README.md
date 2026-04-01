@@ -1,25 +1,29 @@
 # Speculate: Generating REST API Specifications Using LLMs
 
 This is the artifact for our FSE 2026 paper. It contains the Speculate tool,
-15 Java benchmark repositories from the Respector dataset, and scripts to
-reproduce the OpenAPI specification generation described in the paper.
+15 Java benchmark repositories from the Respector dataset, 4 Django benchmark
+repositories, and scripts to reproduce the OpenAPI specification generation
+described in the paper.
 
 ## Contents
 
 ```
 artifact/
-  benchmarks/java/   15 Java REST API repositories (source code)
-  precompiled/       Pre-compiled class files for all 15 repos
-  results/           Pre-computed results from our runs (not included in Docker image)
-    Runs/            Per-model generation outputs (zipped)
-    RQ1/             Evaluation specs used in the paper (dev, ideal, respector)
-  tool/              Speculate tool source code
-  scripts/           Helper scripts used inside the container
-  docker/            Dockerfile
-  outputs/           Mount point for fresh run outputs
+  benchmarks/java/    15 Java REST API repositories (source code)
+  benchmarks/django/  4 Django REST API repositories (source code)
+  precompiled/        Pre-compiled class files for all 15 Java repos
+  results/            Pre-computed results from our runs (not included in Docker image)
+    Runs/             Per-model generation outputs (zipped)
+    RQ1/              Evaluation specs used in the paper (dev, ideal, respector)
+  tool/               Speculate tool source code
+  scripts/            Helper scripts used inside the container
+  docker/             Dockerfile
+  outputs/            Mount point for fresh run outputs
 ```
 
 ## Benchmark Repositories
+
+### Java (15 repos)
 
 | # | Repo ID | Framework | Java |
 |---|---------|-----------|------|
@@ -42,11 +46,23 @@ artifact/
 The full manifest with build commands, class paths, and other metadata is in
 `benchmarks/java/repos.json`.
 
+### Django (4 repos)
+
+| # | Repo ID | Python |
+|---|---------|--------|
+| 1 | mathesar | 3.9 |
+| 2 | education-backend | 3.11 |
+| 3 | treeherder | 3.9 |
+| 4 | librephotos | 3.11 |
+
+The manifest with settings modules, venv paths, and other metadata is in
+`benchmarks/django/repos.json`.
+
 ## Prerequisites
 
 - **Docker** (Docker Desktop or Docker Engine with BuildKit support)
-- **Disk space**: ~1 GB for the built Docker image, plus output space
-- **Memory**: at least 4 GB allocated to Docker (8 GB recommended for gravitee)
+- **Disk space**: ~10 GB for the built Docker image (includes Java + Django venvs with ML deps), plus output space
+- **Memory**: at least 4 GB allocated to Docker (8 GB recommended for gravitee and librephotos)
 - **LLM API access**: the tool requires at least one LLM provider to generate
   OpenAPI specs. Supported providers are Azure OpenAI, Google Vertex AI
   (Gemini), and DeepSeek. See [LLM Configuration](#llm-configuration) below.
@@ -75,9 +91,11 @@ From the `artifact/` directory:
 docker build --target fast -t knowl-artifact -f docker/Dockerfile .
 ```
 
-This uses pre-compiled Java class files and typically completes in **2-3
-minutes**. The image includes JDK 8, JDK 11, Python, Maven, and all tool
-dependencies.
+This uses pre-compiled Java class files. The image includes JDK 8, JDK 11,
+Python, Maven, and all tool dependencies including Django venvs for all 4
+Python repos. Build time: **2-3 minutes** on a warm cache; **25-35 minutes**
+on a first build (librephotos ML dependencies — dlib, llama-cpp-python — are
+compiled from source).
 
 ### Run on a single benchmark
 
@@ -134,7 +152,9 @@ The Dockerfile supports two targets:
 docker build --target fast -t knowl-artifact -f docker/Dockerfile .
 ```
 
-Uses pre-compiled class files from `precompiled/`. Build time: **2-3 minutes**.
+Uses pre-compiled Java class files from `precompiled/`. Build time: **2-3
+minutes** on a warm cache; **25-35 minutes** on a first build due to
+librephotos ML dependency compilation.
 
 ### Rebuild mode (compile from source)
 
@@ -148,7 +168,9 @@ run. Maven/Gradle dependencies are downloaded during the build.
 
 ## Running Benchmarks
 
-### Analyze a bundled repo (analysis only, no recompilation)
+### Java benchmarks
+
+##### Analyze a bundled repo (analysis only, no recompilation)
 
 ```bash
 docker run --rm \
@@ -161,7 +183,7 @@ docker run --rm \
 This is the standard mode. It uses the pre-compiled classes already in the
 image and runs the Speculate tool to generate an OpenAPI specification.
 
-### Full run (recompile + analyze)
+#### Full run (recompile + analyze)
 
 ```bash
 docker run --rm \
@@ -173,6 +195,30 @@ docker run --rm \
 
 This first recompiles the Java project from source inside the container, then
 runs analysis.
+
+### Django benchmarks
+
+Run any of the 4 bundled Django repos using the host wrapper script:
+
+```bash
+bash scripts/run_django.sh <repo-id>
+```
+
+Or directly with Docker:
+
+```bash
+docker run --rm \
+  -v "$(pwd)/outputs:/artifact/outputs" \
+  knowl-artifact \
+  /artifact/scripts/run_django_repo.sh <repo-id>
+```
+
+Valid `<repo-id>` values: `mathesar`, `education-backend`, `treeherder`, `librephotos`.
+
+Generated output appears under `outputs/<repo-id>/<timestamp>/`.
+
+To use your own LLM credentials, pass `--env-file reviewer.env` as with the
+Java benchmarks.
 
 ### Run on a custom (non-bundled) repository
 
@@ -345,7 +391,7 @@ token usage, and validation results.
 
 ## Repo IDs Reference
 
-For convenience, here are all valid `<repo-id>` values:
+### Java
 
 ```
 cwa-verification-server
@@ -365,6 +411,15 @@ kafka-rest
 gravitee-apim-rest-api
 ```
 
+### Django
+
+```
+mathesar
+education-backend
+treeherder
+librephotos
+```
+
 ## Troubleshooting
 
 **"No usable LLM provider configuration was found"**
@@ -375,9 +430,10 @@ file has real values (not the placeholder defaults) for at least one provider.
 Gravitee is the largest benchmark. Increase Docker memory to at least 8 GB:
 Docker Desktop > Settings > Resources > Memory.
 
-**Platform warning (linux/amd64)**
-The image is built for `linux/amd64`. On Apple Silicon Macs, Docker will run
-it under emulation. This is expected and functional, though slower than native.
+**Slow first build**
+On a first build, the librephotos Django venv requires compiling `dlib` and
+`llama-cpp-python` from source. This takes 25-35 minutes. Subsequent builds
+use the Docker layer cache and are fast.
 
 ## License
 
