@@ -3,7 +3,7 @@ set -euo pipefail
 
 ARTIFACT_ROOT="/artifact"
 MANIFEST_PATH="$ARTIFACT_ROOT/benchmarks/java/repos.json"
-TOOL_DIR="$ARTIFACT_ROOT/tool/knowl-apidocs/genapidocs_v2"
+TOOL_DIR="$ARTIFACT_ROOT/tool/speculate-apidocs/genapidocs_v2"
 
 MODE="analyze"
 
@@ -82,7 +82,7 @@ export JAVA_ANALYZER_JAVA_OPTS="${JAVA_ANALYZER_JAVA_OPTS:--Xmx6g}"
 BENCHMARK_DIR="$ARTIFACT_ROOT/benchmarks/java/$REPO_PATH"
 BUILD_DIR="$ARTIFACT_ROOT/benchmarks/java/$BUILD_ROOT"
 BENCHMARK_OUTPUT_DIR="$ARTIFACT_ROOT/outputs/$REPO_ID"
-LOG_LINK="$BENCHMARK_DIR/.knowl_logs2"
+LOG_LINK="$BENCHMARK_DIR/.speculate_logs"
 
 if [ ! -d "$BENCHMARK_DIR" ]; then
   echo "[reviewer] Benchmark directory does not exist: $BENCHMARK_DIR" >&2

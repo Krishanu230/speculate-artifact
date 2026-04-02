@@ -4,7 +4,7 @@ precomputed/
 **/__pycache__/
 **/.pytest_cache/
 **/.DS_Store
-**/.knowl_logs*/
+**/.speculate_logs*/
 **/node_modules/
 **/.git/
 # Exclude target/build dirs from benchmarks (source repos), but NOT from precompiled/

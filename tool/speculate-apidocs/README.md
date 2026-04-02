@@ -1,6 +1,6 @@
 ## Using our generator
 
-1. set the .env file in the knowl-apidocs folder.
+1. set the .env file in the speculate-apidocs folder.
 2. use the following command to run the tool 'python gen_apidocs2.py ../../reviewapi/'
 3. we can set the different models using: 
 'python gen_apidocs2.py ../../reviewapi/ --spec-model gpt_4_1 --context-model gpt_4o_mini'

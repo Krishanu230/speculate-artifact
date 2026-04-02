@@ -11,7 +11,7 @@ Things Tried:
 
 ## TODOs
 - [x] Fill in the Django repos.
-- [ ] Work on code refactoring and cleanup things like unwanted logs and keywords like 'knowl'.
+- [x] Work on code refactoring and cleanup things like unwanted logs and keywords like 'knowl'.
 - [ ] Verify on a case-by-case basis that the runs match the numbers reported in the paper: differing on gravitee
 - [ ] Add a run-all mode to the runner.
 - [x] Find a safe way to share LLM keys with reviewers. Perhaps a one-time fetch during setup could work.

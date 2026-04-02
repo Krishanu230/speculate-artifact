@@ -37,7 +37,7 @@ RUN chmod +x /artifact/scripts/prepare_java_tool.sh
 RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m venv "$VIRTUAL_ENV" \
     && "$VIRTUAL_ENV/bin/pip" install --upgrade pip \
-    && "$VIRTUAL_ENV/bin/pip" install -r /artifact/tool/knowl-apidocs/requirements.txt
+    && "$VIRTUAL_ENV/bin/pip" install -r /artifact/tool/speculate-apidocs/requirements.txt
 
 RUN --mount=type=cache,target=/root/.m2 \
     /artifact/scripts/prepare_java_tool.sh
@@ -85,7 +85,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     && /opt/django-venvs/mathesar/bin/pip install -r /tmp/mathesar/requirements-filtered.txt \
     && /opt/django-venvs/mathesar/bin/pip install --upgrade --force-reinstall numpy pandas \
     && /opt/django-venvs/mathesar/bin/pip install "clevercsv>=0.8.0" \
-    && grep -vE '^(Django|djangorestframework)$' /artifact/tool/knowl-apidocs/requirements.txt > /tmp/mathesar-tool-requirements.txt \
+    && grep -vE '^(Django|djangorestframework)$' /artifact/tool/speculate-apidocs/requirements.txt > /tmp/mathesar-tool-requirements.txt \
     && /opt/django-venvs/mathesar/bin/pip install -r /tmp/mathesar-tool-requirements.txt
 
 FROM django-runtime AS django-education-backend-deps
@@ -96,7 +96,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     && cd /tmp/education-backend \
     && /opt/django-venvs/education-backend/bin/poetry export --without-hashes --only main --format=requirements.txt --output requirements.txt \
     && /opt/django-venvs/education-backend/bin/pip install -r requirements.txt \
-    && grep -vE '^(Django|djangorestframework)$' /artifact/tool/knowl-apidocs/requirements.txt > /tmp/education-backend-tool-requirements.txt \
+    && grep -vE '^(Django|djangorestframework)$' /artifact/tool/speculate-apidocs/requirements.txt > /tmp/education-backend-tool-requirements.txt \
     && /opt/django-venvs/education-backend/bin/pip install -r /tmp/education-backend-tool-requirements.txt
 
 FROM django-runtime AS django-librephotos-runtime
@@ -128,7 +128,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     && python3.11 -m venv /opt/django-venvs/librephotos \
     && /opt/django-venvs/librephotos/bin/pip install --upgrade pip \
     && CMAKE_BUILD_PARALLEL_LEVEL=1 /opt/django-venvs/librephotos/bin/pip install --default-timeout=1000 -r /tmp/librephotos/requirements.txt \
-    && grep -vE '^(Django|djangorestframework)$' /artifact/tool/knowl-apidocs/requirements.txt > /tmp/librephotos-tool-requirements.txt \
+    && grep -vE '^(Django|djangorestframework)$' /artifact/tool/speculate-apidocs/requirements.txt > /tmp/librephotos-tool-requirements.txt \
     && /opt/django-venvs/librephotos/bin/pip install --default-timeout=1000 -r /tmp/librephotos-tool-requirements.txt \
     && rm -rf /var/lib/apt/lists/*
 
@@ -143,7 +143,7 @@ RUN --mount=type=cache,target=/root/.cache/pip \
     && python3.9 -m venv /opt/django-venvs/treeherder \
     && /opt/django-venvs/treeherder/bin/pip install --upgrade pip \
     && /opt/django-venvs/treeherder/bin/pip install -r /tmp/treeherder/requirements-common.txt \
-    && grep -vE '^(Django|djangorestframework)$' /artifact/tool/knowl-apidocs/requirements.txt > /tmp/treeherder-tool-requirements.txt \
+    && grep -vE '^(Django|djangorestframework)$' /artifact/tool/speculate-apidocs/requirements.txt > /tmp/treeherder-tool-requirements.txt \
     && /opt/django-venvs/treeherder/bin/pip install -r /tmp/treeherder-tool-requirements.txt \
     && rm -rf /var/lib/apt/lists/*
 
@@ -161,7 +161,7 @@ RUN find /artifact/benchmarks/django/mathesar -type f -name "*.sh" -exec sed -i 
 
 # ===========================================================================
 # FAST MODE (default): overlay pre-compiled class files onto clean source
-# Usage: docker build --target fast -t knowl-artifact -f docker/Dockerfile .
+# Usage: docker build --target fast -t speculate-artifact -f docker/Dockerfile .
 # ===========================================================================
 FROM django-integrated-sources AS fast
 COPY --from=django-mathesar-deps /opt/django-venvs/mathesar /opt/django-venvs/mathesar
@@ -174,7 +174,7 @@ CMD ["/bin/bash", "/artifact/scripts/run_restcountries_review.sh"]
 
 # ===========================================================================
 # REBUILD MODE: compile all benchmark repos from source (parallel stages)
-# Usage: docker build --target rebuild -t knowl-artifact -f docker/Dockerfile .
+# Usage: docker build --target rebuild -t speculate-artifact -f docker/Dockerfile .
 # ===========================================================================
 
 FROM base AS compile-cwa-verification-server

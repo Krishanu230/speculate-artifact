@@ -799,13 +799,13 @@ async def generate_api_docs(args):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     run_dir_name = f"{timestamp}_{spec_model_name_safe}_{context_model_name_safe}_{repo_name}"
 
-    knowl_folder = os.path.join(".knowl_logs2", run_dir_name)
-    output_path = os.path.join(project_path, knowl_folder)
+    speculate_folder = os.path.join(".speculate_logs", run_dir_name)
+    output_path = os.path.join(project_path, speculate_folder)
 
     Path(output_path).mkdir(parents=True, exist_ok=True)
-    
+
     # Configure logging with the same approach as original implementation
-    configure_logging_directory(project_path, knowl_folder)
+    configure_logging_directory(project_path, speculate_folder)
     
     debug_logger.info(f"Starting API documentation generation for {project_path}")
     debug_logger.info(f"Output will be saved to: {output_path}")

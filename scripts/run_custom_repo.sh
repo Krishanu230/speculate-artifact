@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ARTIFACT_ROOT="/artifact"
-TOOL_DIR="$ARTIFACT_ROOT/tool/knowl-apidocs/genapidocs_v2"
+TOOL_DIR="$ARTIFACT_ROOT/tool/speculate-apidocs/genapidocs_v2"
 OUTPUTS_DIR="$ARTIFACT_ROOT/outputs"
 
 usage() {
@@ -111,7 +111,7 @@ fi
 BENCHMARK_OUTPUT_DIR="$OUTPUTS_DIR/$OUTPUT_LABEL"
 mkdir -p "$BENCHMARK_OUTPUT_DIR"
 
-LOG_LINK="$REPO_PATH/.knowl_logs2"
+LOG_LINK="$REPO_PATH/.speculate_logs"
 if [ ! -L "$LOG_LINK" ]; then
   rm -rf "$LOG_LINK"
   ln -s "$BENCHMARK_OUTPUT_DIR" "$LOG_LINK"

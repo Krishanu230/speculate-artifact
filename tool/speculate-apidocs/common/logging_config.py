@@ -127,9 +127,9 @@ class SetupLogging:
         else:
             return cls()
 
-def configure_logging_directory(directory_path, knowl_folder=".knowl_logs"):
-    result_dir = os.path.join(directory_path, knowl_folder)
+def configure_logging_directory(directory_path, log_folder=".speculate_logs"):
+    result_dir = os.path.join(directory_path, log_folder)
     if not os.path.exists(result_dir):
         os.makedirs(result_dir)
-    debug_logging_file_path = os.path.join(result_dir, "knowl_debug.log")
+    debug_logging_file_path = os.path.join(result_dir, "speculate_debug.log")
     SetupLogging().add_handlers_to_loggers(debug_logging_file_path)  # Adding handlers for Initial setup with custom log file location for debug logger

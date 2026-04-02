@@ -29,18 +29,14 @@ class CustomExceptionHandler:
             full_stack_trace_str = ''.join(full_stack_trace)  # Convert the list to a single string
             
             # Logging the entire error stack in debug file
-            result_dir = os.path.join(self._directory_path, ".knowl_logs2")
+            result_dir = os.path.join(self._directory_path, ".speculate_logs")
             if not os.path.exists(result_dir):
                 os.makedirs(result_dir)
-            debug_logging_file_path = os.path.join(result_dir, "knowl_debug.log")
+            debug_logging_file_path = os.path.join(result_dir, "speculate_debug.log")
 
             full_stack_trace=f"Unhandled exception caught: {exc_type, exc_value, exc_traceback}"
             with open(debug_logging_file_path,'a') as f:
                 f.write(full_stack_trace_str)
-            
-            # Showing a clean one-line message to customer. 
-            # Not showing for now as we will just show the warning.
-            #print("\x1b[38;2;255;165;0mAn error occurred while creating openAPI definition. Please contact support@knowl.io\x1b[0m")
             # Just sending the error code and no trace will be shown
             sys.exit(1)
 

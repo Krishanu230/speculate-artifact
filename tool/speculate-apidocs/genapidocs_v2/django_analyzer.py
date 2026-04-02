@@ -258,8 +258,8 @@ class DjangoAnalyzer(FrameworkAnalyzer):
         
         # Look in package directories
         try:
-            import pypi.knowl_apidocs
-            package_dir = os.path.dirname(pypi.knowl_apidocs.__file__)
+            import pypi.speculate_apidocs
+            package_dir = os.path.dirname(pypi.speculate_apidocs.__file__)
             script_path = os.path.join(package_dir, script_name)
             if os.path.exists(script_path):
                 return script_path

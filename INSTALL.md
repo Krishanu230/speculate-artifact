@@ -15,7 +15,7 @@ From the `artifact/` directory:
 ### 1. Build the Docker image
 
 ```bash
-docker build --target fast -t knowl-artifact -f docker/Dockerfile .
+docker build --target fast -t speculate-artifact -f docker/Dockerfile .
 ```
 
 This uses pre-compiled Java class files so no external Maven/Gradle downloads
@@ -25,13 +25,13 @@ a first build (librephotos ML dependencies are compiled from source).
 ### 2. Verify the build
 
 ```bash
-docker run --rm knowl-artifact echo "Build OK"
+docker run --rm speculate-artifact echo "Build OK"
 ```
 
 ### 3. Run the default benchmark
 
 ```bash
-docker run --rm -v "$(pwd)/outputs:/artifact/outputs" knowl-artifact
+docker run --rm -v "$(pwd)/outputs:/artifact/outputs" speculate-artifact
 ```
 
 This runs the `restcountries` benchmark end-to-end. LLM credentials are
@@ -42,7 +42,7 @@ fetched automatically on startup. Generated output appears in `outputs/`.
 ```bash
 docker run --rm \
   -v "$(pwd)/outputs:/artifact/outputs" \
-  knowl-artifact \
+  speculate-artifact \
   /artifact/scripts/run_java_repo.sh --analyze-only <repo-id>
 ```
 
@@ -70,7 +70,7 @@ To compile all 15 Java repositories from source instead of using pre-compiled
 classes:
 
 ```bash
-docker build --target rebuild -t knowl-artifact -f docker/Dockerfile .
+docker build --target rebuild -t speculate-artifact -f docker/Dockerfile .
 ```
 
 This requires internet access for Maven/Gradle dependency downloads and takes

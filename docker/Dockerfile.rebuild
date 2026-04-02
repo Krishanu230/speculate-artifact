@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 # One-time sequential build to generate precompiled classes.
-# Usage: docker build -t knowl-rebuild -f docker/Dockerfile.rebuild .
+# Usage: docker build -t speculate-rebuild -f docker/Dockerfile.rebuild .
 FROM --platform=linux/amd64 eclipse-temurin:8-jdk AS jdk8
 
 FROM --platform=linux/amd64 maven:3.9.9-eclipse-temurin-11
@@ -35,7 +35,7 @@ RUN chmod +x /artifact/scripts/*.sh
 RUN --mount=type=cache,target=/root/.cache/pip \
     python3 -m venv "$VIRTUAL_ENV" \
     && "$VIRTUAL_ENV/bin/pip" install --upgrade pip \
-    && "$VIRTUAL_ENV/bin/pip" install -r /artifact/tool/knowl-apidocs/requirements.txt
+    && "$VIRTUAL_ENV/bin/pip" install -r /artifact/tool/speculate-apidocs/requirements.txt
 
 RUN --mount=type=cache,target=/root/.m2 \
     /artifact/scripts/prepare_java_tool.sh

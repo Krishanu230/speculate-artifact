@@ -88,7 +88,7 @@ on startup.
 From the `artifact/` directory:
 
 ```bash
-docker build --target fast -t knowl-artifact -f docker/Dockerfile .
+docker build --target fast -t speculate-artifact -f docker/Dockerfile .
 ```
 
 This uses pre-compiled Java class files. The image includes JDK 8, JDK 11,
@@ -105,7 +105,7 @@ keys for the paper's evaluation models on startup.
 ```bash
 docker run --rm \
   -v "$(pwd)/outputs:/artifact/outputs" \
-  knowl-artifact \
+  speculate-artifact \
   /artifact/scripts/run_java_repo.sh --analyze-only <repo-id>
 ```
 
@@ -120,7 +120,7 @@ The generated OpenAPI spec and logs will appear under
 ```bash
 docker run --rm \
   -v "$(pwd)/outputs:/artifact/outputs" \
-  knowl-artifact
+  speculate-artifact
 ```
 
 This runs the `restcountries` benchmark by default.
@@ -130,12 +130,12 @@ This runs the `restcountries` benchmark by default.
 To use your own API keys instead of the bundled defaults, pass an env file:
 
 ```bash
-cp tool/knowl-apidocs/.env.example reviewer.env
+cp tool/speculate-apidocs/.env.example reviewer.env
 # Edit reviewer.env — fill in credentials for at least one provider
 docker run --rm \
   -v "$(pwd)/outputs:/artifact/outputs" \
   --env-file reviewer.env \
-  knowl-artifact \
+  speculate-artifact \
   /artifact/scripts/run_java_repo.sh --analyze-only <repo-id>
 ```
 
@@ -149,7 +149,7 @@ The Dockerfile supports two targets:
 ### Fast mode (default, recommended)
 
 ```bash
-docker build --target fast -t knowl-artifact -f docker/Dockerfile .
+docker build --target fast -t speculate-artifact -f docker/Dockerfile .
 ```
 
 Uses pre-compiled Java class files from `precompiled/`. Build time: **2-3
@@ -159,7 +159,7 @@ librephotos ML dependency compilation.
 ### Rebuild mode (compile from source)
 
 ```bash
-docker build --target rebuild -t knowl-artifact -f docker/Dockerfile .
+docker build --target rebuild -t speculate-artifact -f docker/Dockerfile .
 ```
 
 Compiles all 15 Java repositories from source inside Docker. Build time
@@ -176,7 +176,7 @@ run. Maven/Gradle dependencies are downloaded during the build.
 docker run --rm \
   -v "$(pwd)/outputs:/artifact/outputs" \
   --env-file reviewer.env \
-  knowl-artifact \
+  speculate-artifact \
   /artifact/scripts/run_java_repo.sh --analyze-only <repo-id>
 ```
 
@@ -189,7 +189,7 @@ image and runs the Speculate tool to generate an OpenAPI specification.
 docker run --rm \
   -v "$(pwd)/outputs:/artifact/outputs" \
   --env-file reviewer.env \
-  knowl-artifact \
+  speculate-artifact \
   /artifact/scripts/run_java_repo.sh --full <repo-id>
 ```
 
@@ -209,7 +209,7 @@ Or directly with Docker:
 ```bash
 docker run --rm \
   -v "$(pwd)/outputs:/artifact/outputs" \
-  knowl-artifact \
+  speculate-artifact \
   /artifact/scripts/run_django_repo.sh <repo-id>
 ```
 
@@ -229,7 +229,7 @@ docker run --rm \
   -v "$(pwd)/outputs:/artifact/outputs" \
   -v "/path/to/your/repo:/artifact/custom-repo" \
   --env-file reviewer.env \
-  knowl-artifact \
+  speculate-artifact \
   /artifact/scripts/run_custom_repo.sh \
     --repo-path /artifact/custom-repo \
     --language java \
@@ -293,7 +293,7 @@ Extra flags can be passed to the tool via `run_java_repo.sh` or
 docker run --rm \
   -v "$(pwd)/outputs:/artifact/outputs" \
   --env-file reviewer.env \
-  knowl-artifact \
+  speculate-artifact \
   /artifact/scripts/run_java_repo.sh --analyze-only restcountries \
     --spec-model gpt_4_1 --context-model o4_mini
 ```
@@ -376,7 +376,7 @@ Each run produces a timestamped directory under `outputs/<repo-id>/`:
 ```
 outputs/<repo-id>/<timestamp>_<model>_default_context_<repo-id>/
   openapi.yaml        Generated OpenAPI specification
-  knowl_debug.log     Detailed execution log
+  speculate_debug.log     Detailed execution log
   stats/
     <repo>_stats_<timestamp>.html   Interactive stats dashboard
     <repo>_stats_<timestamp>.json   Raw stats data

@@ -39,19 +39,19 @@ RUN python3.9 -m venv /venvs/treeherder && \
 WORKDIR /artifact/benchmarks/django/treeherder
 RUN /venvs/treeherder/bin/pip install --upgrade pip && \
     /venvs/treeherder/bin/pip install -r requirements/common.txt && \
-    /venvs/treeherder/bin/pip install -r /artifact/tool/knowl-apidocs/requirements.txt
+    /venvs/treeherder/bin/pip install -r /artifact/tool/speculate-apidocs/requirements.txt
 
 WORKDIR /artifact/benchmarks/django/mathesar
 RUN find . -type f -name "*.sh" -exec sed -i 's/\r$//' {} + && \
     /venvs/mathesar/bin/pip install --upgrade pip && \
     /venvs/mathesar/bin/pip install -r requirements.txt && \
     /venvs/mathesar/bin/pip install --upgrade --force-reinstall numpy pandas && \
-    /venvs/mathesar/bin/pip install -r /artifact/tool/knowl-apidocs/requirements.txt
+    /venvs/mathesar/bin/pip install -r /artifact/tool/speculate-apidocs/requirements.txt
 
 WORKDIR /artifact/benchmarks/django/librephotos
 RUN /venvs/librephotos/bin/pip install --upgrade pip && \
     /venvs/librephotos/bin/pip install --default-timeout=1000 -r requirements.txt && \
-    /venvs/librephotos/bin/pip install -r /artifact/tool/knowl-apidocs/requirements.txt
+    /venvs/librephotos/bin/pip install -r /artifact/tool/speculate-apidocs/requirements.txt
 
 WORKDIR /artifact/benchmarks/django/education-backend
 RUN dos2unix src/manage.py && \
@@ -59,7 +59,7 @@ RUN dos2unix src/manage.py && \
     /venvs/education-backend/bin/pip install --upgrade pip poetry poetry-plugin-export && \
     /venvs/education-backend/bin/poetry export --format=requirements.txt > generated_requirements.txt && \
     /venvs/education-backend/bin/pip install --default-timeout=1000 -r generated_requirements.txt && \
-    /venvs/education-backend/bin/pip install -r /artifact/tool/knowl-apidocs/requirements.txt
+    /venvs/education-backend/bin/pip install -r /artifact/tool/speculate-apidocs/requirements.txt
 
 WORKDIR /artifact
 ENTRYPOINT ["/bin/bash", "/artifact/scripts/entrypoint.sh"]

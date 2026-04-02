@@ -5,7 +5,7 @@ export MSYS_NO_PATHCONV=1
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ARTIFACT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-IMAGE="${ARTIFACT_IMAGE:-knowl-artifact}"
+IMAGE="${ARTIFACT_IMAGE:-speculate-artifact}"
 
 if [ "$#" -lt 1 ]; then
   echo "usage: $0 <repo-id> [tool-args...]" >&2

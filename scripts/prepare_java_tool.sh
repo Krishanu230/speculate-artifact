@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TOOL_BUILD_DIR="/artifact/tool/knowl-apidocs/genapidocs_v2/java_analyzer_impl"
+TOOL_BUILD_DIR="/artifact/tool/speculate-apidocs/genapidocs_v2/java_analyzer_impl"
 FAT_JAR="$TOOL_BUILD_DIR/target/jersey-analyzer-1.0-SNAPSHOT-jar-with-dependencies.jar"
 
 export JAVA_HOME="${JDK11_HOME:?JDK11_HOME is not set}"

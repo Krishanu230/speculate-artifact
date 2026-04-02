@@ -3,7 +3,7 @@ set -euo pipefail
 
 ARTIFACT_ROOT="/artifact"
 MANIFEST_PATH="$ARTIFACT_ROOT/benchmarks/django/repos.json"
-TOOL_ENTRY="$ARTIFACT_ROOT/tool/knowl-apidocs/genapidocs_v2/gen_apidocs2.py"
+TOOL_ENTRY="$ARTIFACT_ROOT/tool/speculate-apidocs/genapidocs_v2/gen_apidocs2.py"
 
 if [ "$#" -lt 1 ]; then
   echo "usage: $0 <repo-id> [tool-args...]" >&2
@@ -49,7 +49,7 @@ REPO_DIR="$ARTIFACT_ROOT/benchmarks/django/$REPO_PATH"
 SOURCE_DIR="$ARTIFACT_ROOT/benchmarks/django/$SOURCE_ROOT"
 LOG_DIR="$ARTIFACT_ROOT/benchmarks/django/$LOG_ROOT"
 OUTPUT_DIR="$ARTIFACT_ROOT/outputs/$REPO_ID"
-LOG_LINK="$LOG_DIR/.knowl_logs2"
+LOG_LINK="$LOG_DIR/.speculate_logs"
 PYTHON_BIN="$VENV_PATH/bin/python"
 
 if [ ! -d "$REPO_DIR" ]; then

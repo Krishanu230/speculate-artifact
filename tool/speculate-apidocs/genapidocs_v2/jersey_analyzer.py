@@ -1,4 +1,4 @@
-# knowl-apidocs/genapidocs_v2/jersey_analyzer.py
+# speculate-apidocs/genapidocs_v2/jersey_analyzer.py
 
 from collections import deque
 import copy
