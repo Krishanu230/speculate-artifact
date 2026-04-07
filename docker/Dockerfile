@@ -42,6 +42,18 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 RUN --mount=type=cache,target=/root/.m2 \
     /artifact/scripts/prepare_java_tool.sh
 
+# ===========================================================================
+# TOOL MODE: standalone tool image, no benchmarks baked in.
+# Use this to run Speculate on your own Java project.
+# Pull:  docker pull krishannu/speculate-artifact:tool
+# Build: docker build --target tool -t speculate-tool -f docker/Dockerfile .
+# ===========================================================================
+FROM base-tool AS tool
+COPY scripts/run_custom_repo.sh scripts/validate_env.sh scripts/entrypoint.sh /artifact/scripts/
+RUN chmod +x /artifact/scripts/*.sh && mkdir -p /artifact/outputs
+ENTRYPOINT ["/bin/bash", "/artifact/scripts/entrypoint.sh"]
+CMD ["/artifact/scripts/run_custom_repo.sh", "--help"]
+
 # ---------------------------------------------------------------------------
 # Base stage: Java review/runtime assets. Changing Django sources should not
 # invalidate this stage or the embedded Java analyzer build above.
@@ -170,7 +182,7 @@ COPY --from=django-librephotos-deps /opt/django-venvs/librephotos /opt/django-ve
 COPY --from=django-treeherder-deps /opt/django-venvs/treeherder /opt/django-venvs/treeherder
 COPY precompiled/ /artifact/benchmarks/java/
 ENTRYPOINT ["/bin/bash", "/artifact/scripts/entrypoint.sh"]
-CMD ["/bin/bash", "/artifact/scripts/run_restcountries_review.sh"]
+CMD ["/bin/bash", "/artifact/scripts/run_default_demo.sh"]
 
 # ===========================================================================
 # REBUILD MODE: compile all benchmark repos from source (parallel stages)
@@ -255,4 +267,4 @@ COPY --from=compile-envirocar-server /artifact/benchmarks/java/enviroCar-server 
 COPY --from=compile-kafka-rest /artifact/benchmarks/java/kafka-rest /artifact/benchmarks/java/kafka-rest
 COPY --from=compile-gravitee-apim-rest-api /artifact/benchmarks/java/gravitee-api-management /artifact/benchmarks/java/gravitee-api-management
 ENTRYPOINT ["/bin/bash", "/artifact/scripts/entrypoint.sh"]
-CMD ["/bin/bash", "/artifact/scripts/run_restcountries_review.sh"]
+CMD ["/bin/bash", "/artifact/scripts/run_default_demo.sh"]

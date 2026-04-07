@@ -4,8 +4,8 @@
 
 - Docker (Docker Desktop 4.x+ or Docker Engine 20.10+ with BuildKit)
 - At least 4 GB memory allocated to Docker (8 GB recommended)
-- ~2 GB free disk space (1.2 GB artifact + 1 GB Docker image)
-- Internet access during `docker build` (to pull the base image) and during
+- ~4 GB free disk space if pulling the pre-built image; ~8 GB if building from source
+- Internet access during `docker pull` or `docker build` and during
   `docker run` (to auto-fetch LLM credentials and make API calls)
 
 ## Steps
@@ -34,7 +34,7 @@ docker run --rm speculate-artifact echo "Build OK"
 docker run --rm -v "$(pwd)/outputs:/artifact/outputs" speculate-artifact
 ```
 
-This runs the `restcountries` benchmark end-to-end. LLM credentials are
+This runs the `Ur-Codebin-API` benchmark end-to-end. LLM credentials are
 fetched automatically on startup. Generated output appears in `outputs/`.
 
 ### 4. Run any Java benchmark
@@ -61,7 +61,7 @@ See `README.md` for the full list of repo IDs and options.
 |------|------|
 | Docker image build (warm cache) | 2-3 minutes |
 | Docker image build (first build) | 25-35 minutes (librephotos ML compilation) |
-| First Java benchmark run (restcountries) | 2-5 minutes (depends on LLM response time) |
+| First Java benchmark run (Ur-Codebin-API) | 2-5 minutes (depends on LLM response time) |
 | First Django benchmark run | 3-10 minutes (depends on repo and LLM response time) |
 
 ## Alternate build: compile from source

@@ -15,17 +15,18 @@ Things Tried:
 - [ ] Verify on a case-by-case basis that the runs match the numbers reported in the paper: differing on gravitee
 - [ ] Add a run-all mode to the runner.
 - [x] Find a safe way to share LLM keys with reviewers. Perhaps a one-time fetch during setup could work.
-- [ ] Add instructions on how to run it on any new django/jersey/spring repo
+- [x] Add instructions on how to run it on any new django/jersey/spring repo
 
 ## Size Breakdown
 
 | Component | Size |
 |-----------|------|
-| **Artifact folder (total)** | **1.2 GB** |
-| `benchmarks/java/` (source repos) | 718 MB |
+| **Artifact folder (total)** | **~1.4 GB** |
+| `benchmarks/java/` (source repos) | 165 MB |
+| `benchmarks/django/` (source repos) | 56 MB |
 | `results/` (precomputed runs, zipped) | 427 MB |
 | `precompiled/` (class files) | 53 MB |
 | `tool/` (Speculate source) | 28 MB |
 | `scripts/`, `docker/`, docs | < 1 MB |
 | `outputs/` (empty, mount point) | ~ 0 |
-| **Docker image** | **1.01 GB** |
+| **Tool image** (`speculate-artifact:tool`) | **~840 MB** |
