@@ -1154,7 +1154,7 @@ class SpringBootFrameworkAnalyzer(FrameworkAnalyzer):
             self.logger.debug(f"Inspecting return type. Original: '{return_type_fqn}'")
 
             if return_type_fqn and "ResponseEntity" in return_type_fqn:
-                match = re.search(r'ResponseEntity<([^>]+)>', return_type_fqn)
+                match = re.search(r'ResponseEntity<(.+)>', return_type_fqn)
                 if match:
                     unwrapped_type = match.group(1).strip()
                     self.logger.debug(f"Unwrapped ResponseEntity to: '{unwrapped_type}'")
