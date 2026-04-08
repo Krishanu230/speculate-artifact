@@ -1,4 +1,0 @@
-
-==================================================
-Script execution started at: 2025-09-11 01:54:03
-Working Directory: /Users/abc/llm-openapi-paper/knowl-apidocs/genapidocs_v2
