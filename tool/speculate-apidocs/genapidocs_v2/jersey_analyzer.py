@@ -1958,7 +1958,7 @@ Context: 'handler' provides 'method_annotations', 'class_annotations', 'code', a
             for parent in rich_context.get('parent_classes', []):
                 parent_fqn = parent.get('name')
                 if parent_fqn and parent_fqn not in all_nodes:
-                    print(f"[DEBUG-LOG] Discovered new parent node '{parent_fqn}' from child '{fqn}'. Adding to `all_nodes`.")
+                    self.logger.debug(f"Discovered new parent node '{parent_fqn}' from child '{fqn}'. Adding to `all_nodes`.")
                     all_nodes.add(parent_fqn)
                     transient_nodes_context[parent_fqn] = parent
                     # We need to process this new node as well, but can't modify list while iterating
@@ -2310,7 +2310,6 @@ Context: 'handler' provides 'method_annotations', 'class_annotations', 'code', a
                     queue.append(dep_fqn)
                     
         self.logger.info(f"Expanded {len(seed_fqns)} seed components to a total of {len(final_component_fqns)} concrete components.")
-        print(f"Expanded {len(seed_fqns)} seed components to a total of {len(final_component_fqns)} concrete components.")
         return final_component_fqns
     
     def _deduce_async_response_type(self, method_info: Dict[str, Any]) -> Set[str]:
