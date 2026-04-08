@@ -2054,14 +2054,6 @@ class DjangoAnalyzer(FrameworkAnalyzer):
         # Find where the symbol used in 'context_path' is actually defined.
         symbol_ref = self.code_analyzer.get_symbol_reference(symbol_name, context_path, symbol_type)
         if not symbol_ref:
-            # Attempt to find external symbols if reference resolution fails locally
-            # Note: This assumes get_external_code or similar logic exists and works
-            # external_code = self.code_analyzer.get_external_code(symbol_name, context_path)
-            # if external_code:
-            #     # Handle external code - might need separate logic as path/info differ
-            #     self.logger.debug(f"[Depth {current_depth}] Found external code for '{symbol_name}'. (Handling TBD)")
-            # else:
-            #     self.logger.warning(f"[Depth {current_depth}] Could not resolve reference or find external code for symbol '{symbol_name}' ({symbol_type.name}) from context {context_path}")
             self.logger.warning(f"[Depth {current_depth}] Could not resolve reference for symbol '{symbol_name}' ({symbol_type.name}) from context {context_path}. Skipping.")
             return
 
@@ -2820,13 +2812,6 @@ Here is the initial code context retrieved for this endpoint:
                 prompt_str += f"```python\n{feat.get('code', '# Feature code not available')}\n```\n" # Assuming python
             prompt_str += "=== End Associated Features ===\n"
         
-        # Framework settings were commented out in original, keep it that way or decide if needed.
-        # settings = endpoint_context.get("framework_settings", {}).get("settings", {})
-        # if settings:
-        #     prompt_str += "\n=== Relevant Framework Settings ===\n"
-        #     # ... add settings if needed ...
-        #     prompt_str += "=== End Framework Settings ===\n"
-
         return prompt_str.strip()
 
     def get_framework_specific_guidance_for_missing_symbols(self) -> str:

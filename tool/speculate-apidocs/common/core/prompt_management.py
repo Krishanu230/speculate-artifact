@@ -80,19 +80,12 @@ class PromptManager:
 
     def create_component_prompt(self, component_name: str, component_info: Dict[str, Any], available_schemas_map) -> str:
         framework_system_message = self.framework_analyzer.get_component_system_message()
-        # task_description = (
-        #     f"creating OpenAPI component schemas (request and response versions) for the "
-        #     f"{self.framework_analyzer.get_schema_component_terminology()} named '{component_info.get('name', component_name)}'."
-        # )
-
         task_description = (
             f"creating OpenAPI component schemas for the "
             f"{self.framework_analyzer.get_schema_component_terminology()} named '{component_info.get('name', component_name)}'."
         )
         
-
         base_system_instructions = self._get_base_system_instructions(task_description)
-        #full_system_instructions = f"{framework_system_message}\n\n{base_system_instructions}"
         full_system_instructions = f"{base_system_instructions}"
         code_context = self._build_component_code_context(component_name, component_info)
         
@@ -115,30 +108,6 @@ class PromptManager:
             f"Important Quality Notes:\n{quality_notes}"
         )
         return full_prompt
-
-#     def _get_common_component_openapi_rules(self) -> str:
-#         """Get common OpenAPI output rules for component schemas, without naming specifics."""
-#         return """
-# 1.  You will generate two separate OpenAPI component schemas.
-# 2.  Each schema MUST be a valid OpenAPI 3.0 Schema Object.
-# 3.  Primarily, each schema definition should contain a `type: object` and a `properties` field.
-# 4.  For each field within `properties`:
-#     a.  Determine its OpenAPI `type` (e.g., string, integer, number, boolean, object, array).
-#     b.  Provide a concise `description` for the field.
-#     c.  If the field's type is an `array`, define its `items` schema.
-#     d.  If the field's type is another component, use a `$ref`. The exact format of the $ref (including suffixes like 'Request' or 'Response') will be guided by framework-specific instructions. If the referenced component is external or a primitive, define its schema inline.
-# 5.  For the **request schema**:
-#     a.  Include a `required` array listing all fields that are mandatory for a request.
-#     b.  Indicate fields that are effectively `readOnly` if discernible.
-# 6.  For the **response schema**:
-#     a.  Include a `required` array listing all fields typically present in a response.
-#     b.  Indicate fields that are `writeOnly` if discernible.
-# 7.  The final output MUST start with `components:`, followed by `schemas:`, under which the generated schema definitions are placed. Do not include any other OpenAPI sections.
-# 8.  Do not include `x-codeSamples`.
-# 9.  Strictly adhere to OpenAPI 3.0 syntax.
-# 10. Ensure all generated text (descriptions, examples) is enclosed in double-quotes.
-# """
-
 
     def _get_common_component_openapi_rules(self) -> str:
         """Get common OpenAPI output rules for component schemas, without naming specifics."""
@@ -215,17 +184,6 @@ class PromptManager:
         # This part can be delegated to framework_analyzer.get_common_component_imports_context()
         return "\n".join(code_context_parts)
 
-#     def _get_common_quality_assurance_notes(self) -> str:
-#         """Get common quality assurance notes."""
-#         return """
-# -   Note: Request and response schemas for the same logical entity can differ.
-# -   Note: Use your knowledge of common library patterns for the given framework.
-# -   Note: Ensure strict conformance to OpenAPI 3.0.
-# -   Note: Provide complete and exhaustive schemas. Do not omit information or provide incomplete details.
-# -   Note: Do not ask for missing information; generate the complete spec for both request and response schemas based on the provided context.
-# """
-
-
     def _get_common_quality_assurance_notes(self) -> str:
             """Get common quality assurance notes."""
             return """
@@ -234,69 +192,6 @@ class PromptManager:
     -   Note: Provide complete and exhaustive schemas. Do not omit information or provide incomplete details.
     -   Note: Do not ask for missing information; generate the complete spec for schemas based on the provided context.
     """
-
-
-
-    # def _build_component_code_context(self, component_name: str, component_info: Dict[str, Any]) -> str:
-    #     """Build the code context for the component prompt"""
-    #     code_context = ""
-        
-    #     # Framework context (common imports)
-    #     code_context += """
-    # from model_utils import Choices
-    # from rest_framework import serializers
-    # from rest_framework_simplejwt.exceptions import AuthenticationFailed
-    # from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-    # from rest_framework_simplejwt.settings import api_settings
-    # from django.contrib.auth.models import update_last_login
-    # from django.db import transaction
-    # from rest_framework import filters, mixins, pagination, status, viewsets
-    # from rest_framework.decorators import action
-    # from rest_framework.permissions import AllowAny, IsAuthenticated
-    # from rest_framework.response import Response
-    # from rest_framework.settings import api_settings
-    # from rest_framework_extensions.mixins import NestedViewSetMixin
-    # from rest_framework_simplejwt.views import TokenObtainPairView
-    # import json
-    # import logging
-    # import random
-    # from collections import defaultdict
-    # import requests
-    # from bs4 import BeautifulSoup
-    # from django.core.cache import cache as redis_cache
-    # from django.db.models import Count, Exists, OuterRef, Prefetch, Q
-    # from django_filters.rest_framework import DjangoFilterBackend, FilterSet
-    # from drf_spectacular.utils import extend_schema
-    # """
-        
-    #     # Serializer code
-    #     code_context += f"\n\n# Serializer Definition\n"
-    #     code_context += f"Source File: {component_info['path']}\n"
-    #     code_context += f"{component_info['code']}\n\n"
-        
-    #     # Add parent classes if available
-    #     if component_info['parent_classes']:
-    #         code_context += "# Parent Classes\n"
-    #         for parent in component_info['parent_classes']:
-    #             code_context += f"Class: {parent['name']}\n"
-    #             code_context += f"Source File: {parent['path']}\n"
-    #             code_context += f"Code:\n{parent.get('code', 'Code not available')}\n\n"
-        
-    #     # Add model and data classes
-    #     if component_info['data_classes']:
-    #         code_context += "# Related Models\n"
-    #         for model in component_info['data_classes']:
-    #             code_context += f"Model: {model['name']}\n"
-    #             code_context += f"Source File: {model['path']}\n"
-    #             code_context += f"Code:\n{model['code']}\n\n"
-        
-    #     return code_context
-
-    # def _get_generic_system_instructions(self, component_name: str) -> str:
-    #     """Get the generic system instructions for component generation"""
-    #     return f"""Forget all the instructions given before. You need to create openAPI definition for a customer-facing API which will be called by the customer by following the openAPI definition you provide.
-    # Given below is a serializer {component_name} and the model associated with the serializer. Create the component section of Open API specs for serializer: {component_name} ONLY. 
-    # You need to create two separate schemas for this serializer. One will be for request schema and one will be for response schema."""
 
     def _get_output_format_instructions(self, component_name: str) -> str:
         """Get the generic output format instructions"""

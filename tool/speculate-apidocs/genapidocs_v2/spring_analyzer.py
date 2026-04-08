@@ -1471,12 +1471,6 @@ class SpringBootFrameworkAnalyzer(FrameworkAnalyzer):
 
         all_component_fqns = all_components_info.keys()
         self.logger.info(f"Phase 2 complete. Total components including dependencies: {len(all_component_fqns)}.")
-        # --- PHASE 3: DEPENDENCY GRAPH & TOPOLOGICAL SORT ---
-        # self.logger.info("Phase 3: Building dependency graph and sorting components for processing...")
-        # adj_graph, in_degree = self._build_dependency_graph(set(all_component_fqns))
-        # sorted_fqns = self._topological_sort(adj_graph, in_degree)
-        # self.logger.info(f"Phase 3 complete. Sorted {len(sorted_fqns)} components.")
-
         # --- PHASE 4: RICH CONTEXT BUILDING ---
         self.logger.info("Phase 4: Building rich context for each component in dependency order...")
         final_components_map: Dict[str, Dict[str, Any]] = {}
@@ -2355,16 +2349,9 @@ Focus on finding these Spring Boot patterns in the provided code:
         """
         Returns the Spring Boot-specific "Exclusions:" section for the prompt.
         """
-        #spring_specific_exclusions = self.get_framework_specific_exclusions_for_missing_symbols()
-
         exclusion_text = "Exclusions:\n"
         exclusion_text += "- Do NOT include standard JDK classes (e.g., `java.lang.String`, `java.util.List`).\n"
         exclusion_text += "- Do NOT include unmodified base classes/interfaces from the primary framework.\n"
-        
-        # if spring_specific_exclusions:
-        #     exclusion_text += "- Specifically, also avoid unmodified versions of symbols from common Spring Boot libraries like:\n"
-        #     for exc_pattern in sorted(list(set(spring_specific_exclusions))):
-        #         exclusion_text += f"  - `{exc_pattern}`\n"
         return exclusion_text
     
     def _recurse_on_class_dependencies(self, class_fqn: str, definition_path: str, class_details: Dict[str, Any], current_depth: int, max_depth: int, processed_keys: Set[str], accumulator: List[Dict[str, Any]]):

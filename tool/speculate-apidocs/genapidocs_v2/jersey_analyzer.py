@@ -12,95 +12,6 @@ from typing import Dict, List, Optional, Any, Tuple, Set
 from common.core.framework_analyzer import FrameworkAnalyzer
 from common.core.code_analyzer import CodeAnalyzer, SymbolType
 from java_analyzer import JavaCodeAnalyzer # Make sure this import works
-
-# logger = logging.getLogger(__name__) # Use self.logger instead
-NOISE_COMPONENT_BLACKLIST = [
-    # Legacy V1/V2/V3 Models (Noise Category 1)
-    "io.gravitee.definition.model.Endpoint",
-    "io.gravitee.definition.model.EndpointGroup",
-    "io.gravitee.definition.model.Proxy",
-    "io.gravitee.definition.model.flow.Flow",
-    "io.gravitee.definition.model.flow.Step",
-    "io.gravitee.definition.model.flow.Consumer",
-    "io.gravitee.definition.model.flow.PathOperator",
-    "io.gravitee.definition.model.Logging",
-    "io.gravitee.definition.model.LoadBalancer",
-    "io.gravitee.definition.model.Failover",
-    "io.gravitee.definition.model.Properties",
-    "io.gravitee.definition.model.Property",
-    "io.gravitee.definition.model.plugins.resources.Resource",
-    "io.gravitee.rest.api.model.PlanEntity",
-    "io.gravitee.rest.api.model.api.ApiEntity",
-    "io.gravitee.rest.api.model.DebugApiEntity",
-    "io.gravitee.rest.api.model.ApiPageEntity",
-    "io.gravitee.rest.api.model.PageEntity",
-    "io.gravitee.rest.api.model.PageEntity$PageRevisionId",
-    "io.gravitee.rest.api.model.PageMediaEntity",
-    "io.gravitee.rest.api.model.PageSourceEntity",
-    "io.gravitee.rest.api.model.PlanSecurityType",
-    "io.gravitee.rest.api.model.PlanStatus",
-    "io.gravitee.rest.api.model.PlanType",
-    "io.gravitee.rest.api.model.PlanValidationType",
-    "io.gravitee.definition.model.HttpClientOptions",
-    "io.gravitee.definition.model.HttpClientSslOptions",
-    "io.gravitee.definition.model.HttpProxy",
-    "io.gravitee.definition.model.HttpRequest",
-    "io.gravitee.definition.model.HttpResponse",
-    "io.gravitee.definition.model.VirtualHost",
-    "io.gravitee.definition.model.ssl.KeyStore",
-    "io.gravitee.definition.model.ssl.TrustStore",
-    "io.gravitee.definition.model.Endpoint$Status",
-    "io.gravitee.definition.model.ExecutionMode",
-    "io.gravitee.definition.model.FailoverCase",
-    "io.gravitee.definition.model.flow.FlowStage",
-    "io.gravitee.definition.model.HttpProxyType",
-    "io.gravitee.definition.model.LoadBalancerType",
-    "io.gravitee.definition.model.LoggingContent",
-    "io.gravitee.definition.model.LoggingMode",
-    "io.gravitee.definition.model.LoggingScope",
-    "io.gravitee.definition.model.ProtocolVersion",
-    "io.gravitee.definition.model.ssl.KeyStoreType",
-    "io.gravitee.definition.model.ssl.TrustStoreType",
-    
-    # Internal Service/Configuration Classes (Noise Category 2)
-    "io.gravitee.definition.model.Service",
-    "io.gravitee.definition.model.services.Services",
-    "io.gravitee.definition.model.services.discovery.EndpointDiscoveryService",
-    "io.gravitee.definition.model.services.dynamicproperty.DynamicPropertyProvider",
-    "io.gravitee.definition.model.services.dynamicproperty.DynamicPropertyProviderConfiguration",
-    "io.gravitee.definition.model.services.dynamicproperty.DynamicPropertyService",
-    "io.gravitee.definition.model.services.healthcheck.HealthCheckService",
-    "io.gravitee.definition.model.services.healthcheck.EndpointHealthCheckService",
-    "io.gravitee.definition.model.services.healthcheck.HealthCheckStep",
-    "io.gravitee.definition.model.services.healthcheck.HealthCheckRequest",
-    "io.gravitee.definition.model.services.healthcheck.HealthCheckResponse",
-    "io.gravitee.definition.model.services.schedule.ScheduledService",
-    "io.gravitee.definition.model.endpoint.EndpointStatusListener",
-    "io.gravitee.rest.api.management.v4.rest.resource.param.AbstractListParam",
-    "io.gravitee.rest.api.management.v4.rest.resource.param.PlanStatusParam",
-    "io.gravitee.rest.api.model.AccessControlEntity",
-    
-    # Marker Interfaces & Abstract/Utility Classes (Noise Category 3)
-    "io.gravitee.definition.model.ConditionSupplier",
-    "io.gravitee.rest.api.model.search.Indexable",
-    "io.gravitee.rest.api.model.v4.api.GenericApiEntity",
-    "io.gravitee.rest.api.model.v4.plan.GenericPlanEntity",
-    
-    # JDK/Common Lib classes incorrectly identified
-    "java.io.Serializable",
-    "java.lang.Cloneable",
-    "java.lang.Comparable",
-    "java.lang.Enum",
-    "java.lang.Iterable",
-    "java.lang.constant.Constable",
-    "java.util.AbstractCollection",
-    "java.util.AbstractList",
-    "java.util.ArrayList",
-    "java.util.Collection",
-    "java.util.List",
-    "java.util.RandomAccess",
-    "java.util.SequencedCollection"
-]
 class JerseyFrameworkAnalyzer(FrameworkAnalyzer):
     """
     Jersey-specific implementation of the FrameworkAnalyzer interface.
@@ -2177,13 +2088,6 @@ Context: 'handler' provides 'method_annotations', 'class_annotations', 'code', a
         self.logger.info("Phase 1: Discovering seed components from actual endpoint usage...")
         seed_fqns = self._discover_seed_components_jersey()
         primary_artifacts_to_process = self._collect_all_transitive_dependencies_with_impls(seed_fqns)
-        #self.logger.info(f"Have {len(primary_artifacts_to_process)} components before filtering.")
-        filtered_artifacts = {
-            fqn for fqn in primary_artifacts_to_process 
-            if fqn not in NOISE_COMPONENT_BLACKLIST
-        }
-        #self.logger.info(f"Have {len(filtered_artifacts)} components after filtering.")
-        primary_artifacts_to_process = filtered_artifacts
         # --- VERIFICATION STEP ---
         # As requested, we will stop here to verify the seed components.
         # You can inspect the 'seed_fqns' variable in the debugger.
@@ -3304,51 +3208,11 @@ Context: 'handler' provides 'method_annotations', 'class_annotations', 'code', a
         # Describe what a schema component represents in Java/Jersey context
         return "POJO/DTO" # Plain Old Java Object / Data Transfer Object
 
-#     def get_component_system_message(self) -> str:
-#         # Provide a good system message for the LLM when generating component schemas
-#         return """You are an expert in Java, JAX-RS (Jersey), object-oriented design, common Java libraries (like Jackson for JSON, JAXB for XML), and OpenAPI 3.0 specifications.
-# Your task is to analyze Java Plain Old Java Objects (POJOs) or Data Transfer Objects (DTOs) and their related context (parent classes, field types) to generate corresponding OpenAPI component schemas (request and response versions).
-# Pay close attention to annotations (like Jackson, JAXB, JSR 303/380 validation) as they provide critical hints for serialization, validation, and schema properties."""
-
     def get_component_system_message(self) -> str:
             # Provide a good system message for the LLM when generating component schemas
             return """You are an expert in Java, JAX-RS (Jersey), object-oriented design, common Java libraries (like Jackson for JSON, JAXB for XML), and OpenAPI 3.0 specifications.
     Your task is to analyze Java Plain Old Java Objects (POJOs) or Data Transfer Objects (DTOs) and their related context (parent classes, field types) to generate corresponding OpenAPI component schemas.
     Pay close attention to annotations (like Jackson, JAXB, JSR 303/380 validation) as they provide critical hints for serialization, validation, and schema properties."""
-
-
-
-#     def get_component_field_instructions(self, component_name: str, component_info: Dict[str, Any]) -> str:
-#         # 'component_name' is likely the FQN key, use component_info for user-friendly name
-#         simple_name = component_info.get('name', component_name.split('.')[-1])
-#         request_schema_name = f"{simple_name}Request"
-#         response_schema_name = f"{simple_name}Response"
-
-#         return f"""
-# For the Java class '{component_info.get('qualifiedName', component_name)}' provided in the context:
-# 1.  Generate two separate schemas: '{request_schema_name}' (for request contexts) and '{response_schema_name}' (for response contexts).
-# 2.  Analyze the fields defined in the primary class (`{simple_name}`), its parent classes (code provided in `parent_classes`), and any related component classes (code provided in `data_classes`). Inheritance matters.
-# 3.  Identify all relevant fields for serialization. This typically includes public fields and fields exposed via public getters (e.g., `getXyz()`, `isAbc()`). Consider fields from parent classes unless overridden.
-# 4.  Exclude fields explicitly marked for exclusion using annotations like Jackson's `@JsonIgnore`, JAXB's `@XmlTransient`, or JPA's `@Transient`.
-# 5.  For each relevant field:
-#     a.  Determine its final Java type considering inheritance and potential generics (e.g., `String`, `int`, `List<String>`, `com.example.RelatedPojo`).
-#     b.  Map the Java type to an OpenAPI `type` (`string`, `integer`, `number`, `boolean`, `object`, `array`) and optionally `format` (e.g., `int32`, `int64`, `float`, `double`, `date-time`, `byte`, `binary`). Use standard mappings (e.g., `java.util.Date`/`java.time.OffsetDateTime` -> `string`+`date-time`, `int`/`Integer` -> `integer`+`int32`, `long`/`Long` -> `integer`+`int64`, `byte[]` -> `string`+`byte`).
-#     c.  If the field type is a collection (`List`, `Set`, array), set OpenAPI `type: array` and define the `items` schema. The `items` schema should usually be a `$ref` to the element type's corresponding *Request* or *Response* schema (e.g., `items: {{ $ref: '#/components/schemas/RelatedPojoResponse' }}`). If the element type is primitive, define it directly (e.g., `items: {{ type: string }}`).
-#     d.  If the field type is another custom POJO/DTO identified in the context, use a `$ref` to its corresponding *Request* or *Response* schema (e.g., `$ref: '#/components/schemas/{request_schema_name}'` or `$ref: '#/components/schemas/{response_schema_name}'` for the correct context, or `RelatedPojoRequest`/`RelatedPojoResponse` for other POJOs). Be consistent with the Request/Response suffix.
-#     e.  Infer `description` from JavaDocs (`/** ... */`) on the field or its getter if available. Otherwise, provide a reasonable description based on the field name.
-#     f.  Infer `readOnly`/`writeOnly` status:
-#         - Fields only having a getter (or `isXyz`) but no setter are often `readOnly: true` (especially for responses).
-#         - Fields only having a setter but no getter are often `writeOnly: true` (especially for requests).
-#         - Annotations like Jackson's `@JsonProperty(access = READ_ONLY/WRITE_ONLY)` are strong indicators.
-#         - JPA `@Id` fields, especially if auto-generated (`@GeneratedValue`), are typically `readOnly: true` in responses.
-#     g.  Determine `required` fields for the **request schema** (`{request_schema_name}`):
-#         - Check for validation annotations like `@NotNull`, `@NotBlank`, `@NotEmpty`, `@Size(min=1)` (from `javax.validation.constraints` or `jakarta.validation.constraints`).
-#         - Java primitive types (`int`, `boolean`, etc., *not* their wrappers `Integer`, `Boolean`) are implicitly required unless specifically annotated otherwise (though explicit validation annotations are preferred).
-#         - Fields initialized with default values in constructors or directly might not be required.
-#     h. Determine `required` fields for the **response schema** (`{response_schema_name}`): Generally include fields that are *always* expected to be present in a valid response. Nullable fields might not be required. Primitives are usually required.
-# 6.  Name the schemas exactly as `{request_schema_name}` and `{response_schema_name}`.
-# 7.  Place both schemas under the `components.schemas` path in the output YAML.
-# """
 
 
     def get_component_field_instructions(self, component_name: str, component_info: Dict[str, Any]) -> str:

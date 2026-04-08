@@ -158,10 +158,7 @@ class SpecGenerator:
         log_prefix = f"[{index + 1}/{total_items}][{entity_id}][Retry {retry_count}]"
         accumulated_errors = []
         max_retries = self.validation_max_retries if max_retries is None else max_retries
-        #print(f"{log_prefix} Generating original prompt...", flush=True) # Verify prompt generation isn't blocking
         original_prompt = prompt_func() # Generate the initial prompt
-        #self.logger.debug("prompt used is " + original_prompt)
-        #print(f"{log_prefix} Original prompt generated.", flush=True)
 
         while retry_count <= max_retries:
             log_prefix = f"[{index + 1}/{total_items}][{entity_id}][Retry {retry_count}]"
@@ -177,9 +174,6 @@ class SpecGenerator:
             self.logger.info(f"[{entity_id}] Attempt {retry_count} (ID: {attempt_id}): Calling LLM for {call_type}...")
             # Call LLM - LLMManager handles API-level retries
             # LLMManager should associate the call stats with entity_id and call_type
-            #print(f"{log_prefix} Entering LLM call await...", flush=True)
-            # self.logger.debug(f"[{entity_id}] prompt being sent: {prompt_to_use}")
-            # self.logger.debug(f"[{entity_id}] system_message being sent: {system_message}")
             content, _ = await self.llm_manager.generate(
                 prompt=prompt_to_use,
                 system_message=system_message,
@@ -192,7 +186,6 @@ class SpecGenerator:
                 prefix=f"[ {entity_id} - {call_type.value} - Attempt {retry_count} ]",
                 debug_logger=self.logger
             )
-            #print(f"{log_prefix} Exited LLM call await.", flush=True)
             # Handle critical LLM failure (after LLMManager's retries)
             if content is None:
                 self.logger.error(f"[{entity_id}] Attempt {retry_count}: LLM call failed definitively for {call_type}.")
@@ -204,11 +197,9 @@ class SpecGenerator:
 
             # Validate the received content
             self.logger.debug(f"[{entity_id}] Attempt {retry_count}: Validating content for {call_type}...")
-            #print(f"{log_prefix} Entering validation call...", flush=True)
             relax_object_validation = self.framework_analyzer.is_relaxed_obj_validation()
 
             validation_result = self.spec_manager.sanitize_and_validate_content(content, relax_object_validation)
-            #print(f"{log_prefix} Exited validation call.", flush=True)
 
             # Stats: Log validation attempt
             if self.stats_collector:
@@ -251,11 +242,8 @@ class SpecGenerator:
                      self.stats_collector.update_entity_status(entity_id, EntityStatus.FAILED_VALIDATION,
                                                                error=f"Validation failed after {max_retries} retries: {final_error_str}", end=False)
                 # Log the final invalid content attempt
-                #print(f"{log_prefix} Entering error file write...", flush=True)
                 with open(error_file, "a") as f:
                     f.write(f"--- Final Invalid Content for {entity_id} ({call_type.value}) after {max_retries} retries ---\nErrors: {final_error_str}\nContent:\n{content}\n------\n")
-
-                #print(f"{log_prefix} Exited error file write.", flush=True)
                 return ValidationResult(False, validation_result.sanitized_content, validation_result.errors, validation_result.metadata)
 
             # --- Prepare for Retry: Modify Prompt ---
@@ -286,10 +274,7 @@ class SpecGenerator:
                 "Do not make these same mistakes again\n"
                 "--- End Feedback ---"
             )
-            # Use the *original* prompt and append the modification
-            #print(f"{log_prefix} Entering prompt modification...", flush=True)
             current_prompt = modification_instruction + '\n' + original_prompt
-            #print(f"{log_prefix} Exited prompt modification.", flush=True)
         return ValidationResult(False, validation_result.sanitized_content, validation_result.errors, validation_result.metadata)
     
     async def process_components(self, components, error_file):
@@ -331,15 +316,9 @@ class SpecGenerator:
                                        component_info: dict,
                                        error_file: str):
         """Process a single schema component"""
-        # Track the entity in stats collector
-        # if 'Track' not in component_name:
-        #         return None, None
-        
         print(f"[{index + 1}/{total_items}] Starting Component: {component_name}...", flush=True)
         if self.skip_components:
             return None, None
-        # if component_name != 'org.heigit.ohsome.ohsomeapi.output.DefaultAggregationResponse':
-        #     return None, None
         entity_id = None
         if self.stats_collector:
             metadata_for_stats = {
@@ -525,8 +504,6 @@ class SpecGenerator:
         method = endpoint.get("method", "").lower()
         endpoint_id = f"{url}:{method}"
         print(f"[{index + 1}/{total_items}] Starting Endpoint: {method.upper()} {url}...", flush=True)
-        # if '/api/v0/metadata/endpoints' != url:
-        #         return ""
         # Track the entity in stats collector
         entity_id = None
         if self.stats_collector:
@@ -546,10 +523,6 @@ class SpecGenerator:
 
         result_status = "FAILED" # Default status for logging end message
         should_ignore = False
-
-        # if '/measurements' != url or method != 'post':
-        #         self.stats_collector.update_entity_status(entity_id, EntityStatus.FAILED_SPEC_ADD, error="skipped")
-        #         return ""
         try:
             # 1. Get the initial context for the endpoint
             self.logger.debug(f"[{endpoint_id}] Getting initial context...")
@@ -560,7 +533,6 @@ class SpecGenerator:
                     self.stats_collector.update_entity_status(entity_id, EntityStatus.FAILED_CONTEXT, error="Missing initial context or handler code")
                 return None
             
-            # if '/api/project/{project}/jobs/' == url:
             self.logger.debug(f"[{endpoint_id}] Optimizing initial context before asking for missing symbols...")
             optimized_initial_context = self.framework_analyzer.optimize_context(initial_endpoint_context)
             
