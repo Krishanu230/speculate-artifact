@@ -940,9 +940,6 @@ class SpringBootFrameworkAnalyzer(FrameworkAnalyzer):
         final_dependency_contexts = []
         self.logger.info(f"Found {len(key_artifacts)} key artifacts. Starting recursive dependency gathering...")
         for artifact_info in key_artifacts:
-            # if "Track" in primary_fqn:
-            #     print(">>> DEBUGGER: Paused after recursive gathering. Inspect 'final_dependency_contexts'.")
-            #     import pdb; pdb.set_trace()
             artifact_fqn = artifact_info.get("className")
             self.logger.debug(f"  > Gathering dependencies for key artifact: {artifact_fqn}")
             # The 'processed_fqns' set is passed by reference and updated by the recursive call
@@ -987,10 +984,6 @@ class SpringBootFrameworkAnalyzer(FrameworkAnalyzer):
             )
             final_dependency_contexts.extend(converter_contexts)
 
-        # if "Track" in primary_fqn:
-        #         print(">>> DEBUGGER: Paused after recursive gathering. Inspect 'final_dependency_contexts'.")
-        #         import pdb; pdb.set_trace() 
-        
         # This set tracks FQNs whose code is "clubbed" into the main `code` block.
         claimed_for_clubbing_fqns = {primary_fqn}
 
@@ -1480,7 +1473,6 @@ class SpringBootFrameworkAnalyzer(FrameworkAnalyzer):
         self.logger.info(f"Phase 2 complete. Total components including dependencies: {len(all_component_fqns)}.")
         # --- PHASE 3: DEPENDENCY GRAPH & TOPOLOGICAL SORT ---
         # self.logger.info("Phase 3: Building dependency graph and sorting components for processing...")
-        # import pdb; pdb.set_trace()
         # adj_graph, in_degree = self._build_dependency_graph(set(all_component_fqns))
         # sorted_fqns = self._topological_sort(adj_graph, in_degree)
         # self.logger.info(f"Phase 3 complete. Sorted {len(sorted_fqns)} components.")

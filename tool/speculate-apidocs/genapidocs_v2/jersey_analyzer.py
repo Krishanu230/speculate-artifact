@@ -1668,9 +1668,6 @@ Context: 'handler' provides 'method_annotations', 'class_annotations', 'code', a
         final_dependency_contexts = []
         self.logger.info(f"Found {len(key_artifacts)} key artifacts. Starting recursive dependency gathering...")
         for artifact_info in key_artifacts:
-            # if "Track" in primary_fqn:
-            #     print(">>> DEBUGGER: Paused after recursive gathering. Inspect 'final_dependency_contexts'.")
-            #     import pdb; pdb.set_trace()
             artifact_fqn = artifact_info.get("className")
             self.logger.debug(f"  > Gathering dependencies for key artifact: {artifact_fqn}")
             # The 'processed_fqns' set is passed by reference and updated by the recursive call
@@ -1715,10 +1712,6 @@ Context: 'handler' provides 'method_annotations', 'class_annotations', 'code', a
             )
             final_dependency_contexts.extend(converter_contexts)
 
-        # if "Track" in primary_fqn:
-        #         print(">>> DEBUGGER: Paused after recursive gathering. Inspect 'final_dependency_contexts'.")
-        #         import pdb; pdb.set_trace() 
-        
         # This set tracks FQNs whose code is "clubbed" into the main `code` block.
         claimed_for_clubbing_fqns = {primary_fqn}
 
@@ -2203,8 +2196,6 @@ Context: 'handler' provides 'method_annotations', 'class_annotations', 'code', a
 
         final_components_map: Dict[str, Dict[str, Any]] = {}
         for fqn in sorted(list(primary_artifacts_to_process)):
-            # if fqn == 'com.datastax.mgmtapi.resources.models.Job$JobStatus':
-            #     import pdb; pdb.set_trace()
             rich_context = self._build_rich_context_for_component(fqn)
             if rich_context:
                 final_components_map[fqn] = rich_context
