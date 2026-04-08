@@ -937,7 +937,7 @@ def main():
     parser.add_argument("--language", "-l", default="python", choices=["python", "java"], 
                       help="Programming language of the project")
     parser.add_argument("--framework", "-f", default="django", 
-                      choices=["django", "fastapi", "spring", "jersey"], 
+                      choices=["django", "spring", "jersey"],
                       help="Web framework used in the project")
     parser.add_argument(
         "--spec-model",
