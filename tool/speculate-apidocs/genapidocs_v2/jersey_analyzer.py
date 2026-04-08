@@ -1151,7 +1151,6 @@ class JerseyFrameworkAnalyzer(FrameworkAnalyzer):
 
         # Handler class and method
         handler_details = optimized_ctx.get("handler")
-        extra_item_key='/Users/abc/llm-openapi-paper/dataset/senzing-api-server/src/main/java/com/senzing/api/model/SzRelatedEntity.java:com.senzing.api.model.SzRelatedEntity:CLASS'
         if handler_details:
             # Key for the handler class itself
             class_fqn = handler_details.get("class_name_fqn")
