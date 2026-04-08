@@ -1738,7 +1738,7 @@ class SpringBootFrameworkAnalyzer(FrameworkAnalyzer):
                 method_params = method_info.get("parameters", [])
                 self.logger.debug(f"  -> Method has {len(method_params)} parameter(s). Searching for HttpServletRequest.")
                 for param in method_params:
-                    if param.get("type") == "javax.servlet.http.HttpServletRequest":
+                    if param.get("type") in ("javax.servlet.http.HttpServletRequest", "jakarta.servlet.http.HttpServletRequest"):
                         http_req_param_name = param.get("name")
                         break
                 
@@ -1851,7 +1851,7 @@ class SpringBootFrameworkAnalyzer(FrameworkAnalyzer):
         }
 
         for param in method_parameters_info:
-            if param.get("type") == "javax.servlet.http.HttpServletRequest":
+            if param.get("type") in ("javax.servlet.http.HttpServletRequest", "jakarta.servlet.http.HttpServletRequest"):
                 has_http_servlet_request = True
 
             for ann in param.get("annotations", []):
