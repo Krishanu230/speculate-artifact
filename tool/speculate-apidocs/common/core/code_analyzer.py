@@ -103,15 +103,28 @@ class CodeAnalyzer(ABC):
         pass
 
     @abstractmethod
-    def get_file_classes(self, file_path: str):
+    def get_file_classes(self, file_path: str) -> Dict[str, Any]:
         """
-        Get all class names defined in a file from previously analyzed data.
-        
+        Get all classes defined in a file from previously analysed data.
+
         Args:
-            file_path: Path to the file
-            
+            file_path: Absolute path to the source file.
+
         Returns:
-            List of class names defined in the file
+            Mapping of class name → class detail dict (keys vary by language).
+            Returns an empty dict if the file was not analysed or has no classes.
+        """
+        pass
+
+    @abstractmethod
+    def get_analyzed_files(self) -> List[str]:
+        """
+        Return the list of all source files included in the analysis.
+
+        Returns:
+            List of absolute file paths that were analysed by
+            ``analyze_project``.  Returns an empty list if analysis results
+            have not been loaded yet.
         """
         pass
 
