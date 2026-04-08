@@ -32,16 +32,21 @@ class CodeAnalyzer(ABC):
     """
     
     @abstractmethod
-    def analyze_project(self, project_path: str, output_dir: str) -> str:
+    def analyze_project(self, project_path: str, output_dir: str,
+                        framework: str) -> Optional[str]:
         """
         Analyze an entire project and persist the results.
-        
+
         Args:
-            project_path: Path to the root directory of the project
-            output_dir: Directory where analysis results should be stored
-            
+            project_path: Path to the root directory of the project.
+            output_dir:   Directory where analysis results should be stored.
+            framework:    Framework identifier (e.g. ``'spring'``, ``'jersey'``,
+                          ``'django'``).  Passed to the underlying analysis tool
+                          so it can apply framework-specific extraction rules.
+
         Returns:
-            Path to the persisted analysis results file
+            Absolute path to the persisted analysis results file, or ``None``
+            if analysis failed.
         """
         pass
     
