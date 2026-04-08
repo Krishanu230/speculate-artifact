@@ -3123,67 +3123,6 @@ Context: 'handler' provides 'method_annotations', 'class_annotations', 'code', a
         
         return all_fields
 
-    def _is_potential_dto_old_old(self, type_name: Optional[str]) -> bool:
-        if not type_name or self._is_primitive_or_common(type_name):
-            return False
-        
-        # --- Step 1: "Soft" Rejection on non-DTO naming patterns ---
-        simple_name = type_name.split('.')[-1]
-        excluded_suffixes = [
-            'Impl', 'Factory', 'Provider', 'Tracker', 'Builder', 'Services', 'Support', 'Mongo'
-        ]
-        if any(simple_name.endswith(suffix) for suffix in excluded_suffixes):
-            self.logger.debug(f"Soft Reject: '{type_name}' ends with an excluded suffix.")
-            return False
-        
-        if simple_name.endswith('Response'):
-            base_name = simple_name[:-len('Response')]
-            if base_name.lower() in ['basic', 'error', 'meta', 'links', 'raw', 'api']:
-                self.logger.debug(f"Soft Reject: '{type_name}' appears to be a generic wrapper response.")
-                return False
-
-        # --- Step 2: "Soft" Inclusion based on package name ---
-        name_segments = type_name.lower().split('.')
-        inclusion_keywords = [
-            "model", "models", "dto", "dtos", "entity", "entities", 
-            "schema", "domain", "activity", "activities", "statistic", "statistics"
-        ]
-        exclusion_keywords = [
-            "mongo",
-        ]
-        if not any(segment in inclusion_keywords for segment in name_segments):
-            self.logger.debug(f"Soft Reject: '{type_name}' is not in a recognized data model package.")
-            return False
-        
-        if any(segment in exclusion_keywords for segment in name_segments):
-            self.logger.debug(f"Soft Reject: '{type_name}' is not in a recognized data model package.")
-            return False
-        # --- Step 3: "Hard" Verification (if info is available) ---
-        class_info = self.code_analyzer.get_symbol_info(type_name, self.project_path, SymbolType.CLASS)
-
-        if class_info:
-            if class_info.get("isEnum"):
-                self.logger.debug(f"Hard Reject: '{type_name}' is an enum.")
-                return False
-
-            # DO NOT REJECT interfaces or abstract classes here. They are our primary artifacts.
-            # We will, however, reject empty "marker" interfaces.
-            if class_info.get("isInterface"):
-                parent_count = len(class_info.get("parentClasses", []))
-                method_count = len(class_info.get("functions", []))
-                # If it's an interface with no parents and no methods, it's likely a marker.
-                if parent_count == 0 and method_count == 0:
-                    self.logger.debug(f"Hard Reject: '{type_name}' appears to be a marker interface.")
-                    return False
-        else:
-            # If info is missing, we let it pass based on the soft filters.
-            self.logger.warning(f"Could not get class_info for '{type_name}'. "
-                                f"Allowing it as a candidate based on naming conventions.")
-
-        # --- Final Decision ---
-        # If a class survives all filters, it is a potential component candidate.
-        self.logger.info(f"Accepted '{type_name}' as a schema component candidate.")
-        return True
 
     def _is_primitive_or_common(self, type_name: Optional[str]) -> bool:
         """Checks if a type name represents a Java primitive or common stdlib/framework class."""
