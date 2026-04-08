@@ -62,7 +62,7 @@ class PromptManager:
             
             if signature:
                 # Add it as an indented code block for better readability
-                line += f"\n  ```java\n  {signature}\n  ```"
+                line += f"\n  ```{self.framework_analyzer.language_name}\n  {signature}\n  ```"
             
             component_list_lines.append(line)
         
@@ -72,7 +72,7 @@ class PromptManager:
         return (
             "\nThe following component schemas are already available and could be referenced using `$ref`:"
             f"\n{component_list_str}\n"
-            "When using `$ref`, you MUST use the schema name (e.g., `User`, `Report_1`), not the Java class name.\n"
+            f"When using `$ref`, you MUST use the schema name (e.g., `User`, `Report_1`), not the {self.framework_analyzer.language_name} class name.\n"
         )
 
 

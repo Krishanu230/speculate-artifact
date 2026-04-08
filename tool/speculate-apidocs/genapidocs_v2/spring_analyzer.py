@@ -2053,7 +2053,11 @@ class SpringBootFrameworkAnalyzer(FrameworkAnalyzer):
     @property
     def framework_name(self) -> str:
         return "Spring-Boot"
-    
+
+    @property
+    def language_name(self) -> str:
+        return "java"
+
     def get_schema_component_terminology(self) -> str:
         """
         Describes what a schema component represents in a Spring Boot context.

@@ -2390,6 +2390,10 @@ class DjangoAnalyzer(FrameworkAnalyzer):
     def framework_name(self) -> str:
         return "Django"
 
+    @property
+    def language_name(self) -> str:
+        return "python"
+
     def get_schema_component_terminology(self) -> str:
         return "serializer"
 

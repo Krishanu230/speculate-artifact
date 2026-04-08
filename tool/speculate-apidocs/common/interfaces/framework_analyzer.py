@@ -58,6 +58,14 @@ class FrameworkAnalyzer(ABC):
         """
         pass
     
+    @property
+    def language_name(self) -> str:
+        """
+        Returns the programming language name for this framework (e.g. 'java', 'python').
+        Used for language-agnostic prompt and display generation.
+        """
+        return "unknown"
+
     def get_component_field_instructions(self, component_name: str) -> str:
         """
         Get framework-specific instructions for processing schema components

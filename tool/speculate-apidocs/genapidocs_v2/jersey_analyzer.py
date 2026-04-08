@@ -3651,6 +3651,10 @@ Context: 'handler' provides 'method_annotations', 'class_annotations', 'code', a
     def framework_name(self) -> str:
         return "Jersey"
 
+    @property
+    def language_name(self) -> str:
+        return "java"
+
     def get_schema_component_terminology(self) -> str:
         # Describe what a schema component represents in Java/Jersey context
         return "POJO/DTO" # Plain Old Java Object / Data Transfer Object
