@@ -8,7 +8,7 @@ import shutil
 import glob
 
 # Import the interface and potentially common types
-from common.interfaces.code_analyzer import CodeAnalyzer, SymbolType
+from common.core.code_analyzer import CodeAnalyzer, SymbolType
 
 # Get loggers (assuming logging_config is accessible)
 from common.logging_config import SetupLogging

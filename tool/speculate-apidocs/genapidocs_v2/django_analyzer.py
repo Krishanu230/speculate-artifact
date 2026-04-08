@@ -8,8 +8,8 @@ import traceback
 from typing import Dict, List, Set, Optional, Any, Tuple
 import copy
 
-from common.interfaces.framework_analyzer import FrameworkAnalyzer
-from common.interfaces.code_analyzer import CodeAnalyzer, SymbolType
+from common.core.framework_analyzer import FrameworkAnalyzer
+from common.core.code_analyzer import CodeAnalyzer, SymbolType
 import textwrap
 
 DRF_default_response_codes = {

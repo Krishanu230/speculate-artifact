@@ -13,9 +13,9 @@ if common_path not in sys.path:
 if project_root not in sys.path:
      sys.path.insert(0, project_root)
 
-from common.interfaces.framework_analyzer import FrameworkAnalyzer
+from common.core.framework_analyzer import FrameworkAnalyzer
 from django_analyzer import DjangoAnalyzer
-from common.interfaces.code_analyzer import CodeAnalyzer
+from common.core.code_analyzer import CodeAnalyzer
 from python_analyzer import PythonCodeAnalyzer
 
 class TestDjangoAnalyzerSerializers(unittest.TestCase):

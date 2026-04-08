@@ -9,8 +9,8 @@ import re
 from typing import Dict, List, Optional, Any, Tuple, Set
 
 # Import interfaces and base classes
-from common.interfaces.framework_analyzer import FrameworkAnalyzer
-from common.interfaces.code_analyzer import CodeAnalyzer, SymbolType
+from common.core.framework_analyzer import FrameworkAnalyzer
+from common.core.code_analyzer import CodeAnalyzer, SymbolType
 from java_analyzer import JavaCodeAnalyzer # Make sure this import works
 
 # logger = logging.getLogger(__name__) # Use self.logger instead

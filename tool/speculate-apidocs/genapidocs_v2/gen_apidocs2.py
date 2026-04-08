@@ -20,11 +20,11 @@ if common_path not in sys.path:
 if project_root not in sys.path:
      sys.path.insert(0, project_root)
 
-from common.interfaces.code_analyzer import CodeAnalyzer
-from common.interfaces.framework_analyzer import FrameworkAnalyzer
-from common.interfaces.prompt_management import PromptManager
-from common.interfaces.spec_manager import OpenAPISpecManager, ValidationResult
-from common.interfaces.batch_processor import BatchProcessor
+from common.core.code_analyzer import CodeAnalyzer
+from common.core.framework_analyzer import FrameworkAnalyzer
+from common.core.prompt_management import PromptManager
+from common.core.spec_manager import OpenAPISpecManager, ValidationResult
+from common.core.batch_processor import BatchProcessor
 from common.llm.llm import LLMManager
 from common.stats import EntityStatus, EntityType, LLMCallType, StatsCollector, ValidationAttempt
 

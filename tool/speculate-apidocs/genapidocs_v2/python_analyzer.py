@@ -7,7 +7,7 @@ import textwrap
 from typing import Dict, List, Set, Optional, Any, Tuple
 import copy
 
-from common.interfaces.code_analyzer import CodeAnalyzer, SymbolType
+from common.core.code_analyzer import CodeAnalyzer, SymbolType
 
     
 class PythonCodeAnalyzer(CodeAnalyzer):
