@@ -51,7 +51,9 @@ class PromptManager:
                 # Check cache first
                 if fqn in self._signature_cache:
                     signature = self._signature_cache[fqn]
-                # If not cached, try to generate it if the analyzer supports it
+                # Java-specific capability: build a class signature string for the prompt
+                # (e.g. "public class MyDTO extends BaseDTO"). Not on the common interface
+                # because it is meaningless for non-Java analyzers.
                 elif hasattr(self.framework_analyzer, 'get_class_signature_from_fqn'):
                     try:
                         signature = self.framework_analyzer.get_class_signature_from_fqn(fqn)

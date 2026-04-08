@@ -760,7 +760,9 @@ class SpecGenerator:
             print(f"[{index + 1}/{total_items}] Finished Endpoint: {method.upper()} {url} ({result_status})", flush=True)
     
     async def generate_profile_specs_if_applicable(self, output_path: str):
-        # Check if framework analyzer supports profiles
+        # Spring-specific capability: @Profile annotation support. Not part of the
+        # common interface because profiles are a Spring concept with no equivalent
+        # in other frameworks.
         if not hasattr(self.framework_analyzer, 'get_profile_metadata'):
             self.logger.debug("Framework does not support profile specifications")
             return []
