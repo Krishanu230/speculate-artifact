@@ -1,4 +1,5 @@
 import ast
+import logging
 import os
 import json
 import re
@@ -93,7 +94,7 @@ class DjangoAnalyzer(FrameworkAnalyzer):
         self.explicit_settings_file_path = explicit_settings_file_path
         self.explicit_urls_file_path = explicit_urls_file_path
         self.debug_mode = True
-        self.logger = logger
+        self.logger = logger or logging.getLogger(__name__)
         
 
         # Feature Class Identification - Initialized Empty

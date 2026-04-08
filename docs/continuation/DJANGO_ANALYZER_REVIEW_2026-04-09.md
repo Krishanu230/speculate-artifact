@@ -248,6 +248,18 @@ Risk level if fixed:
 - Very low if solved by assigning a null logger / default logger.
 - Low if constructor and tests are both tightened.
 
+Status update on `2026-04-09`:
+
+- implemented by normalizing Django to the same logger fallback pattern already
+  used by Spring and Jersey
+- constructor still accepts `logger=None`, but now assigns
+  `logging.getLogger(__name__)` when no logger is provided
+- targeted probe: `DjangoAnalyzer(..., logger=None)` successfully completed
+  real component extraction on `education-backend` and produced `31`
+  components
+- smoke regression check: dynamic baseline remained `38` endpoints / `31`
+  components on `education-backend`
+
 ---
 
 #### H4 — Endpoint generation uses the component system prompt
@@ -520,8 +532,10 @@ these findings.
 ### First pass: small, high-signal, low-risk
 
 1. Fix the `get_endpoints` signature drift so Django matches the base contract.
-2. Fix the logger contract:
-   either make logger mandatory or install a safe default/null logger.
+2. ~~Fix the logger contract:
+   either make logger mandatory or install a safe default/null logger.~~
+   Implemented by installing the same default module logger pattern used by the
+   Java analyzers.
 3. Remove stray unconditional prints and convert obvious debug prints to logger
    calls or gated debug behavior.
 4. ~~Record or remove the fake static-fallback claim if we are not implementing it
