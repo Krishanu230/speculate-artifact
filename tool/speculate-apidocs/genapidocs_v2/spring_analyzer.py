@@ -1947,13 +1947,13 @@ class SpringBootFrameworkAnalyzer(FrameworkAnalyzer):
         # Key output: list of {"name": ..., "type": SymbolType.XXX, "context_path": ...}
         required_symbols = []
         if not response_content:
-            self.logger.debug("Jersey: Received empty response for missing symbols.")
+            self.logger.debug("Spring: Received empty response for missing symbols.")
             return required_symbols
         try:
             # LLM might wrap JSON in ```json ... ``` or have other text
             json_match = re.search(r"\{[\s\S]*\}", response_content) # More robust regex for JSON block
             if not json_match:
-                self.logger.warning(f"Jersey: Could not find JSON object in missing symbols response: {response_content[:300]}...")
+                self.logger.warning(f"Spring: Could not find JSON object in missing symbols response: {response_content[:300]}...")
                 return required_symbols
 
             extracted_json_str = json_match.group(0)
@@ -1962,7 +1962,7 @@ class SpringBootFrameworkAnalyzer(FrameworkAnalyzer):
             symbols_list_from_llm = data.get("missing_symbols", [])
 
             if not isinstance(symbols_list_from_llm, list):
-                self.logger.warning(f"Jersey: Expected 'missing_symbols' to be a list, got: {type(symbols_list_from_llm)}")
+                self.logger.warning(f"Spring: Expected 'missing_symbols' to be a list, got: {type(symbols_list_from_llm)}")
                 return required_symbols
 
             for item_llm in symbols_list_from_llm:
@@ -1980,28 +1980,28 @@ class SpringBootFrameworkAnalyzer(FrameworkAnalyzer):
                             "context_path": item_llm["context_path"] # Path of the file *using* the symbol
                         })
                     else:
-                        self.logger.warning(f"Jersey: Unknown/unsupported symbol type '{symbol_type_str}' requested by LLM for '{item_llm.get('name')}'")
+                        self.logger.warning(f"Spring: Unknown/unsupported symbol type '{symbol_type_str}' requested by LLM for '{item_llm.get('name')}'")
                 else:
-                    self.logger.warning(f"Jersey: Skipping malformed item in missing_symbols list from LLM: {item_llm}")
-            self.logger.debug(f"Jersey: Parsed {len(required_symbols)} required symbols from LLM response.")
+                    self.logger.warning(f"Spring: Skipping malformed item in missing_symbols list from LLM: {item_llm}")
+            self.logger.debug(f"Spring: Parsed {len(required_symbols)} required symbols from LLM response.")
             return required_symbols
         except json.JSONDecodeError as e:
-            self.logger.error(f"Jersey: Failed to decode JSON from missing symbols response: {e}. Response: {response_content[:500]}...")
+            self.logger.error(f"Spring: Failed to decode JSON from missing symbols response: {e}. Response: {response_content[:500]}...")
             return []
         except Exception as e:
-            self.logger.error(f"Jersey: Unexpected error parsing missing symbols response: {e}", exc_info=True)
+            self.logger.error(f"Spring: Unexpected error parsing missing symbols response: {e}", exc_info=True)
             return []
     
     def get_missing_context(self, initial_context: Dict[str, Any], required_symbols: List[Dict[str, Any]], max_depth: int = 2) -> Dict[str, Any]:
         if not required_symbols:
-            self.logger.debug("Jersey: No required symbols provided, returning initial context.")
+            self.logger.debug("Spring: No required symbols provided, returning initial context.")
             return initial_context
 
         augmented_context = copy.deepcopy(initial_context)
         extra_context_list: List[Dict[str, Any]] = []
         processed_keys_global: Set[str] = set()
 
-        self.logger.info(f"Jersey: Fetching extra context recursively (max_depth={max_depth}) for {len(required_symbols)} initial symbols.")
+        self.logger.info(f"Spring: Fetching extra context recursively (max_depth={max_depth}) for {len(required_symbols)} initial symbols.")
 
         for symbol_request in required_symbols:
             symbol_name_from_llm = symbol_request.get("name") # This is the name LLM identified
@@ -2009,7 +2009,7 @@ class SpringBootFrameworkAnalyzer(FrameworkAnalyzer):
             referencing_file_path = symbol_request.get("context_path") # Path of file that *used* the symbol
 
             if not all([symbol_name_from_llm, isinstance(symbol_type_enum, SymbolType), referencing_file_path]):
-                 self.logger.error(f"Jersey: Invalid symbol request format for get_missing_context: {symbol_request}. Skipping.")
+                 self.logger.error(f"Spring: Invalid symbol request format for get_missing_context: {symbol_request}. Skipping.")
                  continue
             
             simple_symbol_name = symbol_name_from_llm
@@ -2036,9 +2036,9 @@ class SpringBootFrameworkAnalyzer(FrameworkAnalyzer):
                     seen_final_keys.add(key)
             unique_extra_context.sort(key=lambda x: (x['path'], x.get('start_line', 0))) # Sort for consistency
             augmented_context["extra_context"] = unique_extra_context
-            self.logger.info(f"Jersey: Added {len(unique_extra_context)} unique symbols to extra_context after recursion.")
+            self.logger.info(f"Spring: Added {len(unique_extra_context)} unique symbols to extra_context after recursion.")
         else:
-            self.logger.info("Jersey: No extra context symbols were ultimately fetched or added by get_missing_context.")
+            self.logger.info("Spring: No extra context symbols were ultimately fetched or added by get_missing_context.")
         
         return augmented_context
           
