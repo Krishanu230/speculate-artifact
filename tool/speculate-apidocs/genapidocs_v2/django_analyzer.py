@@ -12,6 +12,50 @@ from common.interfaces.framework_analyzer import FrameworkAnalyzer
 from common.interfaces.code_analyzer import CodeAnalyzer, SymbolType
 import textwrap
 
+DRF_default_response_codes = {
+    "GET_List": {
+        "400": "Bad Request - Invalid query parameters.",
+        "401": "Unauthorized - Authentication credentials were not provided.",
+        "403": "Forbidden - User does not have permission to view the list.",
+        "406": "Not Acceptable - Requested content type is not acceptable according to the Accept headers.",
+    },
+    "GET_Retrieve": {
+        "400": "Bad Request - Invalid query parameters.",
+        "401": "Unauthorized - Authentication credentials were not provided.",
+        "403": "Forbidden - User does not have permission to view this object.",
+        "404": "Not Found - Object with the given identifier does not exist.",
+        "406": "Not Acceptable - Requested content type is not acceptable according to the Accept headers.",
+    },
+    "DELETE": {
+        "400": "Bad Request - Bad input parameter.",
+        "401": "Unauthorized - Authentication credentials were not provided.",
+        "403": "Forbidden - User does not have permission to delete this object.",
+        "404": "Not Found - Object to be deleted does not exist.",
+        "405": "Method Not Allowed - DELETE method not allowed on the endpoint.",
+        "429": "Too Many Requests - Too many requests; rate limit exceeded.",
+    },
+    "PATCH": {
+        "400": "Bad Request - Bad input, validation error, or partial update not allowed.",
+        "401": "Unauthorized - Authentication credentials were not provided.",
+        "403": "Forbidden - User does not have permission to edit this object.",
+        "404": "Not Found - Object to be updated does not exist.",
+        "405": "Method Not Allowed - PATCH method not allowed on the endpoint.",
+        "406": "Not Acceptable - Requested content type is not acceptable.",
+        "415": "Unsupported Media Type - Unsupported media type in request.",
+        "429": "Too Many Requests - Too many requests; rate limit exceeded.",
+    },
+    "POST": {
+        "400": "Bad Request - Bad input, validation error.",
+        "401": "Unauthorized - Authentication credentials were not provided.",
+        "403": "Forbidden - User does not have permission to create the object.",
+        "404": "Not Found - URL not found.",
+        "405": "Method Not Allowed - POST method not allowed on the endpoint.",
+        "406": "Not Acceptable - Requested content type is not acceptable.",
+        "415": "Unsupported Media Type - Unsupported media type in request.",
+        "429": "Too Many Requests - Too many requests; rate limit exceeded.",
+    },
+}
+
 class DjangoAnalyzer(FrameworkAnalyzer):
     """
     Django-specific implementation of the FrameworkAnalyzer interface.
@@ -2619,8 +2663,6 @@ NOTE: Analyse the code carefully. The way that the code is written could vary si
         feature_prompt_for_response_str = self._get_django_formatted_feature_prompt_for_response(endpoint_context)
 
         # The DRF_default_response_codes is a large dict, so stringifying it directly.
-        # Ensure constants.py is imported.
-        from common.interfaces.constants import DRF_default_response_codes
         pagination_response_instructions = """
                 b.3 While deciding the output schema, determine if the response is paginated. Pagination is typically applied only to `list` actions.
                     - Check if the viewset has a `pagination_class` defined.

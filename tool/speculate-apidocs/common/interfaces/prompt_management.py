@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Any, Optional, Tuple
-from .constants import DRF_default_response_codes
 from .framework_analyzer import FrameworkAnalyzer
 
 class PromptManager:
