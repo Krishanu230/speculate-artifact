@@ -145,8 +145,6 @@ class JerseyFrameworkAnalyzer(FrameworkAnalyzer):
             return []
 
         self.logger.info(f"Starting merge process for {len(raw_endpoint_methods)} raw endpoint method entries.")
-        eee = []
-        for r in raw_endpoint_methods: eee.extend(r['endpoints'])
         # --- Grouping Logic: Group raw methods by "HTTP_METHOD /path" ---
         grouped_methods: Dict[str, List[Dict]] = {}
         for raw_method_data in raw_endpoint_methods:
