@@ -821,16 +821,19 @@ async def generate_api_docs(args):
                 django_settings_module = getattr(args, 'django_settings_module', None)
                 django_explicit_settings_file = getattr(args, 'django_explicit_settings_file', None)
                 django_explicit_urls_file = getattr(args, 'django_explicit_urls_file', None)
+                django_use_static_endpoints = getattr(args, 'django_use_static_endpoints', False)
 
                 debug_logger.info(f"Instantiating DjangoAnalyzer with:")
                 debug_logger.info(f"  project_path: {project_path}")
                 debug_logger.info(f"  settings_module_str: {django_settings_module}")
                 debug_logger.info(f"  explicit_settings_file_path: {django_explicit_settings_file}")
                 debug_logger.info(f"  explicit_urls_file_path: {django_explicit_urls_file}")
+                debug_logger.info(f"  use_dynamic_endpoint_extraction: {not django_use_static_endpoints}")
 
                 framework_analyzer = DjangoAnalyzer(
                     code_analyzer=code_analyzer,
                     project_path=project_path,
+                    use_dynamic=not django_use_static_endpoints,
                     logger=debug_logger,
                     settings_module_str=django_settings_module,
                     explicit_settings_file_path=django_explicit_settings_file,
@@ -982,6 +985,11 @@ def main():
         help="For Django projects: The direct file system path to your root urls.py file "
              "(e.g., '/path/to/project/myapp/urls.py'). Highest precedence for URL discovery.",
         default=None
+    )
+    parser.add_argument(
+        "--django-use-static-endpoints",
+        action="store_true",
+        help="For Django projects: use the best-effort static endpoint parser instead of runtime Django URL introspection. Prefer the default dynamic mode when possible.",
     )
     parser.add_argument(
         "--multi-module",

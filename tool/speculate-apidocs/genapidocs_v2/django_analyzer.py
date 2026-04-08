@@ -10,6 +10,7 @@ import copy
 
 from common.core.framework_analyzer import FrameworkAnalyzer
 from common.core.code_analyzer import CodeAnalyzer, SymbolType
+from genapidocs_v2.django_static_endpoint_parser import extract_endpoints_static
 import textwrap
 
 DRF_default_response_codes = {
@@ -143,10 +144,13 @@ class DjangoAnalyzer(FrameworkAnalyzer):
         if self.use_dynamic:
             success = self._extract_endpoints_dynamic(output_dir)
             if not success:
-                print("Dynamic URL extraction failed, falling back to static analysis.")
-                self._extract_endpoints_static()
+                raise RuntimeError(
+                    "Dynamic Django endpoint extraction failed. Prefer fixing the Django "
+                    "runtime environment and retrying. If that is not feasible, rerun "
+                    "with --django-use-static-endpoints to use the best-effort static "
+                    "endpoint parser."
+                )
         else:
-            # Use static extraction
             self._extract_endpoints_static()
         
         return self.endpoints
@@ -494,9 +498,15 @@ class DjangoAnalyzer(FrameworkAnalyzer):
 
     def _extract_endpoints_static(self) -> None:
         """Extract API endpoints using static analysis."""
-        # This would implement the static URL pattern analysis
-        # We'll leave this as a placeholder for now, as we're focusing on the dynamic extraction
-        pass
+        url_file = self._find_url_module()
+        if not url_file:
+            raise RuntimeError("Could not find Django URL configuration file for static endpoint extraction.")
+
+        self.endpoints = extract_endpoints_static(
+            code_analyzer=self.code_analyzer,
+            project_path=self.project_path,
+            url_file=url_file,
+        )
     
     
     def _find_imperative_symbols_in_code(self, code: str, context_path: str, symbol_suffix: str) -> List[str]:
