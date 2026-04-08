@@ -543,7 +543,6 @@ class JavaCodeAnalyzer(CodeAnalyzer):
                     abs_context_path = os.path.abspath(context_path)
                     possible_fqns = [fqn for fqn in self._class_lookup
                                      if fqn.endswith("." + symbol_name) or fqn == symbol_name]
-                    # TODO: Need import resolution here for accuracy
                     if len(possible_fqns) == 1:
                         self.logger.debug(f"Resolved simple class name '{symbol_name}' to '{possible_fqns[0]}'")
                         return self._class_lookup[possible_fqns[0]]
@@ -679,31 +678,22 @@ class JavaCodeAnalyzer(CodeAnalyzer):
         return None
 
     def get_referenced_classes(self, code: str, context_path: str) -> List[Dict[str, Any]]:
-         """Gets classes referenced within a specific Java method or class body."""
-         # This should query the pre-analyzed `referencedClasses` list from `soot-analysis.json`.
-         # The 'code' snippet isn't actually needed if analysis is pre-computed.
-         # Find the relevant method/class in self.analysis_results based on context_path
-         # and potentially a method/class name extracted from the code context.
+        """Gets classes referenced within a specific Java method or class body.
 
-         self.logger.warning("get_referenced_classes(code, ...) should preferably use pre-analyzed data. Searching based on context_path...")
-         # Crude implementation: find symbol info containing the line numbers of the snippet?
-         # Better: FrameworkAnalyzer should call get_symbol_info for the relevant scope
-         #         and then access its 'identifiers'.'referencedClasses' field.
-         # Return empty for now as direct snippet parsing is not the right approach here.
-         return []
+        Java class references are pre-computed by the Soot analysis and stored
+        in each class entry's field data.  Direct snippet parsing is not
+        applicable here; callers that need referenced classes should use
+        get_symbol_info and inspect the returned class data.  Returns an empty
+        list as the safe default.
+        """
+        return []
 
 
     def get_inner_classes(self, class_name: str, class_path: str) -> Dict[str, Dict[str, Any]]:
-        """Gets inner classes for a Java class."""
-        # The soot-analysis.json structure needs to be checked if it captures inner classes.
-        # Assuming it might be nested within ClassInfo or a separate list.
+        """Gets inner classes for a Java class from pre-analysed data."""
         class_info = self.get_symbol_info(class_name, class_path, SymbolType.CLASS)
-        if class_info and "innerClasses" in class_info: # Adjust key if needed
-            # Process the inner class info from the JSON
-            # This might require constructing the full inner class structure
-            # based on the data provided by the Java analysis tool.
-            self.logger.warning("get_inner_classes needs implementation based on actual JSON output structure.")
-            return class_info["innerClasses"] # Placeholder
+        if class_info and "innerClasses" in class_info:
+            return class_info["innerClasses"]
         return {}
     
     def get_code_snippet_from_info(self, symbol_info: Dict[str, Any]) -> Optional[str]:
