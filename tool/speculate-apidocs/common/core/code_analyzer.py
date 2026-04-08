@@ -51,15 +51,21 @@ class CodeAnalyzer(ABC):
         pass
     
     @abstractmethod
-    def load_analysis_results(self, results_path: str) -> Dict[str, Any]:
+    def load_analysis_results(self, results_path: str) -> bool:
         """
-        Load previously persisted analysis results.
-        
+        Load previously persisted analysis results from disk.
+
+        Implementations must store the loaded data in ``self.analysis_results``
+        so that other methods (``get_symbol_info``, ``get_file_classes``, etc.)
+        can access it.  This method is typically called internally by
+        ``analyze_project`` after the underlying analysis tool completes.
+
         Args:
-            results_path: Path to the analysis results file
-            
+            results_path: Path to the analysis results file produced by
+                          ``analyze_project``.
+
         Returns:
-            Dictionary containing the loaded analysis results
+            ``True`` if the results were loaded successfully, ``False`` otherwise.
         """
         pass
     
