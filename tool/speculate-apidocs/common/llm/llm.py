@@ -28,9 +28,6 @@ from azure.ai.inference.models import SystemMessage, UserMessage   # message typ
 from azure.core.credentials import AzureKeyCredential
 
 
-from ..thread_safe import (
-    ThreadSafeDualString,
-)
 from stats import LLMCallType, LLMRequestStats, StatsCollector
 
 
@@ -840,8 +837,6 @@ class LLMManager:
         """
         self.max_retries = max_retries
         self.logger = logger or logging.getLogger(__name__)
-        # Assuming ThreadSafeDualString is still part of your setup
-        self.old_new = ThreadSafeDualString()
         self.stats_collector = stats_collector
 
         # Dictionary to hold successfully initialized and configured providers
@@ -993,9 +988,6 @@ class LLMManager:
         # as the JSON itself might be wrapped in a code block by the LLM.
         if not request.is_json:
             extracted_content = self._extract_code_blocks(content)
-            # Track if extraction changed the content
-            if content != extracted_content:
-                self.old_new.increment(content, extracted_content) # Track original vs extracted
             return extracted_content
         else:
             # If JSON was requested, return the raw content (potentially including ```json ... ```)
