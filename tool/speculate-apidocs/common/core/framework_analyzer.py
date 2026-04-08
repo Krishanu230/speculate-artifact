@@ -72,7 +72,7 @@ class FrameworkAnalyzer(ABC):
     # ------------------------------------------------------------------
 
     @abstractmethod
-    def get_endpoints(self) -> List[Dict[str, Any]]:
+    def get_endpoints(self, output_dir: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Extract every API endpoint from the project.
 

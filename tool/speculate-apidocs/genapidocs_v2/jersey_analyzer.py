@@ -126,7 +126,7 @@ class JerseyFrameworkAnalyzer(FrameworkAnalyzer):
         if not self.code_analyzer.analysis_results:
             self.logger.warning("CodeAnalyzer provided to JerseyFrameworkAnalyzer has not loaded analysis results.")
 
-    def get_endpoints(self, *args, **kwargs) -> List[Dict[str, Any]]:
+    def get_endpoints(self, output_dir: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Merges raw endpoint methods from static analysis into unique API operations.
         This handles method overloading for different content types.
