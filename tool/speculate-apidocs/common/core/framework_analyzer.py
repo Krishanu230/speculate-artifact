@@ -1,158 +1,333 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List, Set, Optional, Any, Tuple
+from typing import Dict, List, Optional, Any
 from .code_analyzer import CodeAnalyzer
+
 
 class FrameworkAnalyzer(ABC):
     """
     Abstract base class for framework-specific analyzers.
-    Provides methods to extract API endpoints, schema components,
-    and other framework-specific information needed for OpenAPI generation.
+
+    Every supported framework (Django, Spring Boot, Jersey, …) subclasses this
+    and provides concrete implementations of its methods.  The class is split
+    into two groups:
+
+    Compulsory (@abstractmethod)
+    ----------------------------
+    Python will refuse to instantiate a subclass that is missing any of these.
+    They form the minimum contract that Speculate needs to generate an OpenAPI
+    specification.  If you are adding support for a new framework you MUST
+    implement all of them.
+
+    Optional (concrete defaults)
+    ----------------------------
+    These are part of the context-enrichment ("missing symbols") pass that
+    improves specification quality but is not required for the tool to produce
+    output.  Sensible no-op defaults are provided so that a minimal new
+    framework implementation still runs end-to-end.  Override them to improve
+    result quality.
     """
-    
-    def __init__(self, code_analyzer: CodeAnalyzer, project_path: str, analysis_path: str = None):
+
+    def __init__(self, code_analyzer: CodeAnalyzer, project_path: str,
+                 analysis_path: str = None):
         """
-        Initialize with a CodeAnalyzer implementation.
-        
         Args:
-            code_analyzer: Implementation of CodeAnalyzer for the language
-            project_path: Root path of the project
-            analysis_path: Path to existing analysis results (optional)
+            code_analyzer:  Language-specific CodeAnalyzer implementation.
+            project_path:   Root directory of the project being analysed.
+            analysis_path:  Path to pre-computed analysis results (optional).
+                            When supplied the results are loaded immediately so
+                            that get_endpoints() / get_schema_components() do
+                            not have to re-analyse the project from scratch.
         """
         self.code_analyzer = code_analyzer
         self.project_path = project_path
-        
-        # If analysis path is provided, load previously analyzed code
-        if analysis_path:
-            self.analysis_results = code_analyzer.load_analysis_results(analysis_path)
-        else:
-            self.analysis_results = None
-    
+        self.analysis_results = (
+            code_analyzer.load_analysis_results(analysis_path)
+            if analysis_path else None
+        )
+
+    # ------------------------------------------------------------------
+    # Identity — COMPULSORY
+    # ------------------------------------------------------------------
+
+    @property
     @abstractmethod
-    def get_endpoints(self) -> List[Dict[str, Any]]:
+    def framework_name(self) -> str:
         """
-        Extract API endpoints from the project.
-        
-        Returns:
-            List of dictionaries, each containing:
-                - url: Dictionary with URL pattern and parameters
-                - method: HTTP method (GET, POST, etc.)
-                - view: Handler class or function name
-                - path: File path where the handler is defined
-                - is_viewset: Whether the handler is a viewset (or controller/resource)
-                - function: Function name (if viewset)
-                - metadata: Framework-specific metadata
+        Human-readable framework name, e.g. ``'Django'``, ``'Spring-Boot'``,
+        ``'Jersey'``.  Used in LLM prompts and log messages.
         """
-        pass
-    
-    @abstractmethod
-    def get_schema_components(self) -> Dict[str, Dict[str, Any]]:
-        """
-        Extract schema components from the project.
-        
-        Returns:
-            Dictionary mapping component names to their details:
-                - path: File path where the component is defined
-                - is_request: Whether it's a request schema
-                - is_model: Whether it's a model schema
-                - fields: Component fields and their properties
-        """
-        pass
-    
+
     @property
     def language_name(self) -> str:
         """
-        Returns the programming language name for this framework (e.g. 'java', 'python').
-        Used for language-agnostic prompt and display generation.
+        Programming language for this framework, e.g. ``'python'``, ``'java'``.
+        Used to select syntax highlighting and to phrase language-specific
+        instructions in prompts.  Defaults to ``'unknown'``; override in every
+        concrete subclass.
         """
         return "unknown"
 
-    def get_component_field_instructions(self, component_name: str) -> str:
+    # ------------------------------------------------------------------
+    # Project extraction — COMPULSORY
+    # ------------------------------------------------------------------
+
+    @abstractmethod
+    def get_endpoints(self) -> List[Dict[str, Any]]:
         """
-        Get framework-specific instructions for processing schema components
-        
+        Extract every API endpoint from the project.
+
+        Returns a list of endpoint dictionaries.  Each dictionary must contain:
+            url         – dict with keys ``url`` (str) and ``parameter`` (list)
+            method      – HTTP method string, e.g. ``'GET'``, ``'POST'``
+            view        – handler class or function name (str)
+            path        – absolute file path where the handler is defined (str)
+            is_viewset  – True if the handler is a viewset / controller / resource
+            function    – action / function name within the handler (str)
+            metadata    – dict of framework-specific extra data (may be empty)
+        """
+
+    @abstractmethod
+    def get_schema_components(self) -> Dict[str, Dict[str, Any]]:
+        """
+        Extract every schema component (serializer, DTO, POJO, …) from the
+        project.
+
+        Returns a mapping of component name → component detail dict.  Each
+        detail dict must contain:
+            path        – absolute file path where the component is defined
+            is_request  – True if the component is used as a request body schema
+            is_model    – True if the component wraps a database model
+            fields      – list / dict describing the component's fields
+        """
+
+    @abstractmethod
+    def get_endpoint_context(self, endpoint: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Build the source-code context needed to generate the OpenAPI description
+        for one endpoint.
+
         Args:
-            component_name: Name of the schema component
-            
-        Returns:
-            Framework-specific instructions for field extraction and processing
+            endpoint: One element from the list returned by ``get_endpoints()``.
+
+        Returns a dict whose keys are context-slot names (e.g.
+        ``'handler_code'``, ``'model_code'``, ``'auth_code'``) and whose values
+        are the relevant source-code strings.  Unknown keys are passed through
+        to the prompt unchanged, so framework-specific slots are fine.
         """
-        raise NotImplementedError("Each framework implementation must provide this method")
-    
+
+    # ------------------------------------------------------------------
+    # Component prompt generation — COMPULSORY
+    # ------------------------------------------------------------------
+
+    @abstractmethod
+    def get_schema_component_terminology(self) -> str:
+        """
+        Return the framework-native term for a schema component, used in LLM
+        prompts so the model understands what kind of object it is examining.
+
+        Examples: ``'serializer'`` (Django), ``'POJO/DTO'`` (Java).
+        """
+
+    @abstractmethod
     def get_component_system_message(self) -> str:
         """
-        Get framework-specific instructions for processing schema components
+        Return the system-level instruction string for the component-generation
+        LLM call.  This is sent as the ``system`` role message and should
+        orient the model toward the framework's conventions for data schemas.
+        """
 
-        Returns:
-            Framework-specific instructions for field extraction and processing
+    @abstractmethod
+    def get_component_field_instructions(self, component_name: str,
+                                         component_info: Dict[str, Any]) -> str:
         """
-        raise NotImplementedError("Each framework implementation must provide this method")
-    
-    # @abstractmethod
-    # def get_authentication_mechanisms(self) -> List[Dict[str, Any]]:
-    #     """
-    #     Extract authentication configuration from the project.
-        
-    #     Returns:
-    #         List of dictionaries describing authentication mechanisms
-    #     """
-    #     pass
-    
-    # @abstractmethod
-    # def get_endpoint_context(self, endpoint: Dict[str, Any]) -> Dict[str, str]:
-    #     """
-    #     Build the context needed for OpenAPI prompt generation for an endpoint.
-        
-    #     Args:
-    #         endpoint: Endpoint dictionary from get_endpoints()
-            
-    #     Returns:
-    #         Dictionary containing code context needed for prompt generation:
-    #             - handler_code: Code for the endpoint handler
-    #             - request_schema_code: Code for request schema
-    #             - response_schema_code: Code for response schema
-    #             - model_code: Code for related models
-    #             - auth_code: Code for authentication mechanisms
-    #             - helpers_code: Code for helper functions/utilities
-    #     """
-    #     pass
-    
-    # @abstractmethod
-    # def get_missing_context(self, endpoint_context: Dict[str, str], required_symbols: List[Dict[str, Any]]) -> Dict[str, str]:
-    #     """
-    #     Get additional code context for missing/referenced symbols.
-        
-    #     Args:
-    #         endpoint_context: Current context dictionary
-    #         required_symbols: List of required symbol information
-            
-    #     Returns:
-    #         Updated context dictionary with additional code
-    #     """
-    #     pass
-    
-    # @abstractmethod
-    # def identify_required_symbols(self, endpoint: Dict[str, Any], context: Dict[str, str]) -> List[Dict[str, Any]]:
-    #     """
-    #     Identify symbols required for comprehensive context.
-        
-    #     Args:
-    #         endpoint: Endpoint dictionary
-    #         context: Current context dictionary
-            
-    #     Returns:
-    #         List of dictionaries containing information about required symbols
-    #     """
-    #     pass
-    
-    # @abstractmethod
-    # def post_process_openapi_spec(self, spec: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        Perform framework-specific validation or post-processing on the OpenAPI spec.
-        
+        Return framework-specific field-extraction instructions appended to the
+        component-generation prompt.
+
         Args:
-            spec: Generated OpenAPI specification
-            
-        Returns:
-            Validated/processed OpenAPI specification
+            component_name: Schema name as it will appear in the OpenAPI spec.
+            component_info: Component detail dict from ``get_schema_components()``.
+
+        Returns a string that is inserted verbatim into the LLM prompt.
         """
-        pass
+
+    # ------------------------------------------------------------------
+    # Endpoint prompt generation — COMPULSORY
+    # ------------------------------------------------------------------
+
+    @abstractmethod
+    def get_endpoint_request_system_message(self) -> str:
+        """
+        System-role message for the endpoint *request* LLM call.
+        """
+
+    @abstractmethod
+    def get_endpoint_response_system_message(self) -> str:
+        """
+        System-role message for the endpoint *response* LLM call.
+        """
+
+    @abstractmethod
+    def get_endpoint_common_instructions(self,
+                                         skip_components: bool = False) -> str:
+        """
+        Instructions that are shared between the request and response prompts
+        for every endpoint (e.g. output format rules, what to omit).
+
+        Args:
+            skip_components: When True the prompt should instruct the model not
+                             to emit ``$ref`` component references.
+        """
+
+    @abstractmethod
+    def get_endpoint_request_instructions(self, endpoint: Dict[str, Any],
+                                          endpoint_context: Dict[str, Any],
+                                          skip_components: bool = False) -> str:
+        """
+        Full user-turn instructions for generating the *request* portion of an
+        endpoint's OpenAPI entry.
+
+        Args:
+            endpoint:         Endpoint dict from ``get_endpoints()``.
+            endpoint_context: Context dict from ``get_endpoint_context()``.
+            skip_components:  Passed through from the generation pipeline.
+        """
+
+    @abstractmethod
+    def get_endpoint_response_instructions(self, endpoint: Dict[str, Any],
+                                           endpoint_context: Dict[str, Any],
+                                           skip_components: bool = False) -> str:
+        """
+        Full user-turn instructions for generating the *response* portion of an
+        endpoint's OpenAPI entry.
+
+        Args:
+            endpoint:         Endpoint dict from ``get_endpoints()``.
+            endpoint_context: Context dict from ``get_endpoint_context()``.
+            skip_components:  Passed through from the generation pipeline.
+        """
+
+    @abstractmethod
+    def get_endpoint_request_framework_specific_notes(self) -> str:
+        """
+        Short framework-specific addendum appended to every request prompt,
+        e.g. notes about authentication decorators or routing conventions.
+        Return an empty string if there is nothing framework-specific to add.
+        """
+
+    @abstractmethod
+    def get_endpoint_response_framework_specific_notes(self) -> str:
+        """
+        Short framework-specific addendum appended to every response prompt,
+        e.g. notes about pagination wrappers or error envelope conventions.
+        Return an empty string if there is nothing framework-specific to add.
+        """
+
+    @abstractmethod
+    def is_relaxed_obj_validation(self) -> bool:
+        """
+        Return ``True`` if the OpenAPI spec validator should accept ``object``
+        schemas that lack a ``properties`` definition, ``False`` to enforce
+        strict object validation.
+
+        Use ``True`` for frameworks whose generated schemas commonly use
+        free-form objects (e.g. dynamic response envelopes in Django), and
+        ``False`` for statically-typed frameworks (Spring Boot, Jersey) where
+        every object schema is expected to have explicit properties.
+        """
+
+    # ------------------------------------------------------------------
+    # Context enrichment — OPTIONAL
+    #
+    # These methods support the "missing symbols" pass that fetches additional
+    # source-code context before the main LLM generation step.  Overriding
+    # them improves specification quality but the defaults below are sufficient
+    # for a working (if lower-quality) implementation.
+    # ------------------------------------------------------------------
+
+    def optimize_context(self, context: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Trim or reorder the context dict before it is sent to the LLM in order
+        to stay within token limits.
+
+        The default implementation returns ``context`` unchanged.  Override to
+        remove low-value slots, truncate large code blocks, or reorder entries
+        so the most relevant code appears first.
+
+        Args:
+            context: Context dict from ``get_endpoint_context()``.
+        """
+        return context
+
+    def get_missing_context(self, initial_context: Dict[str, Any],
+                            required_symbols: List[Dict[str, Any]],
+                            max_depth: int = 2) -> Dict[str, Any]:
+        """
+        Fetch additional source-code context for symbols that the LLM reported
+        as missing from the initial context.
+
+        The default implementation returns ``initial_context`` unchanged (i.e.
+        no extra context is fetched).  Override to resolve symbols via the
+        ``code_analyzer`` and merge the results into the context dict.
+
+        Args:
+            initial_context:  Context dict built by ``get_endpoint_context()``.
+            required_symbols: List of symbol dicts parsed from the LLM's
+                              "missing context" response.
+            max_depth:        How many levels of transitive dependencies to
+                              follow when resolving symbols.
+        """
+        return initial_context
+
+    def parse_missing_symbols_response(self,
+                                       response_content: str,
+                                       ) -> List[Dict[str, Any]]:
+        """
+        Parse the LLM's free-text response to the "what context is missing?"
+        prompt and return a structured list of symbols to look up.
+
+        The default implementation returns an empty list (no symbols resolved).
+        Override to extract symbol names, types, and file hints from the
+        response text using framework-aware heuristics.
+
+        Args:
+            response_content: Raw text returned by the LLM.
+        """
+        return []
+
+    def get_initial_context_presentation_for_missing_symbols(
+            self,
+            endpoint: Dict[str, Any],
+            endpoint_context: Dict[str, Any]) -> str:
+        """
+        Format the initial context as the opening section of the
+        "missing symbols" prompt so the LLM can identify what is absent.
+
+        The default implementation returns an empty string, which disables the
+        missing-symbols pass for this framework.
+
+        Args:
+            endpoint:         Endpoint dict from ``get_endpoints()``.
+            endpoint_context: Context dict from ``get_endpoint_context()``.
+        """
+        return ""
+
+    def get_framework_specific_guidance_for_missing_symbols(self) -> str:
+        """
+        Return framework-specific guidance appended to the "what is missing?"
+        prompt, e.g. explaining which symbols are always available via the
+        framework itself and need not be fetched.
+
+        The default implementation returns an empty string.
+        """
+        return ""
+
+    def get_framework_specific_exclusion_instructions_for_missing_symbols(
+            self) -> str:
+        """
+        Return instructions that tell the LLM which symbol types to exclude
+        when reporting missing context (e.g. built-in framework classes that
+        are always available).
+
+        The default implementation returns an empty string.
+        """
+        return ""
