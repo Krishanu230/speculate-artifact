@@ -2042,7 +2042,6 @@ Context: 'handler' provides 'method_annotations', 'class_annotations', 'code', a
                     processed_for_data_classes.add(artifact_fqn)
 
         for artifact in final_dependency_contexts:
-            # get_code_snippet_from_info is a hypothetical helper you'd create
             artifact_fqn = artifact.get('qualifiedName')
             if artifact_fqn not in claimed_for_clubbing_fqns and artifact_fqn not in processed_for_data_classes:
                     code = artifact.get('code')
