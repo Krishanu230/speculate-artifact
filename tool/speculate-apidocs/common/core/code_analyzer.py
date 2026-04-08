@@ -110,16 +110,21 @@ class CodeAnalyzer(ABC):
         pass
 
     @abstractmethod
-    def get_type_hierarchy(self, type_path: str, type_name: str) -> List[Dict[str, Any]]:
+    def get_type_hierarchy(self, type_name: str, context_path: str) -> List[Dict[str, Any]]:
         """
         Get the parent/supertype hierarchy for a specific type.
-        
+
         Args:
-            type_path: File path where the type is defined
-            type_name: Name of the type
-            
+            type_name:    Fully-qualified or simple name of the type.
+            context_path: File path where the type is defined, or the project
+                          root when a fully-qualified name is supplied and the
+                          exact file is unknown.
+
         Returns:
-            List of dictionaries containing parent/supertype information
+            List of dictionaries, each containing at minimum:
+                name – name of the parent type
+                path – absolute file path where the parent is defined (or None)
+                code – source code of the parent class (or None)
         """
         pass
     

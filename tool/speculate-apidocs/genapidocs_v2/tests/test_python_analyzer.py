@@ -416,7 +416,7 @@ class PriceCalculator:
         serializers_path = os.path.join(self.project_root, "myapp", "serializers.py")
         
         # Get hierarchy for ItemSerializer
-        hierarchy = self.analyzer.get_type_hierarchy(serializers_path, "ItemSerializer")
+        hierarchy = self.analyzer.get_type_hierarchy("ItemSerializer", serializers_path)
         
         # Verify the hierarchy contains ModelSerializer
         self.assertTrue(any("ModelSerializer" in entry["name"] for entry in hierarchy))

@@ -415,25 +415,25 @@ class PythonCodeAnalyzer(CodeAnalyzer):
         # Symbol not found
         return None
     
-    def get_type_hierarchy(self, type_path: str, type_name: str) -> List[Dict[str, Any]]:
+    def get_type_hierarchy(self, type_name: str, context_path: str) -> List[Dict[str, Any]]:
         """
         Get the parent type hierarchy for a specific type.
-        
+
         Args:
-            type_path: File where the type is defined
-            type_name: Name of the type
-            
+            type_name:    Name of the type
+            context_path: File where the type is defined
+
         Returns:
             List of dictionaries containing parent type information
         """
-        if type_path not in self.result or type_name not in self.result[type_path]["classes"]:
+        if context_path not in self.result or type_name not in self.result[context_path]["classes"]:
             return []
-        
+
         hierarchy = []
         visited = set([type_name])
-        
+
         # Get immediate parent classes
-        parent_classes = self.result[type_path]["classes"][type_name]["parentClasses"]
+        parent_classes = self.result[context_path]["classes"][type_name]["parentClasses"]
         
         for parent_name, parent_info in parent_classes.items():
             if parent_name in visited:
@@ -456,7 +456,7 @@ class PythonCodeAnalyzer(CodeAnalyzer):
             
             # Recursively get parent's hierarchy if available
             if parent_path and parent_name in self.result.get(parent_path, {}).get("classes", {}):
-                further_hierarchy = self.get_type_hierarchy(parent_path, parent_name)
+                further_hierarchy = self.get_type_hierarchy(parent_name, parent_path)
                 # Only add entries not already in hierarchy
                 for entry in further_hierarchy:
                     if entry["name"] not in visited:
