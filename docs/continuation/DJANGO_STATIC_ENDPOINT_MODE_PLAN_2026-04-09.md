@@ -260,6 +260,15 @@ Verification completed on `2026-04-09`:
      prefer fixing the Django runtime and to use
      `--django-use-static-endpoints` only if necessary
 
+4. Static parser refactor for SLOC reduction:
+   - file reduced from `800` lines to `450` lines
+   - rewritten from dual regex-driven parser classes into a smaller AST-driven
+     parser with shared endpoint helpers
+   - verified exact output parity against the previously committed static
+     parser on `education-backend` (`38` unique endpoints before and after)
+   - verified normal dynamic smoke still remained at `38` endpoints / `31`
+     components
+
 Known remaining gap in static mode:
 
 - on `education-backend`, imported third-party views such as `dj-rest-auth`
