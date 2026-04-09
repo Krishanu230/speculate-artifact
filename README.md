@@ -31,7 +31,7 @@ for a full interactive dashboard.
 
 ### Step 1 — Get the image
 
-**Recommended: pull from Docker Hub** (~4 GB disk, no build required)
+**Recommended: pull from Docker Hub** (~9 GB disk, no build required)
 
 ```bash
 docker pull krishannu/speculate-artifact:latest
@@ -139,6 +139,11 @@ python gen_apidocs2.py /path/to/your/project \
   --framework django \
   --django-settings-module yourapp.settings
 ```
+
+Dynamic runtime introspection is preferred. If Django cannot boot cleanly in
+your environment, rerun with `--django-use-static-endpoints` to use the
+best-effort static parser instead. That mode may miss some imported
+third-party routes, so use it only when the runtime mode cannot be made to work.
 
 Set LLM credentials as environment variables or in a `.env` file in the
 working directory. See [LLM Configuration](#llm-configuration).
