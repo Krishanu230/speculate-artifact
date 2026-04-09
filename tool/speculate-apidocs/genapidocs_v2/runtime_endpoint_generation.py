@@ -41,11 +41,6 @@ class CustomExceptionHandler:
             sys.exit(1)
 
 
-def ensure_absolute_path(path):
-    if path is not None:
-        path = os.path.abspath(path)
-    return path
-
 path_to_regex = dict()
 def import_module_from_path(file_path, project_path):
     # Get the module name from the file path
@@ -217,10 +212,6 @@ def get_endpoints(project_path, url_conf):
                 }
             )
     return final
-
-def set_settings_conf(manage_py):
-    exec(manage_py)
-    return 
 
 def main(input_dir, result_dir, url_file, starting_point, settings_conf=None):
     # Setup basic logging to console for this script's diagnostics

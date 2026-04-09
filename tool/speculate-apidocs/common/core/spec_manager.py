@@ -45,9 +45,6 @@ class SpecsWalker:
         if error_entry not in self.errors:
             self.errors.append(error_entry)
         
-    def get_type(self, obj):
-        return type(obj).__name__
-
     def schemas(self, components_obj: Dict, parent_context: Optional[Any] = None):
         if 'schemas' not in components_obj or not isinstance(components_obj['schemas'], dict):
              # If 'schemas' key is missing or not a dict, nothing to process
@@ -992,23 +989,6 @@ class OpenAPISpecManager:
         self.component_keys = set(self.spec['components']['schemas'].keys())
         self.logger = logging.getLogger(__name__)
         self.repo_name = repo_name
-
-    def _get_unique_schema_name(self, fqn: str) -> str:
-        """
-        Generates a unique schema name from a Fully Qualified Name (FQN) to prevent collisions.
-        Example: 'eu.fayder.restcountries.v1.domain.Country' -> 'CountryV1'
-        """
-        simple_name = fqn.split('.')[-1]
-        
-        # Heuristic: Look for versioning (v1, v2, etc.) in the package name.
-        match = re.search(r'\.(v\d+)\.', fqn)
-        if match:
-            # Capitalize the version string, e.g., 'v1' -> 'V1'
-            version_suffix = match.group(1).capitalize()
-            return f"{simple_name}{version_suffix}"
-            
-        # Fallback to the simple name if no versioning pattern is found.
-        return simple_name
 
     def sanitize_and_validate_content(self, content: str, relax_object_validation: bool = False) -> ValidationResult:
         """

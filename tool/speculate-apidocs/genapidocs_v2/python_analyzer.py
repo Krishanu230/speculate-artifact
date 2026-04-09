@@ -1158,64 +1158,6 @@ class PythonCodeAnalyzer(CodeAnalyzer):
             return node.value.id + "." + node.attr
         return node.attr
     
-    def extract_property_value(self, file_path: str, class_name: str, property_name: str) -> Optional[str]:
-        """
-        Extract property value using AST.
-        
-        Args:
-            file_path: Path to the file
-            class_name: Name of the class
-            property_name: Name of the property
-            
-        Returns:
-            Property value or None
-        """
-        # Skip if file not found
-        if not os.path.exists(file_path):
-            return None
-        
-        # Get class code
-        class_info = self.get_symbol_info(class_name, file_path, SymbolType.CLASS)
-        if not class_info:
-            return None
-        
-        start_line = class_info.get("startLine")
-        end_line = class_info.get("endLine")
-        if not start_line or not end_line:
-            return None
-        
-        code = self.get_code_snippet(file_path, start_line, end_line)
-        
-        try:
-            # Parse the code
-            tree = ast.parse(code)
-            
-            # Look for assignments to the property
-            for node in ast.walk(tree):
-                if isinstance(node, ast.Assign):
-                    for target in node.targets:
-                        if isinstance(target, ast.Name) and target.id == property_name:
-                            # Found the property, get its value
-                            if isinstance(node.value, ast.Name):
-                                return node.value.id
-                            elif isinstance(node.value, ast.Str):
-                                return node.value.s
-                            elif isinstance(node.value, ast.Constant):
-                                return str(node.value.value)
-                            else:
-                                # For other types, try using ast.unparse
-                                return ast.unparse(node.value)
-        except Exception as e:
-            if getattr(self, "debug_mode", False):
-                _LOGGER.debug(
-                    "Error extracting property %s from %s: %s",
-                    property_name,
-                    class_name,
-                    e,
-                )
-        
-        return None
-    
     def get_method_code(self, class_name: str, method_name: str, file_path: str) -> Optional[str]:
         """
         Retrieves the source code of a specific method within a class from an analyzed file.

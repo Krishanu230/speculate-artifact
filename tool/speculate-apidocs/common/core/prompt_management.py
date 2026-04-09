@@ -192,42 +192,6 @@ class PromptManager:
     -   Note: Provide complete and exhaustive schemas. Do not omit information or provide incomplete details.
     -   Note: Do not ask for missing information; generate the complete spec for schemas based on the provided context.
     """
-
-    def _get_output_format_instructions(self, component_name: str) -> str:
-        """Get the generic output format instructions"""
-        return f"""
-    # Output Format Requirements
-    6. Use the name of serializer: {component_name} and append the string "Request" to it for the request schema. Request schema serializer's name: {component_name}Request.
-
-    7. Use the name of serializer: {component_name} and append the string "Response" to it for the response schema. Response schema serializer's name: {component_name}Response. 
-
-    8. Response schema should have exactly 3 mandatory sections: properties, type and required. properties section should contain the 'set' of fields for Response schema.
-
-    9. Request schema should have two mandatory sections: properties and type. properties section should contain the 'set' of fields for Request schema. A 3rd section required should only be present if 'list' is non-empty. The required section should contain all the fields in 'list'. 
-
-    10. If you $ref another serializer for any field then accordingly append the string "Request" or "Response" to the name of the serializer being $ref'd.
-
-    11. The schema syntax for each schema should be such that there is the name of the schema and then the aforementioned sections.
-
-    12. Every field in the property section of the schema should have exactly three mandatory sections: type, readOnly and writeOnly.
-
-    13. For every property in schema, add readOnly and writeOnly to it. readOnly, writeOnly are properties that should be used within the definition of individual properties, not at the schema object level.
-
-    14. Use all your knowledge about the rules of openAPI specifications 3.0, python DRF and your best analytical ability and quantitative aptitude.
-
-    15. Both the schemas should be nested inside ONLY one "components" section. Start with 'components:' at the root level. Have a 'schemas:' key directly under components. Place all schema definitions under the schemas key.
-
-    16. Clearly state ALL the properties of both the request and response schema even if they have the same properties."""
-
-    def _get_quality_assurance_notes(self) -> str:
-        """Get the generic quality assurance notes"""
-        return """
-    # Quality Assurance Notes
-    Note: Keep in mind that request and response will have two different schemas and could have two different serializers in the code.
-    Note: You need to use your own knowledge to get info about famous packages.
-    Note: Make sure your output STRICTLY CONFORMS to openAPI specifications 3.0.
-    Note: Give me complete, exhaustive, accurate response and request schemas. Do not under any circumstance omit any information or give incomplete information. I am doing very critical work. 
-    Note: Do not give me incomplete information and ask me to fill it, give me complete spec with all the information for BOTH the request and response schemas. DO NOT BE LAZY, I am doing very critical work."""
     
     def _format_endpoint_context_for_prompt(self, endpoint_context: Dict[str, Any]) -> str:
         """
@@ -550,13 +514,6 @@ NOTE: Create ONLY the responses and summary subsections of the path section of o
         
         return prompt.strip()
     
-    def _format_code_context(self, context_dict: Dict[str, str]) -> str:
-        """Format the code context dictionary into a string format for the prompt"""
-        formatted_context = ""
-        for section_name, section_content in context_dict.items():
-            formatted_context += f"=== {section_name} ===\n{section_content}\n\n"
-        return formatted_context
-    
     def get_component_system_message(self) -> str:
         """Get system message for component schema generation"""
         # Delegate to framework analyzer for appropriate framework-specific message
@@ -569,49 +526,6 @@ NOTE: Create ONLY the responses and summary subsections of the path section of o
     def get_endpoint_response_system_message(self) -> str:
         """Get system message for endpoint response generation."""
         return self.framework_analyzer.get_endpoint_response_system_message()
-    
-    def create_retry_prompt(self,
-                            original_prompt: str,
-                            failed_content: str,
-                            validation_errors: List[str],
-                            entity_type: str = "section" # e.g., "component schema", "request section", "response section"
-                           ) -> str:
-        """
-                Creates a prompt asking the LLM to correct its previous output based on validation errors.
-
-                Args:
-                    original_prompt: The initial prompt that led to the failed output.
-                    failed_content: The raw output from the LLM that failed validation.
-                    validation_errors: A list of error messages from the validator.
-                    entity_type: A string describing what was being generated (for context).
-
-                Returns:
-                    A new prompt string incorporating the feedback.
-        """
-        error_string = "\n - ".join(validation_errors)
-
-        retry_prompt = f"""Your previous attempt to generate the {entity_type} based on the original instructions resulted in the following output:
-
-        ```yaml
-        {failed_content}
-
-            
-
-        IGNORE_WHEN_COPYING_START
-        Use code with caution.Python
-        IGNORE_WHEN_COPYING_END
-
-        This output failed validation with the following errors:
-
-            {error_string}
-
-        Please carefully review the original instructions (provided below) and the errors identified. Generate a corrected version of the {entity_type} that addresses these specific errors and fully adheres to the original request and OpenAPI 3.0 specifications. Output ONLY the corrected YAML content, properly formatted within ```yaml code blocks.
-
-        --- ORIGINAL INSTRUCTIONS ---
-
-        {original_prompt}
-        """
-        return retry_prompt
     
     def _get_common_missing_symbols_role_and_goal(self) -> str:
         return f"""You are an expert in {self.framework_analyzer.framework_name.upper()} and analyzing code for API documentation.

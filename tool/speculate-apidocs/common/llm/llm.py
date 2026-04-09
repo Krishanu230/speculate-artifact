@@ -105,36 +105,6 @@ class LLMChatRequest:
     def __post_init__(self):
         if self.metadata is None:
             self.metadata = {}
-    
-    def to_azure_messages(self) -> List[Any]:
-        """Convert ChatMessage objects to Azure AI Inference message types"""
-        azure_messages = []
-        
-        # Add system message first if provided
-        if self.system_message:
-            azure_messages.append(SystemMessage(content=self.system_message))
-        
-        # Convert each chat message to appropriate Azure message type
-        for msg in self.messages:
-            if msg.role == MessageRole.SYSTEM:
-                azure_messages.append(SystemMessage(content=msg.content))
-            elif msg.role == MessageRole.USER:
-                azure_messages.append(UserMessage(content=msg.content))
-            elif msg.role == MessageRole.ASSISTANT:
-                azure_messages.append(AssistantMessage(content=msg.content))
-            elif msg.role == MessageRole.TOOL:
-                if msg.tool_call_id:
-                    azure_messages.append(
-                        ToolMessage(
-                            tool_call_id=msg.tool_call_id,
-                            content=msg.content
-                        )
-                    )
-                else:
-                    # Fallback to user message if tool_call_id is missing
-                    azure_messages.append(UserMessage(content=f"[Tool Response] {msg.content}"))
-        
-        return azure_messages
 
 @dataclass
 class LLMResponse:
@@ -163,31 +133,6 @@ class LLMProvider(ABC):
     @abstractmethod
     def get_default_model(self) -> str:
         pass
-
-
-def convert_to_chat_request(request: LLMRequest) -> LLMChatRequest:
-    """
-    Converts a traditional LLMRequest to an LLMChatRequest.
-    Useful for backward compatibility.
-    """
-    messages = []
-    
-    # Add user message
-    messages.append(ChatMessage(
-        role=MessageRole.USER,
-        content=request.prompt
-    ))
-    
-    return LLMChatRequest(
-        messages=messages,
-        system_message=request.system_message,
-        model=request.model,
-        temperature=request.temperature,
-        max_tokens=request.max_tokens,
-        is_json=request.is_json,
-        seed=request.seed,
-        metadata=request.metadata
-    )
 
 @dataclass
 class AzureConfig:
@@ -814,11 +759,6 @@ class GeminiProvider(LLMProvider):
             logging.error(f"Unexpected error in GeminiProvider (Vertex Async) for model '{model_name_to_call}': {e}", exc_info=True)
             raise LLMError(f"Unexpected error in GeminiProvider (Vertex Async): {type(e).__name__}: {e}", "unknown", e)
 
-    def get_mapped_azure_model_names(self) -> List[str]:
-        # Keep this method defined but non-functional for Gemini
-        logging.error("get_mapped_azure_model_names should not be called on GeminiProvider.")
-        return []
-    
 class LLMManager:
     """Manages LLM interactions with retry logic and error handling"""
     DEFAULT_PROVIDER = "azure"

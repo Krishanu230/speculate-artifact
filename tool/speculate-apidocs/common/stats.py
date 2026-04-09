@@ -752,28 +752,3 @@ class StatsCollector:
             entity = self._entity_map[entity_id]
             if tag not in entity.tags:
                 entity.tags.append(tag)
-
-    def get_current_stats(self) -> Dict:
-        """Get current stats snapshot without finalizing."""
-        with self._lock:
-            temp_serializer_stats = []
-            temp_endpoint_stats = []
-            for entity in self._entity_map.values():
-                 if entity.entity_type == EntityType.SERIALIZER:
-                     temp_serializer_stats.append(entity)
-                 elif entity.entity_type == EntityType.ENDPOINT:
-                     temp_endpoint_stats.append(entity)
-
-            # Temporarily assign lists for serialization, then remove
-            original_serializer_stats = self.global_stats.serializer_stats
-            original_endpoint_stats = self.global_stats.endpoint_stats
-            self.global_stats.serializer_stats = temp_serializer_stats
-            self.global_stats.endpoint_stats = temp_endpoint_stats
-
-            stats_dict = self.global_stats.to_dict()
-
-            # Restore original (likely empty) lists
-            self.global_stats.serializer_stats = original_serializer_stats
-            self.global_stats.endpoint_stats = original_endpoint_stats
-
-            return stats_dict

@@ -182,27 +182,6 @@ class JerseyFrameworkAnalyzer(FrameworkAnalyzer):
             self.logger.debug(f"Identified potential request body parameter (non-DTO or fallback): {candidate_body_param.get('name')} of type {candidate_body_param.get('type')}")
         return candidate_body_param
 
-    def _extract_class_annotation_value(self, annotations_list_from_soot: List[Dict], target_annotation_fqn: str, annotation_param_name: str = "value") -> Optional[Any]:
-        """
-        Extracts a value from a specific annotation in a list of annotation objects.
-        Input: annotations_list_from_soot is a list of annotation dicts from soot-analysis.json.
-               Each dict has "name" (annotation FQN) and "elements" (dict of its params).
-        """
-        for ann_data in annotations_list_from_soot:
-            if ann_data.get("name") == target_annotation_fqn:
-                # 'elements' is a dict like {"value": "application/json"} or {"value": ["app/json", "app/xml"]}
-                value_from_elements = ann_data.get("elements", {}).get(annotation_param_name)
-                if value_from_elements is not None:
-                    # If value is a list (e.g. @Produces multiple types), return the list or first element based on need.
-                    # For @Consumes/@Produces, typically one primary type is used, or LLM handles multiple.
-                    if isinstance(value_from_elements, list) and value_from_elements:
-                        return value_from_elements # Return the list for @Produces, LLM can pick
-                    elif isinstance(value_from_elements, str):
-                        return value_from_elements
-                    # Handle other types if necessary (e.g. int, boolean if annotation params are such)
-                    return str(value_from_elements) # Fallback to string
-        return None
-    
     def get_endpoint_context(self, endpoint: Dict[str, Any]) -> Dict[str, Any]:
         """
         Builds a single, combined context from a MERGED endpoint object.
@@ -442,59 +421,6 @@ class JerseyFrameworkAnalyzer(FrameworkAnalyzer):
 
         return results
 
-    def _find_concrete_types_in_code(self, method_info: Dict[str, Any], interface_fqn: str) -> Set[str]:
-        """
-        Scans for evidence of which concrete implementations of an interface are used.
-        Uses a multi-strategy approach for robustness.
-        """
-        found_concrete_fqns = set()
-        self._build_discovery_maps()
-        all_implementations = set(self._implementations_map.get(interface_fqn, []))
-        if not all_implementations:
-            self.logger.warning(f"No known implementations found for interface '{interface_fqn}'.")
-            return set()
-
-        # --- Strategy 1: Look for Builder Pattern evidence (Handles factories like RestModels) ---
-        # This is highly reliable for libraries like Immutables.io.
-        # We look for calls to a '.build()' method on a builder that belongs to a known implementation.
-        for called_func in method_info.get("functionNames", []):
-            if called_func.get("methodName") == "build":
-                # The method called on is the Builder class, e.g., "...ImmutableRestWorkflowDefinition$Builder"
-                builder_fqn = called_func.get("invokedOn") 
-                if builder_fqn and builder_fqn.endswith('$Builder'):
-                    # Infer the parent class FQN by removing '$Builder'
-                    potential_concrete_fqn = builder_fqn[:-len('$Builder')]
-                    if potential_concrete_fqn in all_implementations:
-                        self.logger.debug(f"Evidence found via Builder pattern: '{potential_concrete_fqn}'")
-                        found_concrete_fqns.add(potential_concrete_fqn)
-
-        # --- Strategy 2: Direct Instantiations and simple Method Returns (Original Logic) ---
-        # This is good for simple cases.
-        for class_name_used in method_info.get("classNames", []):
-            if class_name_used in all_implementations:
-                self.logger.debug(f"Evidence found via direct instantiation: '{class_name_used}'")
-                found_concrete_fqns.add(class_name_used)
-
-        for called_func in method_info.get("functionNames", []):
-            return_type_of_call = self._get_base_type(called_func.get("returnType"))
-            if return_type_of_call in all_implementations:
-                self.logger.debug(f"Evidence found via direct method return type: '{return_type_of_call}'")
-                found_concrete_fqns.add(return_type_of_call)
-
-        # --- Strategy 3: Last Resort Fallback ---
-        # If we found NO evidence at all, but there is ONLY ONE possible implementation
-        # in the entire project, it's a very safe bet that it's the one being used.
-        if not found_concrete_fqns and len(all_implementations) == 1:
-            the_only_one = list(all_implementations)[0]
-            self.logger.debug(f"No direct evidence found. Falling back to the only known implementation: '{the_only_one}'")
-            found_concrete_fqns.add(the_only_one)
-
-
-        if not found_concrete_fqns:
-            self.logger.warning(f"Could not find any static evidence for concrete implementations of '{interface_fqn}' in method '{method_info.get('methodName')}'. Spec may be incomplete.")
-        
-        return found_concrete_fqns
-    
     def _is_internal_project_symbol(self, fqn: Optional[str]) -> bool:
         """
         Checks if a given FQN is likely part of the user's project codebase,
@@ -1002,24 +928,6 @@ class JerseyFrameworkAnalyzer(FrameworkAnalyzer):
     def get_endpoint_request_system_message(self) -> str:
         return "You are an expert in Java, JAX-RS (Jersey), relevant serialization libraries (Jackson, JAXB), and OpenAPI 3.0. Your task is to analyze a Java JAX-RS endpoint method to define its OpenAPI parameters, requestBody."
 
-    def _get_jersey_formatted_framework_settings_prompt(self, endpoint_context: Dict[str, Any]) -> str:
-        """Helper to generate Jersey framework settings string for the prompt."""
-        settings = endpoint_context.get("framework_settings", {}).get("settings", {})
-        lines = []
-        # For Jersey, this might include default @Consumes/@Produces if not method/class specific
-        # For now, let's assume endpoint-specific annotations are primary.
-        # This can be expanded if global Jersey defaults are needed.
-        
-        # Example:
-        # class_consumes = settings.get('class_consumes')
-        # if class_consumes: lines.append(f"Default Class @Consumes: {class_consumes}")
-        # class_produces = settings.get('class_produces')
-        # if class_produces: lines.append(f"Default Class @Produces: {class_produces}")
-        
-        if not lines:
-            return "No specific global framework settings identified for this JAX-RS endpoint request beyond method/class annotations."
-        return "\n".join(lines)
-    
     def get_endpoint_request_instructions(self, endpoint: Dict[str, Any], endpoint_context: Dict[str, Any], skip_components: bool = False) -> str:
         url = endpoint.get("url", {}).get("url", "N/A")
         method_lower = endpoint.get("method", "N/A").lower()
@@ -1167,49 +1075,6 @@ Now, apply these synthesis rules while following the detailed steps below.
 NOTE: Analyze the Java code context carefully. The way the code is written (e.g., use of annotations, helper classes) can vary. Rigorously analyze the provided code.
 """
 
-    def _get_jersey_multi_handler_instructions(self, endpoint: Dict[str, Any], endpoint_context: Dict[str, Any]) -> str:
-        """
-        Generates specialized instructions for synthesizing an OpenAPI operation from multiple JAX-RS methods.
-        This is a Jersey-specific helper.
-        """
-        
-        # We can reuse the same well-defined instructions from the previous proposal.
-        return """
-# --- Multi-Handler Synthesis Instructions ---
-This endpoint is implemented by multiple Java methods, each handling different request content types. You must synthesize these into a single OpenAPI operation.
-
-1.  **Synthesize Parameters:**
-    a.  Examine the 'method_parameters_info' for ALL provided handler methods.
-    b.  Create a unified list of parameters for the OpenAPI `parameters` section.
-    c.  If a parameter with the same `in` (e.g., "query") and `name` (e.g., "dataSource") appears in multiple methods, define it only ONCE in the final output. Its type should be consistent.
-    d.  Combine all unique `@QueryParam`, `@HeaderParam`, `@PathParam`, etc., from all methods into this single list.
-
-2.  **Synthesize RequestBody:**
-    a.  Create a single `requestBody` object.
-    b.  Inside the `requestBody`, populate the `content` map by inspecting each handler method:
-        -   **For methods with `@FormDataParam`:** Add a `multipart/form-data` entry to the `content` map. The `schema` for this entry should be of `type: object` and its `properties` must correspond to all parameters annotated with `@FormDataParam`. The `name` of each property is the value from the `@FormDataParam("name")` annotation.
-        -   **For methods with `@Consumes`:** For each media type listed in a `@Consumes` annotation (e.g., `application/json`, `text/csv`, `application/x-jsonlines`), add a corresponding entry to the `content` map.
-        -   **Schema for Consumed Types:** The schema for these media types should be based on the un-annotated Java parameter in that specific method (the POJO representing the request body). Use a `$ref` to the appropriate component schema (e.g., `#/components/schemas/BulkDataRecordRequest`).
-
-Example of a synthesized `requestBody`:
-```yaml
-requestBody:
-  content:
-    multipart/form-data:
-      schema:
-        type: object
-        properties:
-          data: # from @FormDataParam("data")
-            type: string
-            format: binary
-    application/json:
-      schema:
-        $ref: '#/components/schemas/SomeRequestPojoRequest'
-    text/csv:
-      schema:
-        type: string
-        """
-    
     def get_endpoint_response_system_message(self) -> str:
         return "You are an expert in Java, JAX-RS (Jersey), relevant serialization libraries (Jackson, JAXB), and OpenAPI 3.0. Your task is to analyze a Java JAX-RS endpoint method to define its OpenAPI responses and summary."
 
@@ -2782,173 +2647,6 @@ Context: 'handler' provides 'method_annotations', 'class_annotations', 'code', a
                 
         return all_related_contexts
 
-    def _build_clubbed_context(self, primary_fqn: str) -> Optional[Dict[str, Any]]:
-        """
-        Builds the complete, "clubbed" context for a single primary artifact,
-        including its implementation, parents, and dependencies (DTOs and Enums).
-        """
-        self.logger.debug(f"--- Building context for primary artifact: {primary_fqn} ---")
-        is_debug_target = "Track" in primary_fqn
-        if is_debug_target:
-            self.logger.info(f"[BUILD_CONTEXT_TARGET] Starting targeted context build for PRIMARY artifact: {primary_fqn}")
-
-        # 1. Get Primary Artifact Info
-        primary_info = self.code_analyzer.get_symbol_info(primary_fqn, self.project_path, SymbolType.CLASS)
-        if not primary_info:
-            self.logger.warning(f"Could not get info for primary artifact '{primary_fqn}'. Skipping.")
-            return None
-        
-        primary_path = primary_info.get("classFileName") or primary_info.get("filePath")
-        if not primary_path:
-             self.logger.warning(f"Primary artifact '{primary_fqn}' is missing a file path. Skipping.")
-             return None
-
-        primary_code = self.code_analyzer.get_code_snippet(
-            primary_path, primary_info.get("startLine"), primary_info.get("endLine")
-        ) or f"// Code for {primary_fqn} not found."
-
-        # 2. Find Secondary Artifact (the Data Holder)
-        secondary_info = None
-        impl_fqn_to_use = None
-
-        # Strategy 2a: Try to find a definitive link from annotations first
-        if primary_info.get("isInterface"):
-            self.logger.debug(f"Primary '{primary_fqn}' is an interface. Looking for @JsonDeserialize.")
-            for ann in primary_info.get("annotations", []):
-                ann_type = self._get_fqn_from_annotation_element(ann.get("type"))
-                if ann_type == "com.fasterxml.jackson.databind.annotation.JsonDeserialize":
-                    for element in ann.get("elements", []):
-                        if element.get("name") == "as":
-                            potential_impl_fqn = self._get_fqn_from_annotation_element(element.get("value"))
-                            if potential_impl_fqn:
-                                temp_info = self.code_analyzer.get_symbol_info(potential_impl_fqn, self.project_path, SymbolType.CLASS)
-                                if temp_info:
-                                    secondary_info = temp_info
-                                    impl_fqn_to_use = potential_impl_fqn
-                                    self.logger.info(f"Found definitive implementation via @JsonDeserialize(as=...): {impl_fqn_to_use}")
-                                    break
-                    if impl_fqn_to_use: break
-        
-        # Strategy 2b: Fallback to Naming Convention Heuristics if no annotation link found
-        if not secondary_info:
-            self.logger.debug(f"No definitive implementation found via annotations for '{primary_fqn}'. Trying naming conventions.")
-            
-            # Heuristic 1: Standard FQN + "Impl" (e.g., com.example.MyData -> com.example.MyDataImpl)
-            standard_impl_fqn = primary_fqn + "Impl"
-            temp_info = self.code_analyzer.get_symbol_info(standard_impl_fqn, self.project_path, SymbolType.CLASS)
-            if temp_info:
-                secondary_info = temp_info
-                impl_fqn_to_use = standard_impl_fqn
-                self.logger.info(f"Found implementation using standard naming heuristic: {impl_fqn_to_use}")
-            else:
-                # Heuristic 2: Package.impl.ClassNameImpl (e.g., com.example.MyData -> com.example.impl.MyDataImpl)
-                package_parts = primary_fqn.split('.')
-                if len(package_parts) > 1:
-                    class_name_simple = package_parts[-1]
-                    base_package = ".".join(package_parts[:-1])
-                    subpackage_impl_fqn = f"{base_package}.impl.{class_name_simple}Impl"
-                    
-                    temp_info = self.code_analyzer.get_symbol_info(subpackage_impl_fqn, self.project_path, SymbolType.CLASS)
-                    if temp_info:
-                        secondary_info = temp_info
-                        impl_fqn_to_use = subpackage_impl_fqn
-                        self.logger.info(f"Found implementation using 'impl' subpackage heuristic: {impl_fqn_to_use}")
-
-        if not secondary_info:
-            self.logger.debug(f"No implementation class found for interface '{primary_fqn}'. Will use primary artifact as the source for fields.")
-        
-        # 3. Gather All Fields and Properties (The "Merge")
-        final_fields_list = []
-        if secondary_info and impl_fqn_to_use:
-            self.logger.debug(f"Gathering all properties starting from implementation: {impl_fqn_to_use}")
-            final_fields_list = self._get_all_properties_for_class(impl_fqn_to_use)
-        else:
-            self.logger.debug(f"No Impl used. Gathering all properties starting from primary: {primary_fqn}")
-            final_fields_list = self._get_all_properties_for_class(primary_fqn)
-        
-        self.logger.debug(f"Total unique fields/properties for '{primary_fqn}': {len(final_fields_list)}")
-
-        # 4. Assemble the "Clubbed" Code for the LLM Prompt
-        code_context_parts = [f"// --- Primary Class/Interface: {primary_fqn} ---\n{primary_code}"]
-        if secondary_info and impl_fqn_to_use:
-            secondary_path = secondary_info.get("classFileName") or secondary_info.get("filePath")
-            if secondary_path:
-                secondary_code = self.code_analyzer.get_code_snippet(
-                    secondary_path, secondary_info.get("startLine"), secondary_info.get("endLine")
-                ) or f"// Code for {impl_fqn_to_use} not found."
-                code_context_parts.append(f"\n\n// --- Implementation: {impl_fqn_to_use} ---\n{secondary_code}")
-
-        parent_hierarchy = self.code_analyzer.get_type_hierarchy(primary_fqn, self.project_path)
-        if is_debug_target:
-            parent_names = [p.get('name') for p in parent_hierarchy]
-            self.logger.info(f"[BUILD_CONTEXT_TARGET] '{primary_fqn}': Identified {len(parent_names)} parents. Their code will be added to the prompt, but their own dependencies will NOT be recursively analyzed from here.")
-            for p_name in parent_names:
-                self.logger.info(f"[BUILD_CONTEXT_TARGET]   - Found Parent: {p_name}")
-        
-        # for parent in parent_hierarchy:
-        #     if parent.get("code"):
-        #         code_context_parts.append(f"\n\n// --- Parent Class: {parent['name']} ---\n{parent['code']}")
-
-        clubbed_code = "".join(code_context_parts)
-
-        # --- 5. Find and Recursively Add ALL Dependencies ---
-        data_classes_context = []
-        # This set is now crucial. It tracks every dependency ever added to any context
-        # to avoid duplicating work and code in the final prompt.
-        processed_deps_fqns = {primary_fqn}
-
-        self.logger.info(f"Analyzing {len(final_fields_list)} fields of '{primary_fqn}' for recursive dependencies...")
-
-        if is_debug_target:
-            self.logger.info(f"[BUILD_CONTEXT_TARGET] '{primary_fqn}': Now starting recursive dependency gathering for the types of its fields ONLY.")
-
-        for field in final_fields_list:
-            base_type_fqn = self._get_base_type(field.get("type"))
-            if not base_type_fqn or self._is_primitive_or_common(base_type_fqn):
-                continue
-            
-            # Kick off the recursive gathering for this dependency.
-            # The helper function will handle the 'visited' check and recursion.
-            debug_context = primary_fqn if is_debug_target else None
-            dependency_contexts = self._gather_dependencies_recursively(
-                start_fqn=base_type_fqn,
-                visited_fqns=processed_deps_fqns,
-                max_depth=5, # A safe depth limit
-                debug_context_fqn=debug_context
-            )
-            data_classes_context.extend(dependency_contexts)
-        
-        self.logger.info(f"[BUILD_CONTEXT] '{primary_fqn}': Now analyzing parent hierarchy for dependencies...")
-        for parent_info in parent_hierarchy:
-            parent_fqn = parent_info.get("name")
-            if parent_fqn and self._is_potential_dto(parent_fqn):
-                self.logger.debug(f"[BUILD_CONTEXT] '{primary_fqn}': Found potential DTO parent '{parent_fqn}'. Kicking off recursive gather.")
-                # Use the same recursive function to gather this parent's full context.
-                # The visited_fqns set will prevent re-processing if it was already seen as a field type.
-                dependency_contexts = self._gather_dependencies_recursively(
-                    start_fqn=parent_fqn,
-                    visited_fqns=processed_deps_fqns,
-                    max_depth=2 # A safe depth limit
-                )
-                data_classes_context.extend(dependency_contexts)
-
-        # --- 6. Assemble Final Rich Context Dictionary ---
-        simple_name = primary_info.get("className").split('.')[-1]
-
-        return {
-            "name": simple_name,
-            "qualifiedName": primary_fqn,
-            "path": primary_path,
-            "code": clubbed_code,
-            "fields_info": final_fields_list,
-            "parent_classes": parent_hierarchy,
-            "data_classes": data_classes_context,
-            "annotations": primary_info.get("annotations", []),
-            "is_interface": primary_info.get("isInterface", False),
-            "supports_request": True,
-            "supports_response": True
-        }
-    
     def _infer_fields_from_getters(self, class_info: Dict[str, Any]) -> List[Dict[str, Any]]:
         """
         Infers schema fields from public getter methods (e.g., getFirstName(), isEnabled())
@@ -3154,19 +2852,6 @@ Context: 'handler' provides 'method_annotations', 'class_annotations', 'code', a
         #self.logger.info(f"_get_base_type: For original='{original_type_for_logging}', extracted base type='{final_base_type}'")
         return final_base_type
     
-    def _is_list_type(self, type_name: Optional[str]) -> bool:
-        """Checks if a type name represents a List, Set, Collection, or Array."""
-        if not type_name:
-            return False
-        # Check for array first
-        if type_name.endswith("[]"):
-            return True
-        # Check for common collection interfaces/classes
-        # Using startswith is generally safe for fully qualified names
-        return type_name.startswith("java.util.List") or \
-               type_name.startswith("java.util.Set") or \
-               type_name.startswith("java.util.Collection")
-
     def _get_simple_name_from_annotation_type(self, annotation_data: Dict[str, Any]) -> Optional[str]:
         """
         Parses an annotation data dictionary from the Java analyzer to extract its simple name.

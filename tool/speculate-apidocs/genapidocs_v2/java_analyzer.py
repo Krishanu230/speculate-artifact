@@ -240,89 +240,6 @@ class JavaCodeAnalyzer(CodeAnalyzer):
         self.logger.info("No previous analysis results found to reuse.")
         return None
     
-    def _analyze_single_project_path(self, project_path: str, output_dir: str,override_soot_path: Optional[str] = None, 
-                                     override_source_path: Optional[str] = None) -> Optional[str]:
-        self.analysis_output_dir = os.path.abspath(output_dir)
-        abs_project_path = os.path.abspath(project_path)
-        target_path_for_soot=None
-        if override_soot_path:
-            target_path_for_soot = override_soot_path
-            self.logger.info(f"Using overridden Soot path: {target_path_for_soot}")
-        else:
-            # Original single-module path finding logic
-            target_classes_path = os.path.join(abs_project_path, "target", "classes")
-            if os.path.isdir(target_classes_path):
-                self.logger.info(f"Found 'target/classes' directory, which is the preferred analysis path.")
-                target_path_for_soot = target_classes_path
-            
-            # 2. FALLBACK to finding a JAR if 'target/classes' doesn't exist.
-            if not target_path_for_soot:
-                self.logger.warning("'target/classes' not found. Falling back to JAR file search (might be less effective).")
-                search_dirs = [os.path.join(abs_project_path, "target"), os.path.join(abs_project_path, "build", "libs")]
-                for build_dir in search_dirs:
-                    if os.path.isdir(build_dir):
-                        # Find the largest JAR, assuming it's the fat/uber JAR
-                        jars_in_dir = [os.path.join(build_dir, f) for f in os.listdir(build_dir) if f.endswith(".jar")]
-                        if jars_in_dir:
-                            largest_jar = max(jars_in_dir, key=os.path.getsize)
-                            target_path_for_soot = largest_jar
-                            self.logger.info(f"Found fallback JAR: {target_path_for_soot}")
-                            break
-            
-            # 3. FINAL FALLBACK if nothing else is found.
-            if not target_path_for_soot:
-                self.logger.error(f"Could not find a suitable 'target/classes' directory or a JAR file in {abs_project_path}.")
-                return None
-
-        if override_source_path:
-            target_src_path = override_source_path
-            self.logger.info(f"Using overridden source path: {target_src_path}")
-        else:
-            # Original single-module source finding logic
-            target_src_path = os.path.join(abs_project_path, "src", "main", "java")
-            if not os.path.isdir(target_src_path):
-                 if os.path.isdir(os.path.join(abs_project_path, "src")):
-                     target_src_path = os.path.join(abs_project_path, "src")
-                 else:
-                     self.logger.error(f"Could not find standard Java source directory in {abs_project_path}.")
-                     return None
-
-        self.logger.info(f"Final Soot Path: {target_path_for_soot}")
-        self.logger.info(f"Final Source Path: {target_src_path}")
-
-        # --- The rest of the method is completely unchanged ---
-        if not self._build_java_analyzer(): return None
-        analyzer_jar = self._find_analyzer_jar()
-        if not analyzer_jar: return None
-
-        os.makedirs(self.analysis_output_dir, exist_ok=True)
-        java_command = [
-            "java", "-cp", analyzer_jar, "com.analyzer.ListClasses",
-            target_path_for_soot, target_src_path, self.analysis_output_dir
-        ]
-        
-        self.logger.info("-----------------------------------------------------------------")
-        self.logger.info("--- VERIFYING ARGUMENTS PASSED TO JAVA ANALYZER ---")
-        self.logger.info(f"  Arg 0 (for Soot): {java_command[4]}")
-        self.logger.info(f"  Arg 1 (for JavaParser source root): {java_command[5]}")
-        self.logger.info(f"  Arg 2 (Output Dir): {java_command[6]}")
-        self.logger.info("-----------------------------------------------------------------")
-        if not self._run_java_analyzer_process(java_command, "Analysis"):
-            self.logger.error("Java code analysis script failed.")
-            return None
-
-        final_main_output_path = os.path.join(self.analysis_output_dir, "soot-analysis.json")
-        if os.path.isfile(final_main_output_path):
-            self.logger.info(f"Main analysis output generated at: {final_main_output_path}")
-            if self.load_analysis_results(final_main_output_path):
-                 return final_main_output_path
-            else:
-                 self.logger.error("Failed to load the generated analysis results.")
-                 return None
-        else:
-            self.logger.error(f"Expected main output file not found after analysis: {final_main_output_path}")
-            return None
-
     def analyze_project(self, project_path: str, output_dir: str, framework: str) -> Optional[str]:
         try:
             logs_parent_dir = str(Path(output_dir).parent)
@@ -664,13 +581,6 @@ class JavaCodeAnalyzer(CodeAnalyzer):
         # Could potentially use regex as a *very* crude fallback, but unreliable.
         # Better to rely on get_referenced_classes if needed.
         return []
-
-    def extract_property_value(self, file_path: str, class_name: str, property_name: str) -> Optional[str]:
-        """Extracting specific Java field initializers requires parsing."""
-        # This would need a Java parser (like JavaParser) integrated here or assume
-        # the value is simple and present in the field info from Soot (unlikely).
-        self.logger.warning("extract_property_value not implemented for Java - requires Java parsing.")
-        return None
 
     def get_referenced_classes(self, code: str, context_path: str) -> List[Dict[str, Any]]:
         """Gets classes referenced within a specific Java method or class body.
