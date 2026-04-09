@@ -164,7 +164,7 @@ class SpecsWalker:
 
         # Process top-level sections if they exist
         if "paths" in self.yaml and isinstance(self.yaml['paths'], dict):
-            self.paths(self.yaml, depth=0)
+            self.paths(self.yaml)
         elif "paths" in self.yaml:
              self.logger.warning("Validation Error: 'paths' section is not a dictionary.")
              self._add_error("'paths' section must be a dictionary.", self.yaml)
@@ -188,7 +188,7 @@ class SpecsWalker:
                  self.schemas(parent["components"])
             elif parent["components"]["schemas"] is not None:
                  self.logger.warning("Validation Error: 'components.schemas' is not a dictionary.")
-                 self._add_error("'components.schemas' is not a dictionary.", parent_components_obj)
+                 self._add_error("'components.schemas' is not a dictionary.", parent["components"])
                  self.is_valid = False
 
         if "securitySchemes" in parent["components"]:
@@ -196,7 +196,7 @@ class SpecsWalker:
                  self.securitySchemes(parent["components"])
             elif parent["components"]["securitySchemes"] is not None:
                  self.logger.warning("Validation Error: 'components.securitySchemes' is not a dictionary.")
-                 self._add_error("'components.securitySchemes' is not a dictionary.", parent_components_obj)
+                 self._add_error("'components.securitySchemes' is not a dictionary.", parent["components"])
                  self.is_valid = False
 
     # --- Security Schemes Method ---
