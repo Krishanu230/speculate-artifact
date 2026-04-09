@@ -196,21 +196,6 @@ class CodeAnalyzer(ABC):
         """
         return []
 
-    def get_external_code(self, symbol: str, context_path: str) -> Optional[str]:
-        """
-        Retrieve source code for an external symbol not directly in the project
-        (e.g. a third-party library class resolved via sys.path).
-
-        Args:
-            symbol:       Symbol name to retrieve.
-            context_path: Absolute path providing context for resolution.
-
-        Returns:
-            Code snippet string, or ``None`` if not found or not supported.
-            The default implementation returns ``None``.
-        """
-        return None
-
     def get_referenced_classes(self, code: str,
                                context_path: str) -> List[Dict[str, Any]]:
         """

@@ -29,7 +29,6 @@ class PythonCodeAnalyzer(CodeAnalyzer):
         self.max_statement_group_token_limit = 2000
         self.imports = {}
         self.starting_point = None
-        self.url_path = None
         self.resolved_imports = {}
         self.files = set()
         self.is_done = set()
@@ -76,10 +75,7 @@ class PythonCodeAnalyzer(CodeAnalyzer):
         if self.starting_point is None:
             _LOGGER.warning("Cannot find starting point (manage.py) in project. Using project directory as starting point.")
             self.starting_point = abs_project_path
-        
-        # Find URL configuration
-        self._find_url_configuration(files_list)
-        
+
         # Prepare file lists - using absolute paths
         for root, dirs, files in os.walk(os.path.dirname(self.starting_point)):
             abs_root = os.path.abspath(root)
@@ -96,9 +92,6 @@ class PythonCodeAnalyzer(CodeAnalyzer):
         # Second pass: resolve dependencies
         for file_path in files_list:
             self.resolve_dependencies(file_path)
-        
-        # Set sys.path for external code resolution
-        self._set_sys_path()
         
         # Persist results
         os.makedirs(abs_output_dir, exist_ok=True)
@@ -190,40 +183,6 @@ class PythonCodeAnalyzer(CodeAnalyzer):
                 "error": str(e)
             }
         
-    def analyze_single_file(self, file_path: str) -> Dict[str, Any]:
-        """
-        Analyze a single file including imports.
-        
-        Args:
-            file_path: Path to the file to analyze
-            
-        Returns:
-            Dictionary containing complete file analysis
-        """
-        with open(file_path) as f:
-            file_content = f.read()
-        
-        self.full_code_arr = file_content.split("\n")
-        code_tree = ast.parse(file_content)
-        
-        # Set up file identifiers and imports
-        self._set_file_identifiers(file_path)
-        self._set_imports(file_path)
-        
-        # Process file contents
-        classes = self._process_classes(code_tree, file_path)
-        functions = self._process_functions(code_tree)
-        statements = self._process_statements(code_tree)
-        identifiers = self.file_identifiers.get(file_path, {})
-        
-        return {
-            "classes": classes,
-            "functions": functions,
-            "statements": statements,
-            "identifiers": identifiers,
-            "imports": self.imports.get(file_path, {})
-        }
-    
     def resolve_dependencies(self, file_path: str) -> Dict[str, Any]:
         """
         Resolve dependencies for a specific file.
@@ -466,55 +425,6 @@ class PythonCodeAnalyzer(CodeAnalyzer):
         
         return hierarchy
     
-    def get_external_code(self, symbol: str, context_path: str) -> Optional[str]:
-        """
-        Retrieve code for an external symbol not directly in the project.
-        This is a faithful port of the current implementation from resolve_external_dependencies.py.
-        
-        Args:
-            symbol: Symbol name to retrieve
-            context_path: Path providing context for symbol resolution
-            
-        Returns:
-            Code snippet for the external symbol or None if not found
-        """
-        if self.sys_path is None:
-            return None
-            
-        try:
-            if context_path not in self.unresolved_imports:
-                return None
-                
-            # Match progressively longer prefixes of the symbol
-            var_split = symbol.split(".")
-            fvar = ""
-            
-            for var_ in var_split:
-                fvar = fvar + "." + var_
-                if fvar[0] == ".":
-                    fvar = fvar[1:]
-                if fvar in self.unresolved_imports[context_path]:
-                    break
-                    
-            if fvar not in self.unresolved_imports[context_path]:
-                return None
-                
-            # Get the import statement
-            imp = self.unresolved_imports[context_path][fvar]["code"]
-            
-            # Resolve the import
-            analyzed, resolved_path = self._resolve_import(self.sys_path, imp, symbol, context_path)
-            
-            if analyzed is None:
-                return None
-                
-            # Get code snippet
-            return self.get_code_snippet(resolved_path, analyzed["startLine"], analyzed["endLine"])
-            
-        except Exception as e:
-            _LOGGER.debug("Error in get_external_code: %s", e, exc_info=getattr(self, "debug_mode", False))
-            return None
-    
     def get_analyzed_files(self) -> List[str]:
         """
         Get a list of all files that have been analyzed.
@@ -693,32 +603,6 @@ class PythonCodeAnalyzer(CodeAnalyzer):
         return None
     
     # Internal helper methods
-    def _find_url_configuration(self, files_list: List[str]) -> None:
-        """Find the root URL configuration file."""
-        pattern = r"^ROOT_URLCONF\s*=\s*(.*)$"
-        
-        for file_path in files_list:
-            with open(file_path) as f:
-                code = f.read()
-            
-            statements = self._get_all_statements(code)
-            for statement in statements:
-                matches = re.findall(pattern, statement)
-                if matches:
-                    prefix = os.path.dirname(self.starting_point)
-                    while prefix != "/":
-                        path = os.path.join(prefix, self._remove_quotes(matches[0]).replace(".", "/") + ".py")
-                        if os.path.exists(path):
-                            self.url_path = path
-                            return
-                        
-                        path = os.path.join(prefix, self._remove_quotes(matches[0]).replace(".", "/"), "__init__.py")
-                        if os.path.exists(path):
-                            self.url_path = path
-                            return
-                        
-                        prefix = os.path.dirname(prefix)
-    
     def _set_imports(self, file_path: str) -> None:
         """Extract imports from a file."""
         with open(file_path) as f:
@@ -1197,236 +1081,6 @@ class PythonCodeAnalyzer(CodeAnalyzer):
                 value["alias"] = key
             target_identifiers["variables"].update(variables)
     
-    def _get_all_statements(self, code: str) -> List[str]:
-        """Get all top-level statements from code."""
-        try:
-            tree = ast.parse(code)
-            result = []
-            for statement in tree.body:
-                if isinstance(statement, (ast.ClassDef, ast.FunctionDef)):
-                    continue
-                result.append(ast.unparse(statement))
-            return result
-        except:
-            return []
-    
-    def _remove_quotes(self, stmt: str) -> str:
-        """Remove quotes from a string."""
-        if stmt and (stmt[0] == '"' or stmt[0] == "'"):
-            stmt = stmt[1:]
-        if stmt and (stmt[-1] == '"' or stmt[-1] == "'"):
-            stmt = stmt[:-1]
-        return stmt
-    
-    def _is_django_serializer(self, type_path: str, type_name: str, visited: set) -> bool:
-        """Determine if a type is a Django serializer."""
-        if type_name in visited:
-            return False
-            
-        visited.add(type_name)
-        
-        if type_path not in self.result or type_name not in self.result[type_path]["classes"]:
-            return False
-        
-        parent_classes = self.result[type_path]["classes"][type_name]["parentClasses"]
-        
-        for parent_name in parent_classes:
-            if "Serializer" in parent_name:
-                return True
-            
-            parent_path = parent_classes[parent_name]["path"]
-            if parent_path and self._is_django_serializer(parent_path, parent_name, visited):
-                return True
-        
-        return False
-    
-    def _is_django_viewset(self, type_path: str, type_name: str, visited: set) -> bool:
-        """Determine if a type is a Django viewset."""
-        if type_name in visited:
-            return False
-            
-        visited.add(type_name)
-        
-        if type_path not in self.result or type_name not in self.result[type_path]["classes"]:
-            return False
-        
-        parent_classes = self.result[type_path]["classes"][type_name]["parentClasses"]
-        
-        for parent_name in parent_classes:
-            if "ViewSet" in parent_name or "ModelViewSet" in parent_name or "ReadOnlyModelViewSet" in parent_name:
-                return True
-            
-            parent_path = parent_classes[parent_name]["path"]
-            if parent_path and self._is_django_viewset(parent_path, parent_name, visited):
-                return True
-        
-        return False
-    
-    def _is_django_model(self, type_path: str, type_name: str, visited: set) -> bool:
-        """Determine if a type is a Django model."""
-        if type_name in visited:
-            return False
-                
-        visited.add(type_name)
-        
-        if type_path not in self.result or type_name not in self.result[type_path]["classes"]:
-            return False
-        
-        # Check if it's a serializer first - serializers are never models
-        if self._is_django_serializer(type_path, type_name, set()):
-            return False
-            
-        # Check for model indicators
-        class_info = self.result[type_path]["classes"][type_name]
-        
-        # Check parent classes for models.Model
-        parent_classes = class_info["parentClasses"]
-        for parent_name in parent_classes:
-            if "Model" in parent_name and "models." in parent_name:
-                return True
-                
-        # Check for model fields
-        for prop in class_info.get("properties", []):
-            if prop == "objects" or prop.endswith("_set"):
-                return True
-                
-        # Check for Meta inner class (common in Django models)
-        for inner_class in class_info.get("innerClasses", []):
-            if inner_class["name"] == "Meta":
-                return True
-        
-        return False
-    
-    def _set_sys_path(self) -> None:
-        """Set sys.path for external code resolution."""
-        # This is simplified - in reality we'd want to capture the Python
-        # interpreter's actual sys.path from the project
-        if self.starting_point:
-            project_root = os.path.dirname(self.starting_point)
-            self.sys_path = [
-                project_root,
-                os.path.join(project_root, "site-packages"),
-                # Add more likely paths for external packages
-            ]
-    
-    def _find_in_syspath(self, path: str) -> Optional[str]:
-        """Find a module in syspath."""
-        if self.sys_path is None:
-            return None
-            
-        for spath in self.sys_path:
-            curpath = os.path.join(spath, path)
-            if os.path.exists(curpath) or os.path.exists(curpath + ".py"):
-                return curpath
-                
-        return None
-    
-    def _resolve_import(self, sys_path: List[str], imp: str, module: str, calling_path: str = None) -> Tuple[Dict, str]:
-        """
-        Resolve an import statement to get code for an external module.
-        
-        Args:
-            sys_path: List of directories to search for modules
-            imp: Import statement as text
-            module: Module or symbol being looked up
-            calling_path: Path of the file that contains the import
-            
-        Returns:
-            Tuple of (analyzed module info, file path)
-        """
-        # Simplified version - in reality would use advanced import resolution
-        imp = re.sub(' +', ' ', imp)
-        
-        if imp.startswith("import"):
-            # Regular import
-            package_path = imp[6:].strip()
-            module_path = self._find_in_syspath(package_path.replace(".", os.path.sep))
-            remaining_module = module[len(package_path)+1:] if package_path in module else module
-            
-        else:
-            # From import
-            package_name = imp[4: imp.find("import")].strip()
-            
-            if package_name.startswith("."):
-                # Relative import
-                if package_name.startswith(".."):
-                    package_name = "../" + package_name[2:].replace(".", os.path.sep)
-                else:
-                    package_name = "./" + package_name[1:].replace(".", os.path.sep)
-                    
-                if calling_path:
-                    module_path = os.path.abspath(os.path.join(os.path.dirname(calling_path), package_name))
-                else:
-                    module_path = None
-            else:
-                # Absolute import
-                module_path = self._find_in_syspath(package_name.replace(".", os.path.sep))
-                
-            remaining_module = module
-        
-        if not module_path:
-            return None, None
-            
-        # Handle multi-part module names (package.module.submodule)
-        module_arr = remaining_module.split(".")
-        index = 0
-        curr_path = module_path
-        
-        # Add empty string at start to handle the initial checking
-        module_arr.insert(0, "")
-        
-        for i in range(len(module_arr)):
-            curr_path = os.path.join(curr_path, module_arr[i])
-            
-            # Check for .py file
-            py_path = curr_path[:-1] + ".py" if curr_path[-1] == "/" else curr_path + ".py"
-            if os.path.exists(py_path):
-                module_path = py_path
-                index = i
-                break
-                
-            # Check for package with __init__.py
-            init_path = os.path.join(curr_path, "__init__.py")
-            if os.path.exists(init_path):
-                module_path = init_path
-                index = i
-            elif os.path.exists(curr_path):
-                module_path = curr_path
-                index = i
-            else:
-                break
-        
-        # Get the remaining module to look for
-        remaining_module = module_arr[index+1] if index+1 < len(module_arr) else ""
-        
-        # Analyze the file and find the symbol
-        try:
-            analyzed = self.analyze_single_file(module_path)
-            
-            if remaining_module in analyzed["classes"]:
-                return analyzed["classes"][remaining_module], module_path
-            elif remaining_module in analyzed["functions"]:
-                return analyzed["functions"][remaining_module], module_path
-            elif remaining_module in analyzed["identifiers"]["variables"]:
-                return analyzed["identifiers"]["variables"][remaining_module], module_path
-            elif remaining_module in analyzed["imports"]:
-                code = analyzed["imports"][remaining_module]["code"]
-                name = analyzed["imports"][remaining_module]["name"]
-                return self._resolve_import(sys_path, code, name, os.path.dirname(module_path))
-            else:
-                # Try to find in star imports
-                for alias in analyzed["imports"]:
-                    if analyzed["imports"][alias]["is_star"]:
-                        code = analyzed["imports"][alias]["code"]
-                        module_code = self._resolve_import(sys_path, code, remaining_module, os.path.dirname(module_path))
-                        if module_code is not None:
-                            return module_code
-                            
-                return None, None
-        except Exception as e:
-            _LOGGER.debug("Error analyzing external file: %s", e, exc_info=getattr(self, "debug_mode", False))
-            return None, None
-        
     def extract_class_names(self, code: str) -> List[str]:
         """
         Extract class names from code using AST.

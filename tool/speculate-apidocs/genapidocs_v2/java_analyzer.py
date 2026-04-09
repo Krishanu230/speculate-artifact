@@ -658,11 +658,6 @@ class JavaCodeAnalyzer(CodeAnalyzer):
 
     # --- Methods likely NOT directly applicable/needed or need different implementation for Java ---
 
-    def get_external_code(self, symbol: str, context_path: str) -> Optional[str]:
-        """Retrieving external Java code (from dependencies) is complex and not implemented."""
-        self.logger.warning("get_external_code is not implemented for JavaCodeAnalyzer.")
-        return None
-
     def extract_class_names(self, code: str) -> List[str]:
         """Parsing raw Java snippets with Python AST is not feasible."""
         self.logger.warning("extract_class_names called on JavaCodeAnalyzer - relies on pre-analyzed data.")
