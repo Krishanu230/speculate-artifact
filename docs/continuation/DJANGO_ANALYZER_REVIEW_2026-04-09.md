@@ -40,6 +40,26 @@ to understand.
 
 ---
 
+## Process Discipline
+
+This repository should be treated as production. For review-driven changes:
+
+- do not write code, docs, tests, or helper files before the plan is approved
+- do not change local environments or dependencies before the plan is approved
+- before committing any doc update, first check whether the target file is
+  already tracked by git
+- if a proposed "doc update" would add a previously untracked file, stop and
+  call that out explicitly before editing or committing
+- keep fix commits narrow and avoid polluting history with corrective follow-up
+  commits caused by preventable scope mistakes
+
+Practical rule:
+
+- when touching continuation docs, verify tracked status first with:
+  `git ls-files docs/continuation`
+
+---
+
 ## Local Smoke Baseline
 
 For iterative Django analyzer review, use a local analyzer-only smoke instead
