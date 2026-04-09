@@ -561,6 +561,14 @@ NOTE: Create ONLY the responses and summary subsections of the path section of o
         """Get system message for component schema generation"""
         # Delegate to framework analyzer for appropriate framework-specific message
         return self.framework_analyzer.get_component_system_message()
+
+    def get_endpoint_request_system_message(self) -> str:
+        """Get system message for endpoint request generation."""
+        return self.framework_analyzer.get_endpoint_request_system_message()
+
+    def get_endpoint_response_system_message(self) -> str:
+        """Get system message for endpoint response generation."""
+        return self.framework_analyzer.get_endpoint_response_system_message()
     
     def create_retry_prompt(self,
                             original_prompt: str,

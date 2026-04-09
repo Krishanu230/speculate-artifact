@@ -599,11 +599,12 @@ class SpecGenerator:
             final_optimized_context = self.framework_analyzer.optimize_context(full_endpoint_context)
             # 4. Generate request section
             self.logger.info(f"[{entity_id}] Processing Request section...")
+            request_system_prompt = self.prompt_manager.get_endpoint_request_system_message()
             def get_request_prompt():
                 return self.prompt_manager.create_endpoint_request_prompt(endpoint, final_optimized_context, self.spec_manager._schema_name_to_fqn_map, skip_components=self.skip_components)
 
             validation_result = await self._generate_and_validate_with_retry(
-                prompt_func=get_request_prompt, system_message=system_prompt,
+                prompt_func=get_request_prompt, system_message=request_system_prompt,
                 model_override=self.spec_model_name,
                 entity_id=entity_id, call_type=LLMCallType.ENDPOINT_REQUEST,
                 error_file=error_file, index=index, total_items=total_items # Pass index/total
@@ -638,11 +639,12 @@ class SpecGenerator:
             
             # 5. Generate response section
             self.logger.info(f"[{entity_id}] Processing Response section...")
+            response_system_prompt = self.prompt_manager.get_endpoint_response_system_message()
             def get_response_prompt():
                 return self.prompt_manager.create_endpoint_response_prompt(endpoint, final_optimized_context, self.spec_manager._schema_name_to_fqn_map, skip_components=self.skip_components)
 
             validation_result = await self._generate_and_validate_with_retry(
-                prompt_func=get_response_prompt, system_message=system_prompt,
+                prompt_func=get_response_prompt, system_message=response_system_prompt,
                 model_override=self.spec_model_name,
                 entity_id=entity_id, call_type=LLMCallType.ENDPOINT_RESPONSE,
                 error_file=error_file, index=index, total_items=total_items # Pass index/total
