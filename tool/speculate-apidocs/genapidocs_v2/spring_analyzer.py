@@ -2433,7 +2433,7 @@ Focus on finding these Spring Boot patterns in the provided code:
         # 1. Resolve symbol to its canonical name and definition path
         symbol_ref = self.code_analyzer.get_symbol_reference(symbol_name_from_llm, referencing_context_path, symbol_type)
         if not symbol_ref:
-            self.logger.warning(f"Jersey (Recursive): Could not resolve '{symbol_name_from_llm}' ({symbol_type.name}) from '{referencing_context_path}'.")
+            self.logger.warning(f"Spring (Recursive): Could not resolve '{symbol_name_from_llm}' ({symbol_type.name}) from '{referencing_context_path}'.")
             return
 
         canonical_name = symbol_ref.get("canonicalName") # Should be FQN for classes, FQN.method for methods
@@ -2467,7 +2467,7 @@ Focus on finding these Spring Boot patterns in the provided code:
             "start_line": start_line, "end_line": end_line, "code": code_snippet,
         })
         processed_keys.add(symbol_key)
-        self.logger.debug(f"Jersey (Recursive) [Depth {current_depth}]: Added context for {symbol_key}")
+        self.logger.debug(f"Spring (Recursive) [Depth {current_depth}]: Added context for {symbol_key}")
 
         # 4. Delegate recursion to specialized helpers
         if current_depth + 1 < max_depth:
