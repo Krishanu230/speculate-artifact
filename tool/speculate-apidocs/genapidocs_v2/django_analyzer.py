@@ -201,8 +201,8 @@ class DjangoAnalyzer(FrameworkAnalyzer):
                 command.append(self.settings_module_str)
             
             if self.debug_mode:
-                print("Running command for dynamic endpoint extraction:")
-                print(f"  {' '.join(command)}")
+                self.logger.debug("Running command for dynamic endpoint extraction:")
+                self.logger.debug("  %s", " ".join(command))
             
             result = subprocess.run(
                 command,
@@ -231,7 +231,7 @@ class DjangoAnalyzer(FrameworkAnalyzer):
             if os.path.exists(endpoint_file):
                 success = self._load_endpoints(endpoint_file)
                 if not success and self.debug_mode:
-                    print(f"Failed to load endpoints from {endpoint_file}")
+                    self.logger.debug("Failed to load endpoints from %s", endpoint_file)
                 return success
             else:
                 print(f"URL extraction script did not generate output file: {endpoint_file}")
@@ -276,13 +276,11 @@ class DjangoAnalyzer(FrameworkAnalyzer):
                     self.analysis_results["sys_path"] = data["sys_path"]
                 
                 if self.debug_mode:
-                    print(f"Loaded {len(self.endpoints)} endpoints from {endpoint_file}")
+                    self.logger.debug("Loaded %s endpoints from %s", len(self.endpoints), endpoint_file)
                 
                 return len(self.endpoints) > 0
         except Exception as e:
-            print(f"Error loading endpoints from {endpoint_file}: {e}")
-            if self.debug_mode:
-                traceback.print_exc()
+            self.logger.error("Error loading endpoints from %s: %s", endpoint_file, e, exc_info=self.debug_mode)
             return False
     
     def _find_script_path(self, script_name: str) -> Optional[str]:
@@ -358,25 +356,32 @@ class DjangoAnalyzer(FrameworkAnalyzer):
             Absolute path to the URL configuration file or None if not found.
         """
         if self.urls_module: # Already found/set perhaps by a previous call or direct set
-            if self.debug_mode: print(f"DEBUG: _find_url_module: Returning cached self.urls_module: {self.urls_module}")
+            if self.debug_mode:
+                self.logger.debug("DEBUG: _find_url_module: Returning cached self.urls_module: %s", self.urls_module)
             return self.urls_module
 
 
         # Priority 1: Explicitly provided path to the root urls.py file
         if self.explicit_urls_file_path:
-            if self.debug_mode: print(f"DEBUG: _find_url_module: Trying explicit_urls_file_path: {self.explicit_urls_file_path}")
+            if self.debug_mode:
+                self.logger.debug("DEBUG: _find_url_module: Trying explicit_urls_file_path: %s", self.explicit_urls_file_path)
             abs_explicit_urls_path = os.path.abspath(self.explicit_urls_file_path)
             if os.path.exists(abs_explicit_urls_path) and abs_explicit_urls_path.endswith(".py"):
                 self.urls_module = abs_explicit_urls_path
-                if self.debug_mode: print(f"DEBUG: _find_url_module: Using explicit_urls_file_path: {self.urls_module}")
+                if self.debug_mode:
+                    self.logger.debug("DEBUG: _find_url_module: Using explicit_urls_file_path: %s", self.urls_module)
                 return self.urls_module
             elif self.debug_mode:
-                print(f"DEBUG: _find_url_module: explicit_urls_file_path '{abs_explicit_urls_path}' does not exist or is not a .py file.")
+                self.logger.debug(
+                    "DEBUG: _find_url_module: explicit_urls_file_path '%s' does not exist or is not a .py file.",
+                    abs_explicit_urls_path,
+                )
 
         # Priority 2: Explicitly provided path to the settings file
         # From this settings file, we'll read ROOT_URLCONF and resolve it.
         if self.explicit_settings_file_path:
-            if self.debug_mode: print(f"DEBUG: _find_url_module: Trying explicit_settings_file_path: {self.explicit_settings_file_path}")
+            if self.debug_mode:
+                self.logger.debug("DEBUG: _find_url_module: Trying explicit_settings_file_path: %s", self.explicit_settings_file_path)
             abs_explicit_settings_path = os.path.abspath(self.explicit_settings_file_path)
             if os.path.exists(abs_explicit_settings_path):
                 try:
@@ -386,7 +391,12 @@ class DjangoAnalyzer(FrameworkAnalyzer):
                     match = re.search(url_conf_pattern, content)
                     if match:
                         url_module_name = match.group(1)
-                        if self.debug_mode: print(f"DEBUG: _find_url_module: Found ROOT_URLCONF='{url_module_name}' in explicit_settings_file: {abs_explicit_settings_path}")
+                        if self.debug_mode:
+                            self.logger.debug(
+                                "DEBUG: _find_url_module: Found ROOT_URLCONF='%s' in explicit_settings_file: %s",
+                                url_module_name,
+                                abs_explicit_settings_path,
+                            )
                         
                         # Try resolving ROOT_URLCONF relative to project_path first (most common)
                         resolved_path = self._resolve_url_conf_to_file_path(url_module_name, self.project_path)
@@ -401,24 +411,43 @@ class DjangoAnalyzer(FrameworkAnalyzer):
                             self.urls_module = resolved_path_rel_settings
                             return self.urls_module
                         elif self.debug_mode:
-                            print(f"DEBUG: _find_url_module: Could not resolve ROOT_URLCONF '{url_module_name}' from explicit settings file.")
+                            self.logger.debug(
+                                "DEBUG: _find_url_module: Could not resolve ROOT_URLCONF '%s' from explicit settings file.",
+                                url_module_name,
+                            )
                     elif self.debug_mode:
-                        print(f"DEBUG: _find_url_module: ROOT_URLCONF not found in explicit_settings_file: {abs_explicit_settings_path}")
+                        self.logger.debug(
+                            "DEBUG: _find_url_module: ROOT_URLCONF not found in explicit_settings_file: %s",
+                            abs_explicit_settings_path,
+                        )
                 except Exception as e:
-                    if self.debug_mode: print(f"DEBUG: _find_url_module: Error reading explicit_settings_file {abs_explicit_settings_path}: {e}")
+                    if self.debug_mode:
+                        self.logger.debug(
+                            "DEBUG: _find_url_module: Error reading explicit_settings_file %s: %s",
+                            abs_explicit_settings_path,
+                            e,
+                        )
             elif self.debug_mode:
-                print(f"DEBUG: _find_url_module: explicit_settings_file_path '{abs_explicit_settings_path}' does not exist.")
+                self.logger.debug(
+                    "DEBUG: _find_url_module: explicit_settings_file_path '%s' does not exist.",
+                    abs_explicit_settings_path,
+                )
 
         # Priority 3: Using self.settings_module_str (e.g., "myproject.settings.development")
         # Convert this module string to a file path, read ROOT_URLCONF, then resolve it.
         if self.settings_module_str:
-            if self.debug_mode: print(f"DEBUG: _find_url_module: Trying to use self.settings_module_str: {self.settings_module_str}")
+            if self.debug_mode:
+                self.logger.debug("DEBUG: _find_url_module: Trying to use self.settings_module_str: %s", self.settings_module_str)
             
             settings_file_rel_path_parts = self.settings_module_str.split('.')
             settings_file_rel_path = os.path.join(*settings_file_rel_path_parts) + ".py"
             potential_settings_file_abs_path = os.path.join(self.project_path, settings_file_rel_path)
             
-            if self.debug_mode: print(f"DEBUG: _find_url_module: Potential settings file from module string: {potential_settings_file_abs_path}")
+            if self.debug_mode:
+                self.logger.debug(
+                    "DEBUG: _find_url_module: Potential settings file from module string: %s",
+                    potential_settings_file_abs_path,
+                )
 
             if os.path.exists(potential_settings_file_abs_path):
                 try:
@@ -428,7 +457,12 @@ class DjangoAnalyzer(FrameworkAnalyzer):
                     match = re.search(url_conf_pattern, content)
                     if match:
                         url_module_name = match.group(1)
-                        if self.debug_mode: print(f"DEBUG: _find_url_module: Found ROOT_URLCONF='{url_module_name}' in settings file derived from module string: {potential_settings_file_abs_path}")
+                        if self.debug_mode:
+                            self.logger.debug(
+                                "DEBUG: _find_url_module: Found ROOT_URLCONF='%s' in settings file derived from module string: %s",
+                                url_module_name,
+                                potential_settings_file_abs_path,
+                            )
                         
                         resolved_path = self._resolve_url_conf_to_file_path(url_module_name, self.project_path)
                         if resolved_path:
@@ -441,16 +475,31 @@ class DjangoAnalyzer(FrameworkAnalyzer):
                             self.urls_module = resolved_path_rel_settings
                             return self.urls_module
                         elif self.debug_mode:
-                            print(f"DEBUG: _find_url_module: Could not resolve ROOT_URLCONF '{url_module_name}' from settings_module_str.")
+                            self.logger.debug(
+                                "DEBUG: _find_url_module: Could not resolve ROOT_URLCONF '%s' from settings_module_str.",
+                                url_module_name,
+                            )
                     elif self.debug_mode:
-                        print(f"DEBUG: _find_url_module: ROOT_URLCONF not found in settings file: {potential_settings_file_abs_path}")
+                        self.logger.debug(
+                            "DEBUG: _find_url_module: ROOT_URLCONF not found in settings file: %s",
+                            potential_settings_file_abs_path,
+                        )
                 except Exception as e:
-                    if self.debug_mode: print(f"DEBUG: _find_url_module: Error reading settings file {potential_settings_file_abs_path}: {e}")
+                    if self.debug_mode:
+                        self.logger.debug(
+                            "DEBUG: _find_url_module: Error reading settings file %s: %s",
+                            potential_settings_file_abs_path,
+                            e,
+                        )
             elif self.debug_mode:
-                print(f"DEBUG: _find_url_module: Settings file '{potential_settings_file_abs_path}' derived from module string does not exist.")
+                self.logger.debug(
+                    "DEBUG: _find_url_module: Settings file '%s' derived from module string does not exist.",
+                    potential_settings_file_abs_path,
+                )
 
         # Priority 4: Fallback to automatic discovery (your improved version)
-        if self.debug_mode: print(f"DEBUG: _find_url_module: Falling back to automatic discovery.")
+        if self.debug_mode:
+            self.logger.debug("DEBUG: _find_url_module: Falling back to automatic discovery.")
         discovered_settings_files = []
         for root, dirs, files in os.walk(self.project_path):
             # Pruning common irrelevant directories
@@ -466,7 +515,11 @@ class DjangoAnalyzer(FrameworkAnalyzer):
                     if is_potential_settings:
                         discovered_settings_files.append(os.path.join(root, file_name))
         
-        if self.debug_mode: print(f"DEBUG: _find_url_module (auto-discovery): Potential settings files: {discovered_settings_files}")
+        if self.debug_mode:
+            self.logger.debug(
+                "DEBUG: _find_url_module (auto-discovery): Potential settings files: %s",
+                discovered_settings_files,
+            )
 
         for settings_file_path in discovered_settings_files:
             try:
@@ -476,7 +529,12 @@ class DjangoAnalyzer(FrameworkAnalyzer):
                 match = re.search(url_conf_pattern, content)
                 if match:
                     url_module_name = match.group(1)
-                    if self.debug_mode: print(f"DEBUG: _find_url_module (auto-discovery): Found ROOT_URLCONF='{url_module_name}' in {settings_file_path}")
+                    if self.debug_mode:
+                        self.logger.debug(
+                            "DEBUG: _find_url_module (auto-discovery): Found ROOT_URLCONF='%s' in %s",
+                            url_module_name,
+                            settings_file_path,
+                        )
                     
                     resolved_path = self._resolve_url_conf_to_file_path(url_module_name, self.project_path)
                     if resolved_path:
@@ -489,12 +547,17 @@ class DjangoAnalyzer(FrameworkAnalyzer):
                         self.urls_module = resolved_path_rel_settings
                         return self.urls_module
             except Exception as e:
-                if self.debug_mode: print(f"DEBUG: _find_url_module (auto-discovery): Error with {settings_file_path}: {e}")
+                if self.debug_mode:
+                    self.logger.debug(
+                        "DEBUG: _find_url_module (auto-discovery): Error with %s: %s",
+                        settings_file_path,
+                        e,
+                    )
                 continue
         
         if self.debug_mode:
             if not self.urls_module:
-                print("DEBUG: _find_url_module: All methods failed to find the URL module. self.urls_module is None.")
+                self.logger.debug("DEBUG: _find_url_module: All methods failed to find the URL module. self.urls_module is None.")
         return self.urls_module # Will be None if nothing found
 
     def _extract_endpoints_static(self) -> None:
@@ -1846,7 +1909,7 @@ class DjangoAnalyzer(FrameworkAnalyzer):
             # It needs a new 'visited' set for each top-level call to handle potential
             # cycles within that specific class's inheritance check.
             is_model = self._is_django_model_recursive_check(class_path, class_name, set())
-            print(f"{class_key} {is_model}")
+            self.logger.debug("Model check: %s %s", class_key, is_model)
             if is_model:
                 # If it's a model, add it to our comprehensive map.
                 self.is_model[class_key] = True
@@ -2729,11 +2792,16 @@ NOTE: Analyse the code carefully. The way that the code is written could vary si
             Absolute path to the urls.py file or None.
         """
         if self.debug_mode:
-            print(f"DEBUG: _resolve_url_conf_to_file_path: Resolving '{url_module_name}' relative to '{base_search_path}'")
+            self.logger.debug(
+                "DEBUG: _resolve_url_conf_to_file_path: Resolving '%s' relative to '%s'",
+                url_module_name,
+                base_search_path,
+            )
 
         path_components = url_module_name.split('.')
         if not path_components:
-            if self.debug_mode: print(f"DEBUG: _resolve_url_conf_to_file_path: Empty url_module_name provided.")
+            if self.debug_mode:
+                self.logger.debug("DEBUG: _resolve_url_conf_to_file_path: Empty url_module_name provided.")
             return None
 
         # Attempt 1: Resolve as a .py file (e.g., base_search_path/component1/component2.py)
@@ -2745,7 +2813,8 @@ NOTE: Analyse the code carefully. The way that the code is written could vary si
         potential_file_path = os.path.join(base_search_path, *dir_components, module_file_name)
         if os.path.exists(potential_file_path):
             resolved_path = os.path.abspath(potential_file_path)
-            if self.debug_mode: print(f"DEBUG: _resolve_url_conf_to_file_path: Resolved (file) to: {resolved_path}")
+            if self.debug_mode:
+                self.logger.debug("DEBUG: _resolve_url_conf_to_file_path: Resolved (file) to: %s", resolved_path)
             return resolved_path
 
         # Attempt 2: Resolve as a package (e.g., base_search_path/component1/component2/__init__.py)
@@ -2753,13 +2822,21 @@ NOTE: Analyse the code carefully. The way that the code is written could vary si
         potential_package_init_path = os.path.join(base_search_path, *path_components, "__init__.py")
         if os.path.exists(potential_package_init_path):
             resolved_path = os.path.abspath(potential_package_init_path)
-            if self.debug_mode: print(f"DEBUG: _resolve_url_conf_to_file_path: Resolved (package __init__.py) to: {resolved_path}")
+            if self.debug_mode:
+                self.logger.debug(
+                    "DEBUG: _resolve_url_conf_to_file_path: Resolved (package __init__.py) to: %s",
+                    resolved_path,
+                )
             return resolved_path
 
         if self.debug_mode:
-            print(f"DEBUG: _resolve_url_conf_to_file_path: Could not resolve '{url_module_name}' under '{base_search_path}'.")
-            print(f"DEBUG: Checked (file): {potential_file_path}")
-            print(f"DEBUG: Checked (package): {potential_package_init_path}")
+            self.logger.debug(
+                "DEBUG: _resolve_url_conf_to_file_path: Could not resolve '%s' under '%s'.",
+                url_module_name,
+                base_search_path,
+            )
+            self.logger.debug("DEBUG: Checked (file): %s", potential_file_path)
+            self.logger.debug("DEBUG: Checked (package): %s", potential_package_init_path)
         return None
 
     def get_initial_context_presentation_for_missing_symbols(self, endpoint: Dict[str, Any], endpoint_context: Dict[str, Any]) -> str:
