@@ -10,13 +10,14 @@ from collections import deque
 # Import interfaces and base classes
 from common.core.framework_analyzer import FrameworkAnalyzer
 from common.core.code_analyzer import CodeAnalyzer, SymbolType
+from common.core.java_utils import JavaAnalyzerMixin
 from java_analyzer import JavaCodeAnalyzer # Make sure this import works
 
 REST_CONTROLLER_ANNOTATION = "Lorg/springframework/web/bind/annotation/RestController;"
 CONTROLLER_ANNOTATION = "Lorg/springframework/stereotype/Controller;"
 RESPONSE_BODY_ANNOTATION = "Lorg/springframework/web/bind/annotation/ResponseBody;"
 
-class SpringBootFrameworkAnalyzer(FrameworkAnalyzer):
+class SpringBootFrameworkAnalyzer(JavaAnalyzerMixin, FrameworkAnalyzer):
     """
     Spring Boot-specific implementation of the FrameworkAnalyzer interface.
     Uses JavaCodeAnalyzer output to identify endpoints and context.
@@ -328,30 +329,6 @@ class SpringBootFrameworkAnalyzer(FrameworkAnalyzer):
                     return param_info_soot
         return None
 
-    def _is_primitive_or_common(self, type_name: Optional[str]) -> bool:
-        """Checks if a type name represents a Java primitive or common stdlib/framework class."""
-        if not type_name:
-            return True
-        base_type = type_name.replace("[]", "") # Handle arrays
-
-        primitive_types = {"byte", "short", "int", "long", "float", "double", "boolean", "char", "void"}
-        if base_type in primitive_types:
-            return True
-
-        common_prefixes_or_exact = [
-            "java.lang.", "java.util.", "java.net.", "java.io.", "java.math.", "java.time.",
-            "javax.ws.rs.", "jakarta.ws.rs.",
-            "javax.inject.", "jakarta.inject.", # Common dependency injection
-            "javax.persistence.", "jakarta.persistence.", # JPA / Jakarta Persistence
-            "org.springframework.http.", "org.springframework.web.bind.annotation.", # Common Spring web types if used with Jersey
-            "org.slf4j.", "java.util.logging.", # Logging
-            "com.fasterxml.jackson.databind.", # Jackson types themselves
-        ]
-        if any(base_type.startswith(prefix) for prefix in common_prefixes_or_exact):
-            return True
-
-        return False
-    
     def _is_potential_dto(self, type_name: Optional[str]) -> bool:
         """
         A more robust, multi-rule heuristic to determine if a class is likely a DTO,
@@ -483,70 +460,6 @@ class SpringBootFrameworkAnalyzer(FrameworkAnalyzer):
         self.logger.info(f"_get_base_type: For original='{original_type_for_logging}', extracted base type='{final_base_type}'")
         return final_base_type
 
-    def _soot_descriptor_to_fqn(self, descriptor: Optional[str]) -> Optional[str]:
-        """Converts Soot's Lpath/to/Class; descriptor to path.to.Class FQN."""
-        if not descriptor:
-            return None
-        
-        # Handle array descriptors like "[Ljava/lang/String;" -> "java.lang.String[]"
-        # This part should ideally be integrated into how _get_base_type handles arrays from the start.
-        # For now, let's assume _get_base_type already stripped array markers and we only get L...; or primitives.
-        
-        cleaned_descriptor = descriptor
-        is_array = False
-        while cleaned_descriptor.startswith("["):
-            is_array = True
-            cleaned_descriptor = cleaned_descriptor[1:]
-
-        fqn = cleaned_descriptor
-        if fqn.startswith("L") and fqn.endswith(";"):
-            fqn = fqn[1:-1].replace('/', '.')
-        
-        # If it was an array, re-append brackets (this is simplistic,
-        # _get_base_type's array handling is better)
-        # This helper is primarily for converting the *element type* if it's a descriptor.
-        # For a type like "[Ljava.lang.String;", _get_base_type should have already
-        # called itself with "Ljava.lang.String;", which then gets converted here.
-        
-        return fqn
-    
-    def _get_all_properties_for_class(self, fqn_to_start_from: str) -> List[Dict[str, Any]]:
-        """
-        Gathers all unique properties for a class by inspecting its declared fields,
-        its inferred getter methods, and recursively doing the same for its entire
-        parent hierarchy.
-        """
-        all_props_collected = []
-        
-        # Inner recursive helper
-        def gather_from_hierarchy(current_fqn: str, visited_fqns_for_fields: Set[str]):
-            if not current_fqn or current_fqn in visited_fqns_for_fields:
-                return
-            visited_fqns_for_fields.add(current_fqn)
-
-            info = self.code_analyzer.get_symbol_info(current_fqn, self.project_path, SymbolType.CLASS)
-            if not info: return
-
-            # Add declared fields of the current class first
-            all_props_collected.extend(info.get("fields", []))
-            # Then add fields inferred from getters of the current class
-            all_props_collected.extend(self._infer_fields_from_getters(info))
-
-            # Then recurse on parents
-            parent_hierarchy = self.code_analyzer.get_type_hierarchy(current_fqn, self.project_path)
-            for p_info_dict in parent_hierarchy:
-                gather_from_hierarchy(p_info_dict.get("name"), visited_fqns_for_fields)
-        
-        gather_from_hierarchy(fqn_to_start_from, set())
-        
-        # De-duplicate the collected properties. The first one found (most specific class) wins.
-        final_props_map = {}
-        for prop in all_props_collected:
-            name = prop.get("name")
-            if name and name not in final_props_map:
-                final_props_map[name] = prop
-        return list(final_props_map.values())
-    
     def _build_implementation_map(self):
         """
         Pre-processes soot-analysis.json to build a lookup map of interface -> concrete classes.
@@ -606,102 +519,6 @@ class SpringBootFrameworkAnalyzer(FrameworkAnalyzer):
         
         return best_candidate_info
 
-    def _gather_dependencies_recursively(self, 
-                                     start_fqn: str, 
-                                     visited_fqns: Set[str], 
-                                     max_depth: int = 5,
-                                     debug_context_fqn: Optional[str] = None
-                                     ) -> List[Dict[str, Any]]:
-        """
-        Recursively gathers the code and context for a starting FQN and all of its
-        nested DTO/Enum dependencies.
-
-        Args:
-            start_fqn: The Fully Qualified Name of the component to start from.
-            visited_fqns: A set of FQNs that have already been processed to prevent
-                        infinite recursion in case of circular dependencies.
-            max_depth: The maximum recursion depth to prevent runaway processing.
-
-        Returns:
-            A flat list of context dictionaries for the starting component and all
-            its unique, nested dependencies.
-        """
-        if debug_context_fqn:
-            self.logger.info(f"[RECURSIVE_GATHER][{debug_context_fqn}] (Depth {5-max_depth}) Analyzing dependencies for: {start_fqn}")
-        # --- Base Cases for Recursion ---
-        if max_depth <= 0:
-            self.logger.warning(f"Max recursion depth reached while gathering dependencies for {start_fqn}.")
-            return []
-        
-        if start_fqn in visited_fqns:
-            return []
-
-        # --- Mark as Visited & Get Info ---
-        visited_fqns.add(start_fqn)
-        dep_info = self.code_analyzer.get_symbol_info(start_fqn, self.project_path, SymbolType.CLASS)
-        if not dep_info:
-            self.logger.warning(f"Recursive gather: Could not get info for dependency '{start_fqn}'.")
-            return []
-
-        # --- This list will hold this component AND all its children ---
-        all_related_contexts = []
-        
-        # --- Determine Component Type & Add Itself to the Context List ---
-        is_enum = dep_info.get("isEnum", False)
-        is_dto = self._is_potential_dto(start_fqn)
-        is_dto=True
-        if not is_enum and not is_dto:
-            self.logger.debug(f"Recursive gather: Skipping '{start_fqn}' as it is not a DTO or Enum.")
-            return []
-
-        dep_type_for_header = "Enum" if is_enum else "DTO"
-        dep_path = dep_info.get("classFileName") or dep_info.get("filePath")
-        dep_code = self.code_analyzer.get_code_snippet(dep_path, dep_info.get("startLine"), dep_info.get("endLine"))
-
-        if dep_code:
-            header = f"// --- Dependency: {dep_type_for_header} ({start_fqn}) ---\n"
-            all_related_contexts.append({
-                "name": start_fqn.split('.')[-1],
-                "qualifiedName": start_fqn,
-                "path": dep_path,
-                "code": header + dep_code,
-                "type": dep_type_for_header.lower()
-            })
-            self.logger.debug(f"Recursively added context for {dep_type_for_header}: {start_fqn}")
-
-        # --- Recurse on Children (if not an Enum) ---
-        if not is_enum:
-            properties = self._get_all_properties_for_class(start_fqn)
-            for prop in properties:
-                base_type_fqn = self._get_base_type(prop.get("type"))
-                if not base_type_fqn or base_type_fqn in visited_fqns:
-                    continue
-                
-                # RECURSIVE CALL for nested dependencies
-                nested_deps = self._gather_dependencies_recursively(
-                    base_type_fqn, visited_fqns, max_depth - 1
-                )
-                all_related_contexts.extend(nested_deps)
-
-        self.logger.debug(f"Gathering parent hierarchy for '{start_fqn}'...")
-        parent_hierarchy = self.code_analyzer.get_type_hierarchy(start_fqn, dep_path)
-        
-        for parent_info in parent_hierarchy:
-            parent_fqn = parent_info.get("name")
-            
-            # The parent FQN is valid and we haven't processed it yet
-            if parent_fqn and parent_fqn not in visited_fqns:
-                # The recursive call will handle all checks (is it a DTO? an Enum? already visited?)
-                # This ensures we don't pull in the entire JDK or classes like 'Object'.
-                # The internal checks in this same function will filter them out.
-                self.logger.debug(f"'{start_fqn}' has parent '{parent_fqn}'. Kicking off recursive gather for it.")
-                parent_deps = self._gather_dependencies_recursively(
-                    parent_fqn, visited_fqns, max_depth - 1
-                )
-                all_related_contexts.extend(parent_deps)
-                
-        return all_related_contexts
-    
     def _gather_dependencies_recursively_relaxed(self, 
                                      start_fqn: str, 
                                      visited_fqns: Set[str], 
@@ -1052,43 +869,6 @@ class SpringBootFrameworkAnalyzer(FrameworkAnalyzer):
             "supports_response": True,
         }
     
-    def _infer_fields_from_getters(self, class_info: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """
-        Infers schema fields from public getter methods (e.g., getFirstName(), isEnabled())
-        found in a class's analysis information.
-        """
-        inferred_fields = []
-        if not class_info or not isinstance(class_info.get("functions"), list):
-            return inferred_fields
-
-        for method in class_info.get("functions", []): # Ensure functions is treated as a list
-            method_name = method.get("methodName")
-            if not method_name:
-                continue
-
-            field_name = None
-            # Check for get...() pattern, e.g., getFirstName -> firstName
-            if method_name.startswith("get") and len(method_name) > 3 and method_name[3].isupper():
-                # Ensure it's a no-arg method (a true getter)
-                if len(method.get("parameters", [])) == 0:
-                    field_name = method_name[3].lower() + method_name[4:]
-            
-            # Check for is...() pattern for booleans, e.g., isEnabled -> enabled
-            elif method_name.startswith("is") and len(method_name) > 2 and method_name[2].isupper():
-                if len(method.get("parameters", [])) == 0:
-                     field_name = method_name[2].lower() + method_name[3:]
-
-            if field_name:
-                self.logger.debug(f"Inferred field '{field_name}' from getter '{method_name}' in class '{class_info.get('className')}'.")
-                # The type of the inferred field is the return type of the getter.
-                # Annotations on the getter method are also relevant for the field.
-                inferred_fields.append({
-                    "name": field_name,
-                    "type": method.get("returnType"), # Type comes from getter's return type
-                    "annotations": method.get("annotations", []) # Carry over annotations from getter
-                })
-        
-        return inferred_fields
 
     def _discover_seed_components(self) -> Set[str]:
         """
@@ -1258,52 +1038,6 @@ class SpringBootFrameworkAnalyzer(FrameworkAnalyzer):
         
         self.logger.info(f"[RECURSE] <== Finished processing for concrete class: '{fqn}'.")
 
-    def _topological_sort(self, adj: Dict[str, Set[str]], in_degree: Dict[str, int]) -> List[str]:
-        """
-        Performs a topological sort on the component dependency graph using Kahn's algorithm.
-        This version correctly handles the queue as a FIFO structure to respect dependencies
-        and includes a robust fallback for handling cycles.
-        """
-        self.logger.info("--- Starting Topological Sort ---")
-
-        # Initialize the queue with all nodes that have an in-degree of 0.
-        # Sorting here ensures a deterministic starting order for nodes without dependencies.
-        initial_zero_degree_nodes = sorted([fqn for fqn, degree in in_degree.items() if degree == 0])
-        self.logger.info(f"Initial nodes with in-degree 0: {json.dumps(initial_zero_degree_nodes, indent=2)}")
-        
-        # Use a deque for efficient popleft() operations (O(1) complexity).
-        queue = deque(initial_zero_degree_nodes)
-        sorted_list = []
-        
-        processed_count = 0
-        while queue:
-            # Dequeue the next node to process.
-            u = queue.popleft()
-            sorted_list.append(u)
-            processed_count += 1
-            
-            # For each neighbor of the processed node, decrement its in-degree.
-            # Sorting neighbors ensures deterministic behavior if multiple nodes become ready at once.
-            for v in sorted(list(adj.get(u, []))):
-                in_degree[v] -= 1
-                # If a neighbor's in-degree becomes 0, it's ready to be processed.
-                if in_degree[v] == 0:
-                    queue.append(v)
-
-        # After the loop, check if all nodes were processed. If not, a cycle exists.
-        if len(sorted_list) != len(adj):
-            self.logger.warning(
-                f"Cycle detected in component dependencies. {len(adj) - len(sorted_list)} nodes remain."
-            )
-            # Handle the remaining nodes that are part of a cycle.
-            # This is a fallback to ensure all components are included, though their internal order is not guaranteed.
-            cycled_nodes = {fqn for fqn in adj if in_degree.get(fqn, 0) > 0}
-            self.logger.warning(f"Remaining nodes with in-degree > 0: {sorted(list(cycled_nodes))}")
-            sorted_list.extend(sorted(list(cycled_nodes)))
-        
-        self.logger.info("--- Topological Sort Finished ---")
-        return sorted_list
-    
     def _build_dependency_graph_from_rich_context(self, components_map: Dict[str, Dict[str, Any]]) -> tuple[Dict[str, Set[str]], Dict[str, int]]:
         """
         Builds a complete dependency graph for ALL components (top-level and transient)
@@ -2354,133 +2088,7 @@ Focus on finding these Spring Boot patterns in the provided code:
         exclusion_text += "- Do NOT include unmodified base classes/interfaces from the primary framework.\n"
         return exclusion_text
     
-    def _recurse_on_class_dependencies(self, class_fqn: str, definition_path: str, class_details: Dict[str, Any], current_depth: int, max_depth: int, processed_keys: Set[str], accumulator: List[Dict[str, Any]]):
-        """Helper to recursively fetch dependencies for a given class."""
-        next_depth = current_depth + 1
 
-        # --- 1. Fetch Parent Dependencies if it's a DTO ---
-        if self._is_potential_dto(class_fqn):
-            self.logger.debug(f"'{class_fqn}' is a DTO. Fetching its parent DTOs.")
-            parent_hierarchy = self.code_analyzer.get_type_hierarchy(class_fqn, definition_path)
-            for parent_entry in parent_hierarchy:
-                parent_fqn = parent_entry.get("name")
-                if parent_fqn and self._is_potential_dto(parent_fqn):
-                    self._fetch_recursive_context_java(
-                        parent_fqn, SymbolType.CLASS, definition_path,
-                        next_depth, max_depth, processed_keys, accumulator
-                    )
-        
-        # --- 2. Fetch Child Dependencies (Fields) ---
-        for field_info in class_details.get("fields", []):
-            field_type_fqn = field_info.get("type")
-            base_field_type_fqn = self._get_base_type(field_type_fqn)
-            if base_field_type_fqn and self._is_potential_dto(base_field_type_fqn):
-                self._fetch_recursive_context_java(
-                    base_field_type_fqn, SymbolType.CLASS, definition_path,
-                    next_depth, max_depth, processed_keys, accumulator
-                )
-        
-        # --- 3. Fetch Defined Methods ---
-        for method_info in class_details.get("functions", []):
-            method_fqn = f"{class_fqn}.{method_info.get('methodName')}"
-            self._fetch_recursive_context_java(
-                method_fqn, SymbolType.FUNCTION, definition_path,
-                next_depth, max_depth, processed_keys, accumulator
-            )
-
-    def _recurse_on_function_dependencies(self, definition_path: str, function_details: Dict[str, Any], current_depth: int, max_depth: int, processed_keys: Set[str], accumulator: List[Dict[str, Any]]):
-        """Helper to recursively fetch dependencies for a given function."""
-        next_depth = current_depth + 1
-
-        # --- 1. Fetch Referenced Classes ---
-        for ref_class_fqn in function_details.get("classNames", []):
-            if self._is_potential_dto(ref_class_fqn) or not self._is_primitive_or_common(ref_class_fqn):
-                self._fetch_recursive_context_java(
-                    ref_class_fqn, SymbolType.CLASS, definition_path,
-                    next_depth, max_depth, processed_keys, accumulator
-                )
-
-        # --- 2. Fetch Called Methods ---
-        for called_func_info in function_details.get("functionNames", []):
-            target_method_name = called_func_info.get("simpleName")
-            target_class_fqn = called_func_info.get("declaringClass")
-            if target_method_name and target_class_fqn and not self._is_primitive_or_common(target_class_fqn):
-                self._fetch_recursive_context_java(
-                    f"{target_class_fqn}.{target_method_name}", SymbolType.FUNCTION, definition_path,
-                    next_depth, max_depth, processed_keys, accumulator
-                )
-        
-        # --- 3. Fetch Variable Types that are DTOs ---
-        for var_info in function_details.get("variableNames", []):
-            var_type_fqn = var_info.get("type")
-            base_var_type_fqn = self._get_base_type(var_type_fqn)
-            if base_var_type_fqn and self._is_potential_dto(base_var_type_fqn):
-                self._fetch_recursive_context_java(
-                    base_var_type_fqn, SymbolType.CLASS, definition_path,
-                    next_depth, max_depth, processed_keys, accumulator
-                )
-
-    def _fetch_recursive_context_java(self,
-                                   symbol_name_from_llm: str,
-                                   symbol_type: SymbolType,
-                                   referencing_context_path: str,
-                                   current_depth: int, max_depth: int,
-                                   processed_keys: Set[str],
-                                   accumulator: List[Dict[str, Any]]):
-        if current_depth >= max_depth:
-            return
-
-        # 1. Resolve symbol to its canonical name and definition path
-        symbol_ref = self.code_analyzer.get_symbol_reference(symbol_name_from_llm, referencing_context_path, symbol_type)
-        if not symbol_ref:
-            self.logger.warning(f"Spring (Recursive): Could not resolve '{symbol_name_from_llm}' ({symbol_type.name}) from '{referencing_context_path}'.")
-            return
-
-        canonical_name = symbol_ref.get("canonicalName") # Should be FQN for classes, FQN.method for methods
-        definition_path = symbol_ref.get("definitionPath")
-
-        if not canonical_name or not definition_path: return
-
-        symbol_key = self._get_java_symbol_key(canonical_name, definition_path, symbol_type)
-        if symbol_key in processed_keys: return
-
-        # 2. Get symbol info and code snippet
-        symbol_details = self.code_analyzer.get_symbol_info(canonical_name, definition_path, symbol_type)
-        if not symbol_details:
-            processed_keys.add(symbol_key) # Mark processed even if no info to avoid retries
-            return
-
-        start_line = symbol_details.get("startLine")
-        end_line = symbol_details.get("endLine")
-        code_snippet = "// Code not retrieved"
-        if start_line and end_line:
-            snip = self.code_analyzer.get_code_snippet(definition_path, start_line, end_line)
-            if snip: code_snippet = snip.strip()
-
-        # 3. Add the found symbol to the accumulator
-        item_name_for_list = canonical_name.split('.')[-1] if symbol_type == SymbolType.CLASS else canonical_name
-        accumulator.append({
-            "name": item_name_for_list, # Simple name for class, FQN.method for method
-            "qualifiedName": canonical_name,
-            "type": symbol_type.name.upper(), # "CLASS" or "FUNCTION"
-            "path": definition_path,
-            "start_line": start_line, "end_line": end_line, "code": code_snippet,
-        })
-        processed_keys.add(symbol_key)
-        self.logger.debug(f"Spring (Recursive) [Depth {current_depth}]: Added context for {symbol_key}")
-
-        # 4. Delegate recursion to specialized helpers
-        if current_depth + 1 < max_depth:
-            if symbol_type == SymbolType.CLASS:
-                self._recurse_on_class_dependencies(
-                    canonical_name, definition_path, symbol_details,
-                    current_depth, max_depth, processed_keys, accumulator
-                )
-            elif symbol_type == SymbolType.FUNCTION:
-                self._recurse_on_function_dependencies(
-                    definition_path, symbol_details,
-                    current_depth, max_depth, processed_keys, accumulator
-                )
 
     def get_endpoint_request_system_message(self) -> str:
         """Sets the LLM's persona and primary goal for generating request specs."""
