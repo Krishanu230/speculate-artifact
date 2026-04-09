@@ -1,4 +1,5 @@
 import ast
+import logging
 from enum import Enum
 import json
 import os
@@ -8,6 +9,8 @@ from typing import Dict, List, Set, Optional, Any, Tuple
 import copy
 
 from common.core.code_analyzer import CodeAnalyzer, SymbolType
+
+_LOGGER = logging.getLogger(__name__)
 
     
 class PythonCodeAnalyzer(CodeAnalyzer):
@@ -71,7 +74,7 @@ class PythonCodeAnalyzer(CodeAnalyzer):
                 break
         
         if self.starting_point is None:
-            print("WARNING: Cannot find starting point (manage.py) in project. Using project directory as starting point.")
+            _LOGGER.warning("Cannot find starting point (manage.py) in project. Using project directory as starting point.")
             self.starting_point = abs_project_path
         
         # Find URL configuration
@@ -178,9 +181,7 @@ class PythonCodeAnalyzer(CodeAnalyzer):
                 "identifiers": identifiers,
             }
         except Exception as e:
-            import traceback
-            print(f"Error analyzing file {abs_file_path}: {e}")
-            traceback.print_exc()
+            _LOGGER.error("Error analyzing file %s: %s", abs_file_path, e, exc_info=True)
             return {
                 "classes": {},
                 "functions": {},
@@ -511,7 +512,7 @@ class PythonCodeAnalyzer(CodeAnalyzer):
             return self.get_code_snippet(resolved_path, analyzed["startLine"], analyzed["endLine"])
             
         except Exception as e:
-            print(f"Error in get_external_code: {e}")
+            _LOGGER.debug("Error in get_external_code: %s", e, exc_info=getattr(self, "debug_mode", False))
             return None
     
     def get_analyzed_files(self) -> List[str]:
@@ -1119,7 +1120,7 @@ class PythonCodeAnalyzer(CodeAnalyzer):
             }
         except SyntaxError:
             # Handle potential syntax errors in partial code snippets
-            print(f"Syntax error in _set_code_identifiers with code: {code[:100]}...")
+            _LOGGER.debug("Syntax error in _set_code_identifiers with code: %s...", code[:100])
             return {
                 "classes": [],
                 "functions": [],
@@ -1423,7 +1424,7 @@ class PythonCodeAnalyzer(CodeAnalyzer):
                             
                 return None, None
         except Exception as e:
-            print(f"Error analyzing external file: {e}")
+            _LOGGER.debug("Error analyzing external file: %s", e, exc_info=getattr(self, "debug_mode", False))
             return None, None
         
     def extract_class_names(self, code: str) -> List[str]:
@@ -1485,8 +1486,8 @@ class PythonCodeAnalyzer(CodeAnalyzer):
             return list(class_names)
         except SyntaxError:
             # Handle potential syntax errors in partial code snippets
-            if self.debug_mode:
-                print(f"Syntax error in extract_class_names with code: {code[:100]}...")
+            if getattr(self, "debug_mode", False):
+                _LOGGER.debug("Syntax error in extract_class_names with code: %s...", code[:100])
             return []
         
     def _extract_attribute(self, node):
@@ -1551,8 +1552,13 @@ class PythonCodeAnalyzer(CodeAnalyzer):
                                 # For other types, try using ast.unparse
                                 return ast.unparse(node.value)
         except Exception as e:
-            if hasattr(self, 'debug_mode') and self.debug_mode:
-                print(f"Error extracting property {property_name} from {class_name}: {e}")
+            if getattr(self, "debug_mode", False):
+                _LOGGER.debug(
+                    "Error extracting property %s from %s: %s",
+                    property_name,
+                    class_name,
+                    e,
+                )
         
         return None
     
