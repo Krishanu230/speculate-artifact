@@ -241,14 +241,14 @@ class JavaCodeAnalyzer(CodeAnalyzer):
         return None
     
     def analyze_project(self, project_path: str, output_dir: str, framework: str) -> Optional[str]:
-        try:
-            logs_parent_dir = str(Path(output_dir).parent)
-            reused_results_path = self._find_and_copy_previous_analysis(logs_parent_dir, output_dir)
-            if reused_results_path and self.load_analysis_results(reused_results_path):
-                self.logger.info("Successfully loaded reused analysis results. Skipping Java analysis.")
-                return reused_results_path
-        except Exception as e:
-            self.logger.warning(f"Error checking for previous analysis, proceeding with new run: {e}", exc_info=True)
+        # try:
+        #     logs_parent_dir = str(Path(output_dir).parent)
+        #     reused_results_path = self._find_and_copy_previous_analysis(logs_parent_dir, output_dir)
+        #     if reused_results_path and self.load_analysis_results(reused_results_path):
+        #         self.logger.info("Successfully loaded reused analysis results. Skipping Java analysis.")
+        #         return reused_results_path
+        # except Exception as e:
+        #     self.logger.warning(f"Error checking for previous analysis, proceeding with new run: {e}", exc_info=True)
 
         abs_project_path = os.path.abspath(project_path)
         self.analysis_output_dir = os.path.abspath(output_dir)

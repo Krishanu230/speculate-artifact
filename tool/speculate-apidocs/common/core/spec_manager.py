@@ -1013,7 +1013,7 @@ class OpenAPISpecManager:
         
         if not content:
             self.logger.info("Content is none.")
-            return ValidationResult(False, None, ['The response is empty'])
+            return ValidationResult(False, None, [{'message': 'The response is empty', 'context': ''}])
         # 1. Extract content from backticks
         backticks_found = False
         match = re.search(r"```(?:yaml|yml|json)?\s*([\s\S]*?)\s*```", content, re.IGNORECASE)
@@ -1032,12 +1032,12 @@ class OpenAPISpecManager:
                  content_to_parse = content.strip()
             else:
                  self.logger.warning("Content not wrapped in ``` and does not appear to be valid YAML.")
-                 return ValidationResult(False, None, ["Content not wrapped in ``` and does not appear to be valid YAML. Please make sure your yaml response is wrapped in backticks."])
+                 return ValidationResult(False, None, [{'message': "Content not wrapped in ``` and does not appear to be valid YAML. Please make sure your yaml response is wrapped in backticks.", 'context': content[:200]}])
 
 
         if not content_to_parse:
              self.logger.warning("Extracted YAML content is empty.")
-             return ValidationResult(False, None, ["Extracted content is empty."])
+             return ValidationResult(False, None, [{'message': "Extracted content is empty.", 'context': ''}])
 
         try:
             lines = content_to_parse.split('\n')
