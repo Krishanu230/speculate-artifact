@@ -84,6 +84,37 @@ public class ClassMethodAnnotation {
     return path;
   }
 
+  ArrayList<String> getProducesFrom(AnnotationTag tag){
+    ArrayList<String> p = new ArrayList<>();
+
+    if(produceParam == null){
+      return p;
+    }
+
+    for(AnnotationElem elem0: tag.getElems()){
+      if(elem0 instanceof AnnotationStringElem){
+        AnnotationStringElem elem = (AnnotationStringElem) elem0;
+        if(produceParam.equals(elem.getName())){
+          p.add(elem.getValue());
+          break;
+        }
+      }
+      else if(elem0 instanceof AnnotationArrayElem){
+        AnnotationArrayElem elem = (AnnotationArrayElem) elem0;
+        if(produceParam.equals(elem.getName())){
+          for(AnnotationElem elem2: elem.getValues()){
+            if(elem2 instanceof AnnotationStringElem){
+              p.add(((AnnotationStringElem) elem2).getValue());
+            }
+          }
+          break;
+        }
+      }
+    }
+
+    return p;
+  }
+
   ArrayList<String> getRequestMethodFrom(AnnotationTag tag){
     ArrayList<String> m=new ArrayList<>();
 

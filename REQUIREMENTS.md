@@ -5,7 +5,7 @@
 - **CPU**: Any modern x86_64 or ARM64 processor
 - **RAM**: At least 4 GB allocated to Docker (8 GB recommended for the
   gravitee-apim-rest-api benchmark)
-- **Disk**: ~12 GB free (1.2 GB artifact bundle + ~10 GB Docker image including Django ML deps)
+- **Disk**: ~13.3 GB local Docker disk after pulling the pre-built image
 
 ## Software
 
@@ -17,6 +17,7 @@
 ## Network
 
 - Internet access is required during:
+  - `docker pull` — to download the published artifact image
   - `docker build` — to pull the base image (~500 MB)
   - `docker run` — to auto-fetch LLM credentials and make LLM API calls
 

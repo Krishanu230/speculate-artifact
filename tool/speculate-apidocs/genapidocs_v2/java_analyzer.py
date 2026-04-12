@@ -262,7 +262,9 @@ class JavaCodeAnalyzer(CodeAnalyzer):
         if self.multi_module:
             if self.provided_module_paths:
                 self.logger.info("Using manually provided paths for multi-module analysis.")
-                soot_process_path = self.provided_module_paths
+                soot_process_path = os.pathsep.join(
+                    os.path.abspath(p) for p in self.provided_module_paths.split(os.pathsep)
+                )
                 # Use the provided source root if it exists, otherwise default to the project root.
                 if self.provided_source_root:
                     java_parser_source_root = self.provided_source_root

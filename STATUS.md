@@ -18,7 +18,7 @@ The artifact includes:
 
 The reviewer can:
 
-1. Build the Docker image and run the tool on any of the 15 Java or 4 Django
+1. Pull the published Docker image and run the tool on any of the 15 Java or 4 Django
    bundled benchmarks without manual credential setup
 2. Inspect pre-computed results and evaluation reports in `results/`
 3. Compare fresh outputs against pre-computed results

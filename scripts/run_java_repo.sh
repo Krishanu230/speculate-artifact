@@ -55,6 +55,7 @@ values = {
     "BUILD_COMMAND": meta["build_command"],
     "JAVA_VERSION": str(meta["java_version"]),
     "MULTI_MODULE": "true" if meta.get("multi_module") else "false",
+    "CLASSES_HINT": meta.get("classes_hint", ""),
 }
 
 for key, value in values.items():
@@ -159,6 +160,9 @@ cd "$TOOL_DIR"
 extra_args=()
 if [ "$MULTI_MODULE" = "true" ]; then
   extra_args+=("--multi-module")
+fi
+if [ -n "$CLASSES_HINT" ]; then
+  extra_args+=("--java-module-paths" "$BENCHMARK_DIR/$CLASSES_HINT")
 fi
 
 python3 gen_apidocs2.py "$BENCHMARK_DIR" --language "$LANGUAGE" --framework "$FRAMEWORK" "${extra_args[@]}" "${TOOL_EXTRA_ARGS[@]}"

@@ -83,7 +83,7 @@ public class ListClasses {
         System.out.println("  Received Arg 0 (Multi-path for Soot): " + multiPathForSoot);
         System.out.println("  Received Arg 1 (Project Source Root): " + projectSourceDir);
         System.out.println("  Received Arg 2 (Output Directory): " + outputDir);
-        System.out.println("  Received Arg 3 (Framework): " + frameworkName); 
+        System.out.println("  Received Arg 3 (Framework): " + frameworkName);
         System.out.println("-----------------------------------------");
 
         String respectorBaseFile = "soot-respector.json";
@@ -149,79 +149,15 @@ public class ListClasses {
         PackManager.v().runPacks();
         PreprocessFramework processedFramework = PreprocessFramework.getEndPointInfo(Scene.v(), frameworkName);
 
-        // JSONObject respectorDump = new JSONObject();
-        // JSONArray methodsArray = new JSONArray();
-        // for (EndPointMethodInfo methodInfo : processedFramework.endPointMethodData) {
-        //     if (methodInfo.isEndpointMethod) {
-        //         methodsArray.add(methodInfo.toJSON());
-        //     }
-        // }
-        // respectorDump.put("endpointMethods", methodsArray);
-        // dumpJSONToFile(respectorDump, outputDir, respectorBaseFile);
-
         JSONObject respectorDump = new JSONObject();
-        JSONArray finalMethodsArray = new JSONArray();
-
-        for (EndPointMethodInfo originalMethodInfo : processedFramework.endPointMethodData) {
-            if (!originalMethodInfo.isEndpointMethod) {
-                // Keep non-endpoint methods as they are, they don't have multiple paths.
-                finalMethodsArray.add(originalMethodInfo.toJSON());
-                continue;
+        JSONArray methodsArray = new JSONArray();
+        for (EndPointMethodInfo methodInfo : processedFramework.endPointMethodData) {
+            if (methodInfo.isEndpointMethod) {
+                methodsArray.add(methodInfo.toJSON());
             }
-
-            // Trigger the calculation for both paths and hierarchies on the original object
-            originalMethodInfo.getMappingPathAndParentPathParams();
-            
-            // Now, allPaths and methodHierarchies are populated on the original object
-            ArrayList<Pair<String, ArrayList<EndPointParamInfo>>> resolvedPaths = originalMethodInfo.allPaths;
-            ArrayList<ArrayList<String>> resolvedHierarchies = originalMethodInfo.methodHierarchies;
-
-            // If there are no resolved paths, add the original object as is.
-            if (resolvedPaths == null || resolvedPaths.isEmpty()) {
-                finalMethodsArray.add(originalMethodInfo.toJSON());
-                continue;
-            }
-            
-            // The number of resolved paths should match the number of hierarchies.
-            if (resolvedPaths.size() != resolvedHierarchies.size()) {
-                // This would be a serious internal logic error, but it's safer to handle it
-                // than to crash. We'll just serialize the original object.
-                System.err.println("WARNING: Mismatch between resolved paths and hierarchies for method " + originalMethodInfo.methodSignature);
-                finalMethodsArray.add(originalMethodInfo.toJSON());
-                continue;
-            }
-
-            // Create a distinct cloned object for each path and its corresponding hierarchy
-            for (int i = 0; i < resolvedPaths.size(); i++) {
-                Pair<String, ArrayList<EndPointParamInfo>> pathTuple = resolvedPaths.get(i);
-                ArrayList<String> hierarchy = resolvedHierarchies.get(i);
-
-                // CLONE the original object
-                EndPointMethodInfo clonedMethodInfo = new EndPointMethodInfo(originalMethodInfo);
-
-                // ** CRITICAL FIX **:
-                // Manually set BOTH the single path and its corresponding single hierarchy on the clone.
-                ArrayList<Pair<String, ArrayList<EndPointParamInfo>>> singlePathList = new ArrayList<>();
-                singlePathList.add(pathTuple);
-                
-                ArrayList<ArrayList<String>> singleHierarchyList = new ArrayList<>();
-                singleHierarchyList.add(hierarchy);
-
-                clonedMethodInfo.allPaths = singlePathList;
-                clonedMethodInfo.methodHierarchies = singleHierarchyList;
-                
-                finalMethodsArray.add(clonedMethodInfo.toJSON());
-            }
-    }
-
-    // The de-duplication logic at the end is no longer necessary because we are
-    // now correctly representing each unique endpoint. The original Respector
-    // did not perform this de-duplication, so removing it brings us closer
-    // to the proven implementation. Any duplicates are now a sign of a deeper
-    // issue in the path resolution itself, which should be investigated separately.
-    
-    respectorDump.put("endpointMethods", finalMethodsArray);
-    dumpJSONToFile(respectorDump, outputDir, respectorBaseFile);
+        }
+        respectorDump.put("endpointMethods", methodsArray);
+        dumpJSONToFile(respectorDump, outputDir, respectorBaseFile);
 
         JSONObject identifiersDump = new JSONObject();
         JSONArray classIdentifiersArray = new JSONArray();
@@ -245,7 +181,7 @@ public class ListClasses {
             System.err.println("Error processing project for line numbers: " + projectSourceDir);
             e.printStackTrace();
         }
-        
+
         String lineNumbersFileFullPath = Paths.get(outputDir, lineNumberBaseFile).toString();
         String identifierFileFullPath = Paths.get(outputDir, identifierBaseFile).toString();
         String finalAnalysisFileFullPath = Paths.get(outputDir, finalAnalysisBaseFile).toString();
@@ -272,7 +208,7 @@ public class ListClasses {
 
         Map<String, String> sootFqnToOriginalFqnMap = new HashMap<>();
         Map<String, Map<String, List<MethodLineInfo>>> lineInfoMap = new HashMap<>();
-        
+
         class ClassInfoForMerge {
             long startLine;
             long endLine;
@@ -324,7 +260,7 @@ public class ListClasses {
             for (Object obj : classIdentifiersArray) {
                 JSONObject classIdNode = (JSONObject) obj;
                 String classNameFromSoot = (String) classIdNode.get("className");
-                
+
                 String keyForLookup = classNameFromSoot;
                 if (!classInfoMap.containsKey(keyForLookup)) {
                     String fallbackKey = sootFqnToOriginalFqnMap.get(classNameFromSoot);
@@ -342,7 +278,7 @@ public class ListClasses {
 
                 Map<String, List<MethodLineInfo>> classLineInfos = lineInfoMap.get(keyForLookup);
                 if (classLineInfos == null) continue;
-                
+
                 JSONArray functionsArray = (JSONArray) classIdNode.get("functions");
                 if (functionsArray != null) {
                     for (Object funcObj : functionsArray) {
@@ -369,7 +305,7 @@ public class ListClasses {
                 }
             }
         }
-        
+
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String prettyJson = gson.toJson(JsonParser.parseString(classIdentifiersJson.toJSONString()));
 

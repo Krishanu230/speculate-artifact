@@ -4,7 +4,7 @@
 
 - Docker (Docker Desktop 4.x+ or Docker Engine 20.10+ with BuildKit)
 - At least 4 GB memory allocated to Docker (8 GB recommended)
-- ~4 GB free disk space if pulling the pre-built image; ~8 GB if building from source
+- ~13.3 GB local Docker disk after pulling the pre-built image
 - Internet access during `docker pull` or `docker build` and during
   `docker run` (to auto-fetch LLM credentials and make API calls)
 
@@ -12,26 +12,24 @@
 
 From the `artifact/` directory:
 
-### 1. Build the Docker image
+### 1. Pull the Docker image
 
 ```bash
-docker build --target fast -t speculate-artifact -f docker/Dockerfile .
+docker pull krishannu/speculate-artifact:latest
 ```
 
-This uses pre-compiled Java class files so no external Maven/Gradle downloads
-are needed. Build time: **2-3 minutes** on a warm cache; **25-35 minutes** on
-a first build (librephotos ML dependencies are compiled from source).
+Observed clean pull time on 2026-04-12: **7m 25s**.
 
-### 2. Verify the build
+### 2. Verify the image
 
 ```bash
-docker run --rm speculate-artifact echo "Build OK"
+docker run --rm krishannu/speculate-artifact echo "Image OK"
 ```
 
 ### 3. Run the default benchmark
 
 ```bash
-docker run --rm -v "$(pwd)/outputs:/artifact/outputs" speculate-artifact
+docker run --rm -v "$(pwd)/outputs:/artifact/outputs" krishannu/speculate-artifact
 ```
 
 This runs the `Ur-Codebin-API` benchmark end-to-end. LLM credentials are
@@ -42,7 +40,7 @@ fetched automatically on startup. Generated output appears in `outputs/`.
 ```bash
 docker run --rm \
   -v "$(pwd)/outputs:/artifact/outputs" \
-  speculate-artifact \
+  krishannu/speculate-artifact \
   /artifact/scripts/run_java_repo.sh --analyze-only <repo-id>
 ```
 
@@ -59,12 +57,21 @@ See `README.md` for the full list of repo IDs and options.
 
 | Step | Time |
 |------|------|
-| Docker image build (warm cache) | 2-3 minutes |
-| Docker image build (first build) | 25-35 minutes (librephotos ML compilation) |
+| Docker image pull (clean pull, observed 2026-04-12) | 7m 25s |
 | First Java benchmark run (Ur-Codebin-API) | 2-5 minutes (depends on LLM response time) |
 | First Django benchmark run | 3-10 minutes (depends on repo and LLM response time) |
 
 ## Alternate build: compile from source
+
+To build from source instead of pulling the published image:
+
+```bash
+docker build --target fast -t speculate-artifact -f docker/Dockerfile .
+```
+
+This uses pre-compiled Java class files so no external Maven/Gradle downloads
+are needed. Build time: **2-3 minutes** on a warm cache; **25-35 minutes** on
+a first build (librephotos ML dependencies are compiled from source).
 
 To compile all 15 Java repositories from source instead of using pre-compiled
 classes:

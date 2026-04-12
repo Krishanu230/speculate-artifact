@@ -31,7 +31,7 @@ for a full interactive dashboard.
 
 ### Step 1 — Get the image
 
-**Recommended: pull from Docker Hub** (~9 GB disk, no build required)
+**Recommended: pull from Docker Hub** (~13.3 GB local Docker disk after pull, no build required; observed clean pull time on 2026-04-12: 7m 25s)
 
 ```bash
 docker pull krishannu/speculate-artifact:latest
@@ -352,14 +352,14 @@ Uses pre-compiled Java class files from `precompiled/`:
 docker build --target fast -t speculate-artifact -f docker/Dockerfile .
 ```
 
-Build time: **~3 min** on a warm cache; **25–35 min** on a first build
+Build time: more than ** 2 hours ** on a first build
 (librephotos ML dependencies — `dlib`, `llama-cpp-python` — are compiled
 from source).
 
 ### Rebuild mode (compile benchmarks from source)
 
 Compiles all 15 Java repositories from source inside Docker. Requires internet
-access for Maven/Gradle downloads. Expect **30+ min** on a first build.
+access for Maven/Gradle downloads.
 
 ```bash
 docker build --target rebuild -t speculate-artifact -f docker/Dockerfile .

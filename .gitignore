@@ -6,4 +6,5 @@ outputs/*
 **/__pycache__/
 **/.DS_Store
 **/.pytest_cache/
+.venvs/**
 docs/

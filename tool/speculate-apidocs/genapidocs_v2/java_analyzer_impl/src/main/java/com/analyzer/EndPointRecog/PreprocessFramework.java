@@ -256,10 +256,12 @@ public class PreprocessFramework {
 
               if(CMAnno != null){
                 hasMethodAnnotationsNoSkip=true;
-                
+
                 methodPath.addAll(CMAnno.getPathFrom(mTag));
 
                 requestMethod.addAll(CMAnno.getRequestMethodFrom(mTag));
+
+                produces.addAll(CMAnno.getProducesFrom(mTag));
               }
 
               ClassMethodAnnotation CRAnno = data.responseStatusAnnotations.get(annoType);
@@ -309,10 +311,14 @@ public class PreprocessFramework {
             */
           }
 
-          ///TODO: fix this
           if(requestMethod.isEmpty()){
             if(framework==FrameworkName.Spring){
-              requestMethod.addAll(List.of("get", "post", "head", "options", "put", "patch", "delete", "trace"));
+              if(produces.stream().anyMatch(mime -> mime.contains("text/event-stream"))){
+                // SSE endpoints must be GET only
+                requestMethod.add("get");
+              } else {
+                requestMethod.addAll(List.of("get", "post", "head", "options", "put", "patch", "delete", "trace"));
+              }
             }
           }
 

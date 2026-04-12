@@ -148,6 +148,6 @@
     "build_command": "mvn -U -DskipTests package",
     "java_version": "11",
     "multi_module": true,
-    "classes_hint": "gravitee-apim-rest-api/gravitee-apim-rest-api-management-v4/gravitee-apim-rest-api-management-v4-rest/target/classes"
+    "classes_hint": "gravitee-apim-rest-api-management-v4/gravitee-apim-rest-api-management-v4-rest/target/classes"
   }
 }
