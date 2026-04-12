@@ -4,7 +4,7 @@
 
 - **CPU**: Any modern x86_64 or ARM64 processor
 - **RAM**: At least 4 GB allocated to Docker (8 GB recommended for the
-  gravitee-apim-rest-api benchmark)
+  gravitee-apim-rest-api build)
 - **Disk**: ~13.3 GB local Docker disk after pulling the pre-built image
 
 ## Software
